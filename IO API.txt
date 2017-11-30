@@ -1,0 +1,77 @@
+Input commands are to be written as new lines into instructions_input.txt
+
+If commands include additional arguments, they should be on the same line 
+following the command. For example, the below command has three arguments:
+
+SomeCommand SomeArgument AnotherArgument AThirdArgument
+
+--sent after acquisition of single image stack complete--
+command: GrabOneStackDone
+arguments: path to newly acquired image stack 
+example: GrabOneStackDone c:/images/acq1/image1.tiff
+
+--sent after movement to new coordinates is complete--
+command = StageMoveDone
+arguments: x, y, z
+example: StageMoveDone 1 34.2 -2
+
+--sent after request for current position--
+command = CurrentPosition
+arguments: x, y, z
+example: CurrentPosition 2 0 -3.2
+
+--sent after uncaging is finished--
+command = UncagingDone
+arguments: None
+example: UncagingDone
+
+--sent to establish Field of View size in µm (when completely zoomed out)--
+command = fovXY_um
+arguments = X,Y
+example: fovXY_um 250 250
+
+--sent when new zoom is set--
+command = Zoom
+arguments = zoomvalue
+example: Zoom 25
+
+
+Output commands are written line by line to instructions_output.txt
+
+Commands may include additional arguments, just like input commands
+
+--Move to new stage position--
+command = moveXYZ
+arguments: x y z
+example: moveXYZ 12 89.2 0
+expected return command: StageMoveDone
+
+--Grab a stack once--
+command = grabOneStack
+arguments: None
+example: grabOneStack
+expected return command: GrabOneStackDone
+
+--Set Zoom to specific value
+command = setZoom
+arguments: zoom
+example: setZoom 20
+expected return command: Zoom
+
+--Do uncaging--
+command = runUncaging
+arguments: None
+example: runUncaging
+expected return command: UncagingDone
+
+--Request for current position to be sent--
+command = getCurrentPosition
+arguments: coordinate axes
+example: getCurrentPosition xyz
+expected return command: CurrentPosition
+
+--Request fo FOV size--
+command = getFOV_xy
+arguments: None
+example: getFOV_xy
+expected return command: fovXY_um
