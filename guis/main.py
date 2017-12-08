@@ -124,7 +124,7 @@ class SpineTracker(tk.Tk):
     
     def __init__(self, *args, **kwargs):
         
-        tk.Tk.__init__(self, *args, **kwargs) #initialize regulat Tk stuff
+        tk.Tk.__init__(self, *args, **kwargs) #initialize regular Tk stuff
         
         #set properties for main window
         tk.Tk.iconbitmap(self,default = "../images/crabIco.ico") #icon doesn't work
@@ -140,6 +140,7 @@ class SpineTracker(tk.Tk):
         self.initializePositions()
         self.loadSettings()
         self.frames = {}
+        self.windows = {}
         self.acq = {}
         self.measure = {}
         self.stepRunning = False
@@ -156,6 +157,9 @@ class SpineTracker(tk.Tk):
             frame = F(container, self)
             self.frames[F] = frame
             container.add(frame, text = F.name)
+            
+    def showMacroViewWindow(self):
+        self.windows[MacroWindow] = MacroWindow(self)
             
     def on_exit(self):
         print('quitting')
@@ -545,7 +549,11 @@ class PositionsPage(ttk.Frame):
         button_clearPositions = ttk.Button(frame_forButtons, text = "Clear All Positions", 
                             command = lambda:controller.clearPositions(self))
         button_clearPositions.grid(row = 1, column = 0, padx = 10, 
-                                   pady = 10, sticky = 'wn')
+                            pady = 10, sticky = 'wn')
+        button_cellView = ttk.Button(frame_forButtons, text = "Macro View", 
+                            command = lambda:controller.showMacroViewWindow())
+        button_cellView.grid(row = 2, column = 0, padx = 10, 
+                            pady = 10, sticky = 'wn')
         #treeview example given at http://knowpapa.com/ttk-treeview/
         positionsTableFrame = ttk.Frame(self)
         positionsTableFrame.grid(row = 0, column = 1, sticky = 'nsew', padx = 10, pady = 10)
@@ -1295,8 +1303,43 @@ class getCommandsClass(object):
             if self.uncagingDone:
                 print('Uncaging Done')
                 break
-    
+            
+            
+class MacroWindow(tk.Tk):
+    def __init__(self, controller, *args, **kwargs):      
+        tk.Tk.__init__(self, *args, **kwargs) #initialize regular Tk stuff
         
+        #set properties for main window
+        tk.Tk.wm_title(self, "Macro View")
+        tk.Tk.geometry(self, newGeometry = '600x700+200+200')
+        #define container for what's in the window
+        self.controller = controller
+        f_wholeCellFig = Figure(figsize = (5,5), dpi = fig_dpi)
+        f_wholeCellFig.subplots_adjust(left = 0, right = 1,  bottom = 0, top = 1, wspace = 0.02, hspace = 0)
+        canvas_wholeCell = FigureCanvasTkAgg(f_wholeCellFig,self)
+        canvas_wholeCell.get_tk_widget().config(borderwidth = 1, background='gray',  highlightcolor='gray', highlightbackground='gray')
+        canvas_wholeCell.show()
+        canvas_wholeCell.get_tk_widget().grid(row = 0, column = 0, padx = 10, sticky = 'nsew')
+        a=f_wholeCellFig.add_subplot(1,1,1)
+        self.wholeCellAx = a
+        self.wholeCellFig = f_wholeCellFig
+        frame_buttons = ttk.Frame(self)
+        frame_buttons.grid(row = 1, column = 0, sticky = 'nsew')
+        button_loadMacroImage = ttk.Button(frame_buttons,text = "Load Macro Image", command = 
+                            lambda: self.loadMacroImage())
+        button_loadMacroImage.grid(row = 0, column = 0, padx = 10, pady = 10, sticky = 'nw')
+        
+    def loadMacroImage(self):
+        if simulation:
+            image = io.imread('../testing/macroImage.tif')
+        a = self.wholeCellAx
+        a.clear()
+        a.imshow(image)
+        a.axis('equal')
+        a.axis('off')
+        self.canvas_wholeCell.draw_idle()
+    
+    
 ###################
 
 app = SpineTracker()
