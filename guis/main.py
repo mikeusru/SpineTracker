@@ -31,6 +31,8 @@ import time
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 from queue import Queue
+import cv2
+from PIL import Image, ImageTk
 
 #Program running as simulation, without host imaging program
 simulation = True
@@ -1324,6 +1326,7 @@ class MacroWindow(tk.Tk):
         #define container for what's in the window
         self.controller = controller
         self.figSize_inches = [8,8]
+        self.scrollingCanvas = ScrolledCanvas(self)
         self.addScrollingFigure()
         self.scale_z = tk.Scale(self.frame_canvas, orient = tk.VERTICAL)
         self.scale_z.grid(row = 0, column = 2, sticky = 'nse')
@@ -1332,10 +1335,11 @@ class MacroWindow(tk.Tk):
         button_loadMacroImage = ttk.Button(frame_buttons,text = "Load Test Macro Image", command = 
                             lambda: self.loadMacroImage())
         button_loadMacroImage.grid(row = 0, column = 0, padx = 10, pady = 10, sticky = 'nw')
-        self.scale_zoom = tk.Scale(self, orient = tk.VERTICAL)
+        self.scale_zoom = tk.Scale(self, orient = tk.HORIZONTAL)
         self.scale_zoom.grid(row = 2, column = 0, sticky = 'ew')
         self.scale_zoom.config(command = self.changeSize, from_=.1, to=5, resolution = .1)
-                
+        self.scale_zoom.set(2)        
+        
     def addScrollingFigure(self):
         self.frame_canvas = ttk.Frame(self)
         self.frame_canvas.grid(row = 0, column = 0, sticky = 'nsew')
@@ -1397,7 +1401,7 @@ class MacroWindow(tk.Tk):
         self.scale_z.config(command = self.scaleCallback, from_=0, to=self.volume.shape[0]-1)
         ax.index = self.volume.shape[0] // 2
         self.scale_z.set(ax.index)
-        ax.imshow(self.volume[ax.index])
+        ax.imshow(self.volume[ax.index],interpolation = 'none')
         self.wholeCellFig.canvas.draw()
 
     def scaleCallback(self,event):
@@ -1407,6 +1411,35 @@ class MacroWindow(tk.Tk):
         ax.images[0].set_array(volume[ax.index])
         self.wholeCellFig.canvas.draw()
         
+class ScrolledCanvas(tk.Frame):
+        def __init__(self, controller):
+            tk.Frame.__init__(self, parent)
+            self.pack(expand=tk.YES, fill=tk.BOTH)
+            canv = tk.Canvas(self, relief=tk.SUNKEN)
+            canv.config(width=600, height=600)
+            #canv.config(scrollregion=(0,0,1000, 1000))
+            #canv.configure(scrollregion=canv.bbox('all'))
+            canv.config(highlightthickness=0)
+        
+            sbarV = tk.Scrollbar(self, orient=tk.VERTICAL)
+            sbarH = tk.Scrollbar(self, orient=tk.HORIZONTAL)
+            
+            sbarV.config(command=canv.yview)
+            sbarH.config(command=canv.xview)
+        
+            canv.config(yscrollcommand=sbarV.set)
+            canv.config(xscrollcommand=sbarH.set)
+            
+            sbarV.pack(side=tk.RIGHT, fill=tk.Y)
+            sbarH.pack(side=tk.BOTTOM, fill=tk.X)
+            
+            canv.pack(side=tk.LEFT, expand=tk.YES, fill=tk.BOTH)
+            self.im=Image.open("../testing/macroImage.tif")
+            self.im = self.im.resize((2000,2000))
+            width,height=self.im.size
+            canv.config(scrollregion=(0,0,width,height))
+            self.im2=ImageTk.PhotoImage(master= canv, image = self.im)
+            self.imgtag=canv.create_image(0,0,anchor="nw",image=self.im2)
 ###################
 
 app = SpineTracker()
