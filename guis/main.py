@@ -1326,10 +1326,9 @@ class MacroWindow(tk.Tk):
         #define container for what's in the window
         self.controller = controller
         self.figSize_inches = [8,8]
-        self.scrollingCanvas = ScrolledCanvas(self)
         self.addScrollingFigure()
         self.scale_z = tk.Scale(self.frame_canvas, orient = tk.VERTICAL)
-        self.scale_z.grid(row = 0, column = 2, sticky = 'nse')
+        self.scale_z.pack(side = tk.LEFT)
         frame_buttons = ttk.Frame(self)
         frame_buttons.grid(row = 1, column = 0, sticky = 'nsew')
         button_loadMacroImage = ttk.Button(frame_buttons,text = "Load Test Macro Image", command = 
@@ -1343,82 +1342,98 @@ class MacroWindow(tk.Tk):
     def addScrollingFigure(self):
         self.frame_canvas = ttk.Frame(self)
         self.frame_canvas.grid(row = 0, column = 0, sticky = 'nsew')
-        # set up canvas with scrollbars
-        canvas = tk.Canvas(self.frame_canvas)
-        canvas.grid(row = 0, column = 0, sticky = 'nsew')
-        xScrollbar = tk.Scrollbar(self.frame_canvas, orient = tk.HORIZONTAL)
-        yScrollbar = tk.Scrollbar(self.frame_canvas, orient = tk.VERTICAL)
-        xScrollbar.grid(row = 1, column = 0, sticky = 'ew')
-        yScrollbar.grid(row = 0, column = 1, sticky = 'ns')
-        canvas.config(xscrollcommand = xScrollbar.set)
-        xScrollbar.config(command = canvas.xview)
-        canvas.config(yscrollcommand = yScrollbar.set)
-        yScrollbar.config(command = canvas.yview)
+        self.scrollingCanvas = ScrolledCanvas(self.frame_canvas, self.controller)
+#        self.changeSize(1.0)
         
-        #create figure and axis
-        f_wholeCellFig = Figure(figsize = self.figSize_inches, dpi = fig_dpi)
-        a=f_wholeCellFig.add_subplot(1,1,1)
-        f_wholeCellFig.subplots_adjust(left = 0, right = 1,  bottom = 0, top = 1, wspace = 0.02, hspace = 0)
-
-        self.wholeCellFig = f_wholeCellFig
-        self.wholeCellAx = a
-
-        #plug in the figure
-        figAgg = FigureCanvasTkAgg(f_wholeCellFig,canvas)
-        mplCanvas = figAgg.get_tk_widget()
-        self.mplCanvas = mplCanvas
-        self.canvas = canvas
-        # and connect figure with scrolling region
-        self.cwid = canvas.create_window(0, 0, window=mplCanvas, anchor='nw')
-        self.changeSize(1.0)
-        
+#        
+#        
+#        
+#        
+#        # set up canvas with scrollbars
+#        canvas = tk.Canvas(self.frame_canvas)
+#        canvas.grid(row = 0, column = 0, sticky = 'nsew')
+#        xScrollbar = tk.Scrollbar(self.frame_canvas, orient = tk.HORIZONTAL)
+#        yScrollbar = tk.Scrollbar(self.frame_canvas, orient = tk.VERTICAL)
+#        xScrollbar.grid(row = 1, column = 0, sticky = 'ew')
+#        yScrollbar.grid(row = 0, column = 1, sticky = 'ns')
+#        canvas.config(xscrollcommand = xScrollbar.set)
+#        xScrollbar.config(command = canvas.xview)
+#        canvas.config(yscrollcommand = yScrollbar.set)
+#        yScrollbar.config(command = canvas.yview)
+#        
+#        #create figure and axis
+#        f_wholeCellFig = Figure(figsize = self.figSize_inches, dpi = fig_dpi)
+#        a=f_wholeCellFig.add_subplot(1,1,1)
+#        f_wholeCellFig.subplots_adjust(left = 0, right = 1,  bottom = 0, top = 1, wspace = 0.02, hspace = 0)
+#
+#        self.wholeCellFig = f_wholeCellFig
+#        self.wholeCellAx = a
+#
+#        #plug in the figure
+#        figAgg = FigureCanvasTkAgg(f_wholeCellFig,canvas)
+#        mplCanvas = figAgg.get_tk_widget()
+#        self.mplCanvas = mplCanvas
+#        self.canvas = canvas
+#        # and connect figure with scrolling region
+#        self.cwid = canvas.create_window(0, 0, window=mplCanvas, anchor='nw')
+#        self.changeSize(1.0)
+#        
         
     def changeSize(self,factor):
         if not isinstance(factor,float):
             factor = self.scale_zoom.get()
-        figure = self.wholeCellFig
-        oldSize = self.figSize_inches
-        figure.set_size_inches([factor * s for s in oldSize])
-        wi,hi = [i*figure.dpi for i in figure.get_size_inches()]
-        self.mplCanvas.config(width = wi, height = hi)
-        self.canvas.itemconfigure(self.cwid, width = wi, height = hi)
-        self.canvas.config(scrollregion = self.canvas.bbox('all'), width = 500, height = 500)
-        figure.subplots_adjust(left = 0, bottom = 0, top = 1, right = 1)
-        figure.canvas.draw()
+        width,height = self.image.size
+        im_resized = self.image.resize((round(width*factor), round(height*factor)))
+        self.scrollingCanvas.setImage(im_resized,self.sliceIndex)
+        
+#        figure = self.wholeCellFig
+#        oldSize = self.figSize_inches
+#        figure.set_size_inches([factor * s for s in oldSize])
+#        wi,hi = [i*figure.dpi for i in figure.get_size_inches()]
+#        self.mplCanvas.config(width = wi, height = hi)
+#        self.canvas.itemconfigure(self.cwid, width = wi, height = hi)
+#        self.canvas.config(scrollregion = self.canvas.bbox('all'), width = 500, height = 500)
+#        figure.subplots_adjust(left = 0, bottom = 0, top = 1, right = 1)
+#        figure.canvas.draw()
         
     def loadMacroImage(self):
         if simulation:
-            image = io.imread('../testing/macroImage.tif')
-        a = self.wholeCellAx
-        a.clear()
-        a.axis('equal')
-        a.axis('off')
-        self.volume = image
+            self.image=Image.open("../testing/macroImage.tif")
+#            image = io.imread('../testing/macroImage.tif')
+#        a = self.wholeCellAx
+#        a.clear()
+#        a.axis('equal')
+#        a.axis('off')
+#        self.volume = image
         self.multi_slice_viewer()
         
     def multi_slice_viewer(self):
-        ax = self.wholeCellAx
-        self.scale_z.config(command = self.scaleCallback, from_=0, to=self.volume.shape[0]-1)
-        ax.index = self.volume.shape[0] // 2
-        self.scale_z.set(ax.index)
-        ax.imshow(self.volume[ax.index],interpolation = 'none')
-        self.wholeCellFig.canvas.draw()
+        
+#        ax = self.wholeCellAx
+        self.scale_z.config(command = self.scaleCallback, from_=0, to=self.image.n_frames-1)
+#        ax.index = self.volume.shape[0] // 2
+        self.sliceIndex = self.image.n_frames//2
+        self.scale_z.set(self.sliceIndex)
+        self.scrollingCanvas.setImage(self.image,self.sliceIndex)
+
+#        ax.imshow(self.volume[ax.index],interpolation = 'none')
+#        self.wholeCellFig.canvas.draw()
 
     def scaleCallback(self,event):
-        ax = self.wholeCellAx
-        volume = self.volume
-        ax.index = self.scale_z.get()
-        ax.images[0].set_array(volume[ax.index])
-        self.wholeCellFig.canvas.draw()
+#        ax = self.wholeCellAx
+#        volume = self.volume
+        self.sliceIndex = self.scale_z.get()
+        self.scrollingCanvas.setImage(self.image,self.sliceIndex)
+#        self.wholeCellFig.canvas.draw()
         
 class ScrolledCanvas(tk.Frame):
-        def __init__(self, controller):
+        def __init__(self, parent, controller):
             tk.Frame.__init__(self, parent)
             self.pack(expand=tk.YES, fill=tk.BOTH)
+            self.parent = parent
+            self.controller = controller
             canv = tk.Canvas(self, relief=tk.SUNKEN)
             canv.config(width=600, height=600)
-            #canv.config(scrollregion=(0,0,1000, 1000))
-            #canv.configure(scrollregion=canv.bbox('all'))
             canv.config(highlightthickness=0)
         
             sbarV = tk.Scrollbar(self, orient=tk.VERTICAL)
@@ -1434,12 +1449,17 @@ class ScrolledCanvas(tk.Frame):
             sbarH.pack(side=tk.BOTTOM, fill=tk.X)
             
             canv.pack(side=tk.LEFT, expand=tk.YES, fill=tk.BOTH)
-            self.im=Image.open("../testing/macroImage.tif")
-            self.im = self.im.resize((2000,2000))
+            self.canvas = canv
+            
+        def setImage(self,im,frame):
+#            self.im = self.im.resize((1000,1000))
+            self.im = im
             width,height=self.im.size
-            canv.config(scrollregion=(0,0,width,height))
-            self.im2=ImageTk.PhotoImage(master= canv, image = self.im)
-            self.imgtag=canv.create_image(0,0,anchor="nw",image=self.im2)
+            self.im.seek(frame) #move to appropriate frame
+            self.canvas.config(scrollregion=(0,0,width,height))
+            self.im2=ImageTk.PhotoImage(master= self.canvas, image = self.im)
+            self.imgtag=self.canvas.create_image(0,0,anchor="nw",image=self.im2)
+
 ###################
 
 app = SpineTracker()
