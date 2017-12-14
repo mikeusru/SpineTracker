@@ -90,6 +90,15 @@ def focusMeasure(image):
      FM = np.mean(FM)
      return FM
  
+def remove_keymap_conflicts(new_keys_set):
+    for prop in plt.rcParams:
+        if prop.startswith('keymap.'):
+            keys = plt.rcParams[prop]
+            remove_list = set(keys) & new_keys_set
+            for key in remove_list:
+                keys.remove(key)
+    
+ 
 #output is directional shift [x,y] in pixels. based on Sugar et al (2014) paper
 def computeDrift(imgref,img):
     h,w = imgref.shape
@@ -1314,32 +1323,90 @@ class MacroWindow(tk.Tk):
         tk.Tk.geometry(self, newGeometry = '600x700+200+200')
         #define container for what's in the window
         self.controller = controller
-        f_wholeCellFig = Figure(figsize = (5,5), dpi = fig_dpi)
-        f_wholeCellFig.subplots_adjust(left = 0, right = 1,  bottom = 0, top = 1, wspace = 0.02, hspace = 0)
-        canvas_wholeCell = FigureCanvasTkAgg(f_wholeCellFig,self)
-        canvas_wholeCell.get_tk_widget().config(borderwidth = 1, background='gray',  highlightcolor='gray', highlightbackground='gray')
-        canvas_wholeCell.show()
-        canvas_wholeCell.get_tk_widget().grid(row = 0, column = 0, padx = 10, sticky = 'nsew')
-        a=f_wholeCellFig.add_subplot(1,1,1)
-        self.wholeCellAx = a
-        self.wholeCellFig = f_wholeCellFig
+        self.figSize_inches = [8,8]
+        self.addScrollingFigure()
+        self.scale_z = tk.Scale(self.frame_canvas, orient = tk.VERTICAL)
+        self.scale_z.grid(row = 0, column = 2, sticky = 'nse')
         frame_buttons = ttk.Frame(self)
         frame_buttons.grid(row = 1, column = 0, sticky = 'nsew')
-        button_loadMacroImage = ttk.Button(frame_buttons,text = "Load Macro Image", command = 
+        button_loadMacroImage = ttk.Button(frame_buttons,text = "Load Test Macro Image", command = 
                             lambda: self.loadMacroImage())
         button_loadMacroImage.grid(row = 0, column = 0, padx = 10, pady = 10, sticky = 'nw')
+        self.scale_zoom = tk.Scale(self, orient = tk.VERTICAL)
+        self.scale_zoom.grid(row = 2, column = 0, sticky = 'ew')
+        self.scale_zoom.config(command = self.changeSize, from_=.1, to=5, resolution = .1)
+                
+    def addScrollingFigure(self):
+        self.frame_canvas = ttk.Frame(self)
+        self.frame_canvas.grid(row = 0, column = 0, sticky = 'nsew')
+        # set up canvas with scrollbars
+        canvas = tk.Canvas(self.frame_canvas)
+        canvas.grid(row = 0, column = 0, sticky = 'nsew')
+        xScrollbar = tk.Scrollbar(self.frame_canvas, orient = tk.HORIZONTAL)
+        yScrollbar = tk.Scrollbar(self.frame_canvas, orient = tk.VERTICAL)
+        xScrollbar.grid(row = 1, column = 0, sticky = 'ew')
+        yScrollbar.grid(row = 0, column = 1, sticky = 'ns')
+        canvas.config(xscrollcommand = xScrollbar.set)
+        xScrollbar.config(command = canvas.xview)
+        canvas.config(yscrollcommand = yScrollbar.set)
+        yScrollbar.config(command = canvas.yview)
+        
+        #create figure and axis
+        f_wholeCellFig = Figure(figsize = self.figSize_inches, dpi = fig_dpi)
+        a=f_wholeCellFig.add_subplot(1,1,1)
+        f_wholeCellFig.subplots_adjust(left = 0, right = 1,  bottom = 0, top = 1, wspace = 0.02, hspace = 0)
+
+        self.wholeCellFig = f_wholeCellFig
+        self.wholeCellAx = a
+
+        #plug in the figure
+        figAgg = FigureCanvasTkAgg(f_wholeCellFig,canvas)
+        mplCanvas = figAgg.get_tk_widget()
+        self.mplCanvas = mplCanvas
+        self.canvas = canvas
+        # and connect figure with scrolling region
+        self.cwid = canvas.create_window(0, 0, window=mplCanvas, anchor='nw')
+        self.changeSize(1.0)
+        
+        
+    def changeSize(self,factor):
+        if not isinstance(factor,float):
+            factor = self.scale_zoom.get()
+        figure = self.wholeCellFig
+        oldSize = self.figSize_inches
+        figure.set_size_inches([factor * s for s in oldSize])
+        wi,hi = [i*figure.dpi for i in figure.get_size_inches()]
+        self.mplCanvas.config(width = wi, height = hi)
+        self.canvas.itemconfigure(self.cwid, width = wi, height = hi)
+        self.canvas.config(scrollregion = self.canvas.bbox('all'), width = 500, height = 500)
+        figure.subplots_adjust(left = 0, bottom = 0, top = 1, right = 1)
+        figure.canvas.draw()
         
     def loadMacroImage(self):
         if simulation:
             image = io.imread('../testing/macroImage.tif')
         a = self.wholeCellAx
         a.clear()
-        a.imshow(image)
         a.axis('equal')
         a.axis('off')
-        self.canvas_wholeCell.draw_idle()
-    
-    
+        self.volume = image
+        self.multi_slice_viewer()
+        
+    def multi_slice_viewer(self):
+        ax = self.wholeCellAx
+        self.scale_z.config(command = self.scaleCallback, from_=0, to=self.volume.shape[0]-1)
+        ax.index = self.volume.shape[0] // 2
+        self.scale_z.set(ax.index)
+        ax.imshow(self.volume[ax.index])
+        self.wholeCellFig.canvas.draw()
+
+    def scaleCallback(self,event):
+        ax = self.wholeCellAx
+        volume = self.volume
+        ax.index = self.scale_z.get()
+        ax.images[0].set_array(volume[ax.index])
+        self.wholeCellFig.canvas.draw()
+        
 ###################
 
 app = SpineTracker()
