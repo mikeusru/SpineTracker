@@ -1,3 +1,4 @@
 stagger = 10
 totalChannels = 2
 driftCorrectionChannel = 1
+fovXY = (250,250)

@@ -33,7 +33,7 @@ from watchdog.events import FileSystemEventHandler
 from queue import Queue
 import cv2
 from PIL import Image, ImageTk
-
+import math
 #Program running as simulation, without host imaging program
 simulation = True
 
@@ -54,6 +54,16 @@ f_positions.set_tight_layout(True)
 initDirectory = "../iniFiles/"
 
 #addToQueueLock = threading.Lock()
+
+def round_math(n, ndigits = 0):
+    part = n * 10 ** ndigits
+    delta = part - int(part)
+    # always round "away from 0"
+    if delta >= 0.5 or -0.5 < delta <= 0:
+        part = math.ceil(part)
+    else:
+        part = math.floor(part)
+    return part / (10 ** ndigits)
 
 def fitFigToCanvas(fig, canv):
     h = canv.get_tk_widget().winfo_height()
@@ -206,6 +216,10 @@ class SpineTracker(tk.Tk):
         with open('../iniFiles/settings.txt') as input_file:
             for line in input_file:
                 key, sep, val = [x.strip() for x in line.split()]
+                try:
+                    val = eval(val)
+                except:
+                    pass
                 self.settings[key] = val  
  
         #measure autofocus of image
@@ -226,7 +240,9 @@ class SpineTracker(tk.Tk):
     
     def loadTestRefImage(self,cont): #for testing purposes only
         imgref = io.imread("../testing/test_refimg.tif")
-        self.acq['imgref'] = imgref
+#        self.acq['imgref'] = imgref
+        self.acq['imgref_imaging'] = imgref
+        self.acq['imgref_ref'] = imgref
 #        return(imgref)
                     
     def runXYZ_DriftCorrection(self, posID = None):
@@ -276,7 +292,7 @@ class SpineTracker(tk.Tk):
         
     def calcDrift(self):
         image = np.max(self.acq['imageStack'],0)
-        imgref = self.acq['imgref']
+        imgref = self.acq['imgref_imaging']
         shift = computeDrift(imgref,image)
         shiftx = shift['shiftx']
         shifty = shift['shifty']    
@@ -310,24 +326,28 @@ class SpineTracker(tk.Tk):
             x,y,z = self.currentCoordinates
         return({'x':x,'y':y,'z':z})
     
-    def createNewPos(self,xyz):
+    def createNewPos(self,xyz, refImages = None):
         #just starting with an empty dict for now
         if len(self.positions)==0:
             posID = 1
         else:
             posID = max(self.positions.keys())+1  
         self.positions[posID] = xyz
-        ##load sample ref images
-        self.loadTestRefImage(self)
-        self.loadTestRefImage(self)
-        self.positions[posID]['refImg'] = self.acq['imgref']
-        self.positions[posID]['refImgZoomout'] = self.acq['imgref']
+        if refImages is None:
+            ##load sample ref images
+            self.loadTestRefImage(self)
+        else:
+            self.acq['imgref_imaging'] = refImages['imaging']
+            self.acq['imgref_ref'] = refImages['ref']
+        self.positions[posID]['refImg'] = self.acq['imgref_imaging']
+        self.positions[posID]['refImgZoomout'] = self.acq['imgref_ref']
         self.positions[posID]['xyzShift'] = np.array([0,0,0])
     
-    def addPosition(self,cont):
+    def addPosition(self,cont,xyz = None, refImages = None):
+        if xyz is None:
+            xyz = self.getCurrentPosition()
         #add position to table
-        xyz = self.getCurrentPosition()
-        self.createNewPos(xyz)
+        self.createNewPos(xyz, refImages = refImages)
         cont.redrawPositionTable()        
         self.backupPositions()
         
@@ -554,9 +574,13 @@ class PositionsPage(ttk.Frame):
         self.controller = controller
         frame_forButtons = ttk.Frame(self)
         frame_forButtons.grid(column = 0, row = 0, sticky = 'nw')
-        button = ttk.Button(frame_forButtons, text = "Add current position", 
+        frame_forZoom = ttk.Frame(self)
+        frame_forZoom.grid(column = 1, row = 3, sticky = 'ew', padx = 10, pady = 10)
+        frame_forGraphics = ttk.Frame(self)
+        frame_forGraphics.grid(column = 1, row = 0, sticky = 'nsew')
+        button_addPosition = ttk.Button(frame_forButtons, text = "Add current position", 
                             command = lambda:controller.addPosition(self))
-        button.grid(row = 0, column = 0, padx = 10, pady = 10, sticky = 'wn')
+        button_addPosition.grid(row = 0, column = 0, padx = 10, pady = 10, sticky = 'wn')
         button_clearPositions = ttk.Button(frame_forButtons, text = "Clear All Positions", 
                             command = lambda:controller.clearPositions(self))
         button_clearPositions.grid(row = 1, column = 0, padx = 10, 
@@ -565,18 +589,45 @@ class PositionsPage(ttk.Frame):
                             command = lambda:controller.showMacroViewWindow())
         button_cellView.grid(row = 2, column = 0, padx = 10, 
                             pady = 10, sticky = 'wn')
+        label_imagingZoom = tk.Label(frame_forZoom, text = "Imaging Zoom", font=LARGE_FONT)
+        label_imagingZoom.grid(row = 0, column = 0, sticky = 'nw', padx = 10, pady = 10)
+        self.imagingZoom= tk.StringVar(self)
+        self.imagingZoom.set(30)
+        entry_imagingZoom = ttk.Entry(frame_forZoom, textvariable = self.imagingZoom)
+        entry_imagingZoom.grid(row = 0, column = 1, padx = 10, pady = 10, sticky = 'nw')
+        label_refZoom = tk.Label(frame_forZoom, text = "Reference Zoom", font=LARGE_FONT)
+        label_refZoom.grid(row = 0, column = 2, sticky = 'nw', padx = 10, pady = 10)
+        self.refZoom = tk.StringVar(self)
+        self.refZoom.set(15)
+        entry_refZoom = ttk.Entry(frame_forZoom, textvariable = self.refZoom)
+        entry_refZoom.grid(row = 0, column = 3, padx = 10, pady = 10, sticky = 'nw')
+        
+        label_imagingSlices = tk.Label(frame_forZoom, text = "Imaging Slices", font=LARGE_FONT)
+        label_imagingSlices.grid(row = 1, column = 0, sticky = 'nw', padx = 10, pady = 10)
+        self.imagingSlices= tk.StringVar(self)
+        self.imagingSlices.set(3)
+        entry_imagingSlices = ttk.Entry(frame_forZoom, textvariable = self.imagingSlices)
+        entry_imagingSlices.grid(row = 1, column = 1, padx = 10, pady = 10, sticky = 'nw')
+        label_refSlices = tk.Label(frame_forZoom, text = "Reference Slices", font=LARGE_FONT)
+        label_refSlices.grid(row = 1, column = 2, sticky = 'nw', padx = 10, pady = 10)
+        self.refSlices = tk.StringVar(self)
+        self.refSlices.set(10)
+        entry_refSlices = ttk.Entry(frame_forZoom, textvariable = self.refSlices)
+        entry_refSlices.grid(row = 1, column = 3, padx = 10, pady = 10, sticky = 'nw')
+        
+        
         #treeview example given at http://knowpapa.com/ttk-treeview/
-        positionsTableFrame = ttk.Frame(self)
-        positionsTableFrame.grid(row = 0, column = 1, sticky = 'nsew', padx = 10, pady = 10)
+        positionsTableFrame = ttk.Frame(frame_forGraphics)
+        positionsTableFrame.grid(row = 0, column = 0, sticky = 'nsew', padx = 10, pady = 10)
         self.createPositionsTable(positionsTableFrame)
         
         #create canvas for previewing reference images
         f1 = Figure(figsize = (4,2), dpi = fig_dpi)
         f1.subplots_adjust(left = 0, right = 1,  bottom = 0, top = 1, wspace = 0.02, hspace = 0)
-        canvas_previewRefImages = FigureCanvasTkAgg(f1,self)
+        canvas_previewRefImages = FigureCanvasTkAgg(f1,frame_forGraphics)
         canvas_previewRefImages.get_tk_widget().config(borderwidth = 1, background='gray',  highlightcolor='gray', highlightbackground='gray')
         canvas_previewRefImages.show()
-        canvas_previewRefImages.get_tk_widget().grid(row = 2, column = 1, columnspan = 2, padx = 10, sticky = 'nsew')
+        canvas_previewRefImages.get_tk_widget().grid(row = 1, column = 0, padx = 10, sticky = 'nsew')
         a1=[]
         self.canvas_previewRefImages = canvas_previewRefImages
         for i in range(2):
@@ -584,11 +635,11 @@ class PositionsPage(ttk.Frame):
         controller.refImgAx = a1
         controller.refImgFig = f1
         #relative positions figure
-        f_positions.set_size_inches(2,2)
-        canvas_positions = FigureCanvasTkAgg(f_positions,self)
+        f_positions.set_size_inches(4,4)
+        canvas_positions = FigureCanvasTkAgg(f_positions,frame_forGraphics)
         canvas_positions.show()
         canvas_positions.get_tk_widget().config(borderwidth = 1, background='gray',  highlightcolor='gray', highlightbackground='gray')
-        canvas_positions.get_tk_widget().grid(row = 0, column = 2, padx = 10, pady = 10, sticky = 'nsew')        
+        canvas_positions.get_tk_widget().grid(row = 0, column = 2, rowspan = 2, padx = 10, pady = 10, sticky = 'nsew')        
         a2 = f_positions.add_subplot(1,1,1)
         cAx,kw = colorbar.make_axes_gridspec(a2)
         self.canvas_positions = canvas_positions
@@ -599,7 +650,7 @@ class PositionsPage(ttk.Frame):
     def createPositionsTable(self,container):
         tree = ttk.Treeview(container)
         tree["columns"] = ("x","y","z")
-        tree.column("#0", width = 100)
+        tree.column("#0", width = 300)
         tree.column("x", width=30 )
         tree.column("y", width=30)
         tree.column("z", width=50)
@@ -678,7 +729,7 @@ class PositionsPage(ttk.Frame):
         if len(self.tree.selection())==0:
             return
         self.popup = tk.Menu(self, tearoff = 0)
-        posID = int(item_text[-1])
+        posID = int(item_text.split()[1])
         self.popup.add_command(label = "Update XYZ", command = lambda:self.controller.updatePosition(posID))
         self.popup.add_command(label = "Delete", command = lambda:self.controller.deletePosition(posID))
         self.popup.post(event.x_root,event.y_root)
@@ -686,7 +737,7 @@ class PositionsPage(ttk.Frame):
     def onTreeSelect(self,event):
         for item in self.tree.selection():
             item_text = self.tree.item(item,"text")
-            posID = int(item_text[-1])
+            posID = int(item_text.split()[1])
         self.drawRefImages(posID)
         self.selectPositionInGraph(posID)
 
@@ -1270,7 +1321,7 @@ class getCommandsClass(object):
         elif command == 'fovXY_um':
             checkNumArgs(args,2,2)
             X,Y = [float(args[XY]) for XY in [0,1]]
-            self.fovXY = [X,Y]
+            self.settings['fovXY'] = [X,Y]
         elif command == 'zoom':
             checkNumArgs(args,1,1)
             self.currentZoom = float(args[0])
@@ -1333,6 +1384,12 @@ class MacroWindow(tk.Tk):
         button_loadMacroImage = ttk.Button(frame_buttons,text = "Load Test Macro Image", command = 
                             lambda: self.loadMacroImage())
         button_loadMacroImage.grid(row = 0, column = 0, padx = 10, pady = 10, sticky = 'nw')
+        label_macroZoom = tk.Label(frame_buttons, text = "Macro Zoom", font=LARGE_FONT)
+        label_macroZoom.grid(row = 0, column = 1, sticky = 'nw', padx = 10, pady = 10)
+        self.macroZoom= tk.StringVar(self)
+        entry_macroZoom = ttk.Entry(frame_buttons, textvariable = self.macroZoom, width = 3)
+        entry_macroZoom.grid(row = 0, column = 2, padx = 10, pady = 10, sticky = 'nw')             
+        self.macroZoom.set(1)
         self.scale_zoom = tk.Scale(self, orient = tk.HORIZONTAL)
         self.scale_zoom.grid(row = 2, column = 0, sticky = 'ew')
         self.scale_zoom.config(command = self.changeSize, from_=.1, to=5, resolution = .1)
@@ -1367,57 +1424,124 @@ class MacroWindow(tk.Tk):
         self.sliceIndex = self.scale_z.get()
         self.scrollingCanvas.setImage()
         
+    def addPositionOnImageClick(self,x,y,z):
+        # translate to normal coordinates
+        fovX,fovY = self.controller.settings['fovXY']
+        # xy currently originate from top left of image. 
+        # translate them to coordinate plane directionality.
+        # also, make them originate from center
+        xyz_clicked = {'x':x, 'y':y, 'z':z}
+        x = x - .5
+        y = -y + .5
+        #translate coordinates to µm
+        x = x * fovX
+        y = y * fovY
+        #add coordinates to position table
+        print('x, y, z = {0}, {1}, {2}'.format(x,y,z))
+        xyz = {'x':x, 'y':y, 'z':z}
+        self.getRefImageFromMacro(xyz_clicked)
+        self.controller.addPosition(self.controller.frames[PositionsPage], xyz = xyz, refImages = self.refImages)
+        
+    def getRefImageFromMacro(self,xyz_clicked):
+        macroZoom = float(self.macroZoom.get())
+        imagingZoom = float(self.controller.frames[PositionsPage].imagingZoom.get())
+        refZoom = float(self.controller.frames[PositionsPage].refZoom.get())
+        imagingSlices = int(self.controller.frames[PositionsPage].imagingSlices.get())
+        refSlices = int(self.controller.frames[PositionsPage].refSlices.get())
+        
+        frame = self.sliceIndex
+        imagingSlices_ind = range(int(round_math(frame-imagingSlices/2)),int(round_math(frame+imagingSlices/2)))
+        refSlices_ind = range(int(round_math(frame-refSlices/2)),int(round_math(frame+refSlices/2)))
+        
+        
+        height, width = self.image.size
+        boxX_imaging = width/imagingZoom*macroZoom
+        boxY_imaging = height/imagingZoom*macroZoom
+        boxX_ref = width/refZoom*macroZoom
+        boxY_ref = height/refZoom*macroZoom
+        x_clicked_pixel = width * xyz_clicked['x']
+        y_clicked_pixel = height * xyz_clicked['y']
+        xIndex_imaging = np.s_[int(round_math(x_clicked_pixel - boxX_imaging/2)) : int(round_math(x_clicked_pixel + boxX_imaging/2))] 
+        yIndex_imaging = np.s_[int(round_math(y_clicked_pixel - boxY_imaging/2)) : int(round_math(y_clicked_pixel + boxY_imaging/2))] 
+        xIndex_ref = np.s_[int(round_math(x_clicked_pixel - boxX_ref/2)) : int(round_math(x_clicked_pixel + boxX_ref/2))] 
+        yIndex_ref = np.s_[int(round_math(y_clicked_pixel - boxY_ref/2)) : int(round_math(y_clicked_pixel + boxY_ref/2))] 
+
+#        image = np.array(self.image.size)        
+        #get maximum projection of image
+        image = np.array(self.image)
+        image_imaging_max = image[yIndex_imaging,xIndex_imaging]
+        image_ref_max = image[yIndex_ref,xIndex_ref]
+        for i in imagingSlices_ind:
+            self.image.seek(i)
+            image = np.array(self.image)
+            image_imaging_max = np.max(np.dstack([image[yIndex_imaging,xIndex_imaging],image_imaging_max]), axis = 2)
+        for i in refSlices_ind:
+            self.image.seek(i)
+            image = np.array(self.image)
+            image_ref_max = np.max(np.dstack([image[yIndex_ref,xIndex_ref],image_ref_max]),axis = 2)
+            
+#        image_ref = image[yIndex_ref,xIndex_ref]
+
+
+#        image_imaging = image[yIndex_imaging,xIndex_imaging]
+#        image_ref = image[yIndex_ref,xIndex_ref]
+        self.refImages = {'imaging':image_imaging_max, 'ref':image_ref_max}
+        
 class ScrolledCanvas(tk.Frame):
-        def __init__(self, parent, master, controller):
-            tk.Frame.__init__(self, parent)
-            self.grid(row = 0, column = 0)
-            self.parent = parent
-            self.controller = controller
-            self.master = master
-            canv = tk.Canvas(self, relief=tk.SUNKEN)
-            canv.bind('<Button-1>', func = self.canvasClick)
-            canv.config(width=600, height=600)
-            canv.config(highlightthickness=0)
+    def __init__(self, parent, master, controller):
+        tk.Frame.__init__(self, parent)
+        self.grid(row = 0, column = 0)
+        self.parent = parent
+        self.controller = controller
+        self.master = master
+        canv = tk.Canvas(self, relief=tk.SUNKEN)
+        canv.bind('<Button-3>', func = self.canvasRightClick)
+        canv.config(width=600, height=600)
+        canv.config(highlightthickness=0)
+    
+        sbarV = tk.Scrollbar(self, orient=tk.VERTICAL)
+        sbarH = tk.Scrollbar(self, orient=tk.HORIZONTAL)
         
-            sbarV = tk.Scrollbar(self, orient=tk.VERTICAL)
-            sbarH = tk.Scrollbar(self, orient=tk.HORIZONTAL)
-            
-            sbarV.config(command=canv.yview)
-            sbarH.config(command=canv.xview)
+        sbarV.config(command=canv.yview)
+        sbarH.config(command=canv.xview)
+    
+        canv.config(yscrollcommand=sbarV.set)
+        canv.config(xscrollcommand=sbarH.set)
         
-            canv.config(yscrollcommand=sbarV.set)
-            canv.config(xscrollcommand=sbarH.set)
-            
-            sbarV.grid(row = 0, column = 1, sticky = 'ns')
-            sbarH.grid(row = 1, column = 0, sticky = 'ew')
-            
-            canv.grid(row = 0, column = 0, sticky = 'nsew')
-            self.canvas = canv
-            
-        def canvasClick(self,event):
-            w,r = self.master.image.size
-            canvas = event.widget
-            x = canvas.canvasx(event.x) / (w*self.master.scale_zoom.get())
-            y = canvas.canvasy(event.y) / (h*self.master.scale_zoom.get())
-            if x > 1 or y >1:
-                return
-            z = self.master.sliceIndex
-            print('x, y, z = {0}, {1}, {2}'.format(x,y,z))
+        sbarV.grid(row = 0, column = 1, sticky = 'ns')
+        sbarH.grid(row = 1, column = 0, sticky = 'ew')
+        
+        canv.grid(row = 0, column = 0, sticky = 'nsew')
+        self.canvas = canv
+        
+        
+    def canvasRightClick(self,event):
+        # Create popup menu
+        w,h = self.master.image.size
+        canvas = event.widget
+        x = canvas.canvasx(event.x) / (w*self.master.scale_zoom.get())
+        y = canvas.canvasy(event.y) / (h*self.master.scale_zoom.get())
+        if x > 1 or y >1:
+            return
+        z = self.master.sliceIndex
 #            print('eventx, eventy = {0}, {1}'.format(event.x,event.y))
 #            print(canvas.find_closest(x,y))
-            
-            
-        def setImage(self):
-            im = self.master.image
-            frame = self.master.sliceIndex
-            zoom = self.master.scale_zoom.get()
-            width,height=im.size
-            width_r = round(width*zoom); height_r = round(height*zoom)
-            im.seek(frame) #move to appropriate frame
-            im_r = im.resize((width_r, height_r))
-            self.canvas.config(scrollregion=(0,0,width_r,height_r))
-            self.im2=ImageTk.PhotoImage(master= self.canvas, image = im_r)
-            self.imgtag=self.canvas.create_image(0,0,anchor="nw",image=self.im2)
+        self.popup = tk.Menu(self, tearoff = 0)
+        self.popup.add_command(label = 'Add Position', command = lambda:self.master.addPositionOnImageClick(x,y,z))          
+        #display the popup menu
+        self.popup.post(event.x_root,event.y_root)
+         
+    def setImage(self):
+        im = self.master.image
+        frame = self.master.sliceIndex
+        zoom = self.master.scale_zoom.get()
+        width,height=im.size
+        width_r = round(width*zoom); height_r = round(height*zoom)
+        im.seek(frame) #move to appropriate frame
+        self.im_r = im.resize((width_r, height_r))
+        self.canvas.config(scrollregion=(0,0,width_r,height_r))
+        self.im2=ImageTk.PhotoImage(master= self.canvas, image = self.im_r)
+        self.imgtag=self.canvas.create_image(0,0,anchor="nw",image=self.im2)
 
 ###################
 
