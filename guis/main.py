@@ -32,7 +32,7 @@ from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 from queue import Queue
 import cv2
-from PIL import Image, ImageTk
+from PIL import Image, ImageTk, ImageOps, ImageMath
 import math
 #Program running as simulation, without host imaging program
 simulation = True
@@ -1538,6 +1538,10 @@ class ScrolledCanvas(tk.Frame):
         width,height=im.size
         width_r = round(width*zoom); height_r = round(height*zoom)
         im.seek(frame) #move to appropriate frame
+        #rescale to uint8 for accurate display in TkInter
+        im_max = np.array(im).max()
+        im = ImageMath.eval("float(a)", a= im)
+        im = ImageMath.eval("convert(a/a_m * 255, 'L')", a= im, a_m = im_max)
         self.im_r = im.resize((width_r, height_r))
         self.canvas.config(scrollregion=(0,0,width_r,height_r))
         self.im2=ImageTk.PhotoImage(master= self.canvas, image = self.im_r)
