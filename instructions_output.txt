@@ -1,1 +1,4 @@
-movexyz 23 50.6 3.0004
+moveXYZ 3 45 6.0
+doUncaging
+runUncaging
+getCurrentPosition

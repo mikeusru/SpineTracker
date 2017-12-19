@@ -25,13 +25,32 @@ while ~feof(fid)
     end
     line_split = strsplit(line);
     allCommands{end+1} = line_split;
-    disp(line_split);
     commandQueue{end+1} = line_split;
 end
 fclose(fid);
 translateNewCommands(); %this runs here so program doesn't wait to close file before running commands
 end
 
-function translateCommand(line_split)
-% do sstuff
+function translateNewCommands()
+global commandQueue
+while ~isempty(commandQueue)
+    command = commandQueue{1};
+    commandQueue(1)=[];
+    switch lower(command{1})
+        case 'movexyz'
+            disp('movexyz')
+        case 'grabonestack'
+            disp('grabonestack')
+        case 'setzoom'
+            disp('setzoom');
+        case 'rununcaging'
+            disp('rununcaging')
+        case 'getcurrentposition'
+            disp('getcurrentposition')
+        case 'getfov_xy'
+            disp('getfov_xy')
+        otherwise
+            disp('COMMAND NOT UNDERSTOOD')
+    end
+end
 end
