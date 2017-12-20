@@ -66,11 +66,11 @@ expected return command: UncagingDone
 
 --Request for current position to be sent--
 command = getCurrentPosition
-arguments: coordinate axes
-example: getCurrentPosition xyz
+arguments: None
+example: getCurrentPosition
 expected return command: CurrentPosition
 
---Request fo FOV size--
+--Request for FOV size--
 command = getFOV_xy
 arguments: None
 example: getFOV_xy
