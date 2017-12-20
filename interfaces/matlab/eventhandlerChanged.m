@@ -14,16 +14,16 @@ fid = fopen(fullpath,'r');
 ii = 0;
 commandLen = length(allCommands);
 while ~feof(fid)
-    line = fgets(fid); %read line by line
-    line = strtrim(line);
-    if isempty(line)
+    line_text = fgets(fid); %read line by line
+    line_text = strtrim(line_text);
+    if isempty(line_text)
         continue
     end
     ii = ii + 1;
     if ii <= commandLen
         continue
     end
-    line_split = strsplit(line);
+    line_split = strsplit(line_text);
     allCommands{end+1} = line_split;
     commandQueue{end+1} = line_split;
 end
