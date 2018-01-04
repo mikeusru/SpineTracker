@@ -1,4 +1,4 @@
 moveXYZ 3 45 6.0
+grabOneStack
 doUncaging
-runUncaging
 getCurrentPosition

@@ -1,0 +1,4 @@
+StageMoveDone 3 45 6
+GrabOneStackDone
+UncagingDone
+CurrentPosition 3 45 6
