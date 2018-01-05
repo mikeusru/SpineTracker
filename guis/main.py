@@ -35,6 +35,8 @@ import cv2
 from PIL import Image, ImageTk, ImageOps, ImageMath
 import math
 import inspect
+import timeit
+
 #Program running as simulation, without host imaging program
 simulation = True
 verbose = True
@@ -115,7 +117,7 @@ def remove_keymap_conflicts(new_keys_set):
 def printStatus(followingString):
     if verbose:
         # followingString is a string to add after the function. something like Started or Finished
-        print('Functionin {0} {1}'.format(inspect.stack()[1][3],followingString))
+        print('\nFunction {0} {1}\n'.format(inspect.stack()[1][3],followingString))
      
 #output is directional shift [x,y] in pixels. based on Sugar et al (2014) paper
 def computeDrift(imgref,img):
@@ -236,11 +238,15 @@ class SpineTracker(tk.Tk):
 #        return(image)
         
     def loadAcquiredImage(self):
+        startTime = timeit.timeit()
         image = io.imread(self.imageFilePath)
         totalChan = int(self.frames[DriftPage].totalChannelsVar.get())
         driftChan = int(self.frames[DriftPage].driftCorrectionChannelVar.get())
         image = image[np.arange(driftChan -1,len(image),totalChan)]
         self.acq['imageStack'] = image
+        endTime = timeit.timeit()
+        elapsedTime = endTime - startTime
+        printStatus('Done after {0}s'.format(elapsedTime))
         self.createFigureForAFImages()
     
     def loadTestRefImage(self,cont): #for testing purposes only
@@ -253,6 +259,7 @@ class SpineTracker(tk.Tk):
     def runXYZ_DriftCorrection(self, posID = None):
         if 'imageStack' not in self.acq:
             return
+        startTime = timeit.timeit()
         if posID == None:
             posID = self.currentPosID
         shape = self.acq['imageStack'][0].shape
@@ -268,7 +275,10 @@ class SpineTracker(tk.Tk):
         self.positions[posID]['z'] = z + shiftz       
         self.positions[posID]['xyzShift'] = self.positions[posID]['xyzShift'] + np.array([shiftx,shifty,shiftz])
         self.frames[StartPage].driftLabel.configure(text = 'Detected drift of {0}px in x and {1}px in y'.format(shiftx.item(),shifty.item()))
-        printStatus('Done')
+        end = timeit.timeit()
+        elapsedTime = end-startTime
+        printStatus('Done after {0}s'.format(elapsedTime))
+        
         self.showNewImages()
         
     def showNewImages(self):
@@ -315,9 +325,13 @@ class SpineTracker(tk.Tk):
         subplotLength = len(image)
         f = self.AFImageFig
         a = self.AFImageAx
-        for ax in a:
-            f.delaxes(ax)
-            a.remove(ax)
+        try:
+            for ax in a:
+                f.delaxes(ax)
+                a.remove(ax)
+        except:
+            pass
+            
         for i in range(subplotLength):
             a.append(f.add_subplot(1,subplotLength,i+1))  
         
@@ -1247,9 +1261,9 @@ class sendCommandsClass(object):
         self.writeCommand('getFOV_xy')
         
     def writeCommand(self,*args):
-        command = " ".join([str(x) for x in args])
+        command = ",".join([str(x) for x in args])
         if verbose:
-            print('Writing Command ',command)
+            print('\nWriting Command {0}\n'.format(command))
         with open(self.filepath, "a") as f:
             f.write('\n'+command)
             
@@ -1276,9 +1290,9 @@ class getCommandsClass(object):
                 ii += 1
             if ii > instLen:
                 if verbose:
-                    print('new line ',ii)
-                    print('new instructions received')
-                    print(line)
+                    print('\nnew line {0}\n'.format(ii))
+                    print('\nnew instructions received\n')
+                    print('\n{0}\n'.format(line))
                 self.instructions.append(line)
                 self.controller.instructions_in_queue.put(line) #add to queue to handle lots of stuff to do    
         """once file is read, run everything from queue"""
@@ -1314,7 +1328,7 @@ class getCommandsClass(object):
             checkNumArgs(args,3,3)
             x,y,z = [float(args[xyz]) for xyz in [0,1,2]]
             if verbose:
-                print('Stage Moved to x= {0} , y = {1}, z = {2}'.format(x,y,z))
+                print('\nStage Moved to x= {0} , y = {1}, z = {2}\n'.format(x,y,z))
         elif command == 'grabonestackdone':
             self.grabOneStackDone = True
             #commands need to be separated by commas, not spaces, otherwise file paths will cause problems
@@ -1342,7 +1356,7 @@ class getCommandsClass(object):
         
     def waitForStageMoveDone(self):
         if verbose:
-            print('Waiting for Stage Move Completion')
+            print('\nWaiting for Stage Move Completion\n')
         while True:
 #            time.sleep(.05)
             if self.stageMoveDone:
@@ -1351,29 +1365,29 @@ class getCommandsClass(object):
               
     def waitForGrabDone(self):
         if verbose:
-            print('Waiting for Grab to be Finished')
+            print('\nWaiting for Grab to be Finished\n')
         while True:
 #            time.sleep(.05)
             if self.grabOneStackDone:
-                print('Grab One Stack Done')
+                print('\nGrab One Stack Done\n')
                 break
             
     def waitForCurrentPosition(self):
         if verbose:
-            print('Waiting for Current Position')
+            print('\nWaiting for Current Position\n')
         while True:
 #            time.sleep(.05)
             if self.positionGrabDone:
-                print('Grab One Stack Done')
+                print('\nGrab One Stack Done\n')
                 break
 
     def waitForUncagingDone(self):
         if verbose:
-            print('Waiting for Uncaging to be Complete')
+            print('\nWaiting for Uncaging to be Complete\n')
         while True:
 #            time.sleep(.05)
             if self.uncagingDone:
-                print('Uncaging Done')
+                print('\nUncaging Done\n')
                 break
             
             

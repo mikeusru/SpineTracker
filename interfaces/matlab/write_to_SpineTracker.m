@@ -21,6 +21,7 @@ line_to_write = sprintf('%s\n',line_to_write(1:end-1));
 %open file
 fileID = fopen(filepath,'a');
 %write line
-fprintf(fileID, line_to_write);
+fprintf('Writing Line: %s',line_to_write);
+fprintf(fileID, '%s', line_to_write);
 %close file
 fclose(fileID);
