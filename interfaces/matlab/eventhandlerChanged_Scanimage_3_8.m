@@ -143,20 +143,24 @@ yphys_stimScope('start_Callback',gh.yphys.stimScope.start);
 % UncagingDone is written by either yphys_stimScope or yphys_stimLoop
 end
 
-function getCurrentPositions()
+function getCurrentPosition()
+global state
 % request for current xyz position
-
+motorGetPosition();
+xyz = state.motor.lastPositionRead;
 % respond with CurrentPosition
+rst('CurrentPosition',xyz(1),xyz(2),xyz(3));
 end
 
 function getFOV_xy()
 % request FOV size in µm, in x and y
-
+% this should probably just be set in SpineTracker
 % respond with fov_XY_um
+rst('fov_XY_um',250,250);
 end
 
 %% Respond to SpineTracker
 function rst(varargin)
-%this is basically code shorthand
+%this function is just code shorthand
 write_to_SpineTracker(varargin)
 end
