@@ -21,7 +21,7 @@ while ~feof(fid)
     if ii <= commandLen
         continue
     end
-    line_split = strsplit(line_text);
+    line_split = strsplit(line_text,',');
     allCommands{end+1} = line_split;
     commandQueue{end+1} = line_split;
 end

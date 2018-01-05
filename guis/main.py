@@ -9,7 +9,7 @@ import tkinter as tk
 from tkinter import ttk
 import numpy as np
 from scipy import ndimage
-from skimage import io
+from skimage import io, transform
 import matplotlib
 matplotlib.use("TkAgg")
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
@@ -34,8 +34,10 @@ from queue import Queue
 import cv2
 from PIL import Image, ImageTk, ImageOps, ImageMath
 import math
+import inspect
 #Program running as simulation, without host imaging program
 simulation = True
+verbose = True
 
 LARGE_FONT = ("Verdana", 12)
 style.use("ggplot")
@@ -109,8 +111,12 @@ def remove_keymap_conflicts(new_keys_set):
             remove_list = set(keys) & new_keys_set
             for key in remove_list:
                 keys.remove(key)
-    
- 
+                
+def printStatus(followingString):
+    if verbose:
+        # followingString is a string to add after the function. something like Started or Finished
+        print('Functionin {0} {1}'.format(inspect.stack()[1][3],followingString))
+     
 #output is directional shift [x,y] in pixels. based on Sugar et al (2014) paper
 def computeDrift(imgref,img):
     h,w = imgref.shape
@@ -156,7 +162,6 @@ class SpineTracker(tk.Tk):
         container = ttk.Notebook(self)
         container.pack(side="top", fill = "both", expand = True)       
         initializeInitDirectory()
-        self.verbose = True
         self.initializeTimelineSteps()
         self.initializePositions()
         self.loadSettings()
@@ -250,6 +255,9 @@ class SpineTracker(tk.Tk):
             return
         if posID == None:
             posID = self.currentPosID
+        shape = self.acq['imageStack'][0].shape
+        self.acq['imgref_imaging'] = transform.resize(self.positions[posID]['refImg'],shape)
+        self.acq['imgref_ref'] = transform.resize(self.positions[posID]['refImgZoomout'],shape)
         self.calcFocus()
         self.calcDrift()
         x,y,z = [self.positions[posID][key] for key in ['x','y','z']]
@@ -260,6 +268,7 @@ class SpineTracker(tk.Tk):
         self.positions[posID]['z'] = z + shiftz       
         self.positions[posID]['xyzShift'] = self.positions[posID]['xyzShift'] + np.array([shiftx,shifty,shiftz])
         self.frames[StartPage].driftLabel.configure(text = 'Detected drift of {0}px in x and {1}px in y'.format(shiftx.item(),shifty.item()))
+        printStatus('Done')
         self.showNewImages()
         
     def showNewImages(self):
@@ -1239,7 +1248,7 @@ class sendCommandsClass(object):
         
     def writeCommand(self,*args):
         command = " ".join([str(x) for x in args])
-        if self.controller.verbose:
+        if verbose:
             print('Writing Command ',command)
         with open(self.filepath, "a") as f:
             f.write('\n'+command)
@@ -1266,7 +1275,7 @@ class getCommandsClass(object):
             if len(line) > 0:
                 ii += 1
             if ii > instLen:
-                if self.controller.verbose:
+                if verbose:
                     print('new line ',ii)
                     print('new instructions received')
                     print(line)
@@ -1290,8 +1299,8 @@ class getCommandsClass(object):
             else:
                 print('Error - Missing arguments. Expected between {0} and {1}. Got {2}'.format(minArgs,maxArgs,lenArgs))
                 return(False)
-
-        lineParts = line.split()
+        #split command and arguments by comma
+        lineParts = line.split(',')
         command = lineParts[0]
         #make command lowercase to avoid errors
         command = command.lower()
@@ -1304,10 +1313,11 @@ class getCommandsClass(object):
             self.stageMoveDone = True
             checkNumArgs(args,3,3)
             x,y,z = [float(args[xyz]) for xyz in [0,1,2]]
-            if self.controller.verbose:
+            if verbose:
                 print('Stage Moved to x= {0} , y = {1}, z = {2}'.format(x,y,z))
         elif command == 'grabonestackdone':
             self.grabOneStackDone = True
+            #commands need to be separated by commas, not spaces, otherwise file paths will cause problems
             checkNumArgs(args,1,1)
             self.controller.imageFilePath = args[0]
         elif command == 'currentposition':
@@ -1331,7 +1341,7 @@ class getCommandsClass(object):
         
         
     def waitForStageMoveDone(self):
-        if self.controller.verbose:
+        if verbose:
             print('Waiting for Stage Move Completion')
         while True:
 #            time.sleep(.05)
@@ -1340,7 +1350,7 @@ class getCommandsClass(object):
                 break
               
     def waitForGrabDone(self):
-        if self.controller.verbose:
+        if verbose:
             print('Waiting for Grab to be Finished')
         while True:
 #            time.sleep(.05)
@@ -1349,7 +1359,7 @@ class getCommandsClass(object):
                 break
             
     def waitForCurrentPosition(self):
-        if self.controller.verbose:
+        if verbose:
             print('Waiting for Current Position')
         while True:
 #            time.sleep(.05)
@@ -1358,7 +1368,7 @@ class getCommandsClass(object):
                 break
 
     def waitForUncagingDone(self):
-        if self.controller.verbose:
+        if verbose:
             print('Waiting for Uncaging to be Complete')
         while True:
 #            time.sleep(.05)
@@ -1552,7 +1562,7 @@ class ScrolledCanvas(tk.Frame):
 app = SpineTracker()
 #ani = animation.FuncAnimation(app.AFImageFig, app.animate, interval = 1000)
 
-#app.mainloop()
+app.mainloop()
 
 ###################
 #s = sendCommandsClass(app, '../instructions_output.txt')

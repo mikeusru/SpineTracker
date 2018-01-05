@@ -9,15 +9,14 @@ myfile = 'instructions_input.txt';
 filepath = fullfile(parentdir,myfile);
 
 %create line of text to write
-line_to_write = '';
 for i = 1:nargin
-    var = varargin{i};
-    if ~ischar(var)
-        var = num2str(var);
+    if ~ischar(varargin{i})
+        varargin{i} = num2str(varargin{i});
     end
-    line_to_write = sprintf('%s ', line_to_write, var);
 end
-line_to_write = sprintf('%s\n',line_to_write);
+%create comma-delimited string followed by linebreak
+line_to_write = sprintf('%s,',string(varargin));
+line_to_write = sprintf('%s\n',line_to_write(1:end-1));
 
 %open file
 fileID = fopen(filepath,'a');
