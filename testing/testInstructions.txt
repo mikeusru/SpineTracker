@@ -1,0 +1,7 @@
+StageMoveDone,40,2.3,28
+
+GrabOneStackDone,C:\Users\mikeu\Documents\Python Scripts\SpineTracker\testing\test_image.tif
+
+StageMoveDone,84,-35.3,40
+
+GrabOneStackDone,C:\Users\mikeu\Documents\Python Scripts\SpineTracker\testing\test_image.tif
