@@ -4,13 +4,13 @@ function eventhandlerChanged_Scanimage_3_8(source,arg)
 readNewInstructions(arg.FullPath.char)
 end
 
-%% This functions reads the text file and adds new lines to the allCommands
+%% This functions reads the text file and adds new lines to the spineTracker.allCommands
 function readNewInstructions(fullpath)
-%%variable, and to the commandQueue
-global allCommands commandQueue
+%%variable, and to the spineTracker.commandQueue
+global spineTracker
 fid = fopen(fullpath,'r');
 ii = 0;
-commandLen = length(allCommands);
+commandLen = length(spineTracker.allCommands);
 while ~feof(fid)
     line_text = fgets(fid); %read line by line
     line_text = strtrim(line_text);
@@ -22,20 +22,20 @@ while ~feof(fid)
         continue
     end
     line_split = strsplit(line_text,',');
-    allCommands{end+1} = line_split;
-    commandQueue{end+1} = line_split;
+    spineTracker.allCommands{end+1} = line_split;
+    spineTracker.commandQueue{end+1} = line_split;
 end
 fclose(fid);
 translateNewCommands(); %this runs here so program doesn't wait to close file before running commands
 end
 
 function translateNewCommands()
-%%This function takes commands out of the commandQueue variable and sends them
+%%This function takes commands out of the spineTracker.commandQueue variable and sends them
 %to their appropriate functions
-global commandQueue
-while ~isempty(commandQueue)
-    command = commandQueue{1};
-    commandQueue(1)=[];
+global spineTracker
+while ~isempty(spineTracker.commandQueue)
+    command = spineTracker.commandQueue{1};
+    spineTracker.commandQueue(1)=[];
     argCount = length(command) - 1;
     switch lower(command{1})
         case 'movexyz'
@@ -106,7 +106,7 @@ motorSetPositionAbsolute([str2double(x),str2double(y),str2double(z)],'verify');
 % verify command makes it wait to read the position it moved to
 % respond with StageMoveDone
 [xyz] = state.motor.lastPositionSet;
-rst('StageMoveDone',xyz(1),xyz(2),xyz(3))
+write_to_SpineTracker('StageMoveDone',xyz(1),xyz(2),xyz(3))
 end
 
 function grabOneStack()
@@ -123,7 +123,7 @@ end
 % respond with GrabOneStackDone
 % should make sure that this filename is taken at the correct time. might
 % need to be done before taking the image
-rst('GrabOneStackDone',state.files.fullFileName);
+write_to_SpineTracker('GrabOneStackDone',state.files.fullFileName);
 end
 
 function setZoom(zoom)
@@ -131,7 +131,7 @@ global state
 % set zoom to new value
 setZoomValue(str2double(zoom))
 % respond with Zoom
-rst('Zoom',state.acq.zoomFactor);
+write_to_SpineTracker('Zoom',state.acq.zoomFactor);
 end
 
 function runUncaging()
@@ -149,18 +149,12 @@ global state
 motorGetPosition();
 xyz = state.motor.lastPositionRead;
 % respond with CurrentPosition
-rst('CurrentPosition',xyz(1),xyz(2),xyz(3));
+write_to_SpineTracker('CurrentPosition',xyz(1),xyz(2),xyz(3));
 end
 
 function getFOV_xy()
 % request FOV size in µm, in x and y
 % this should probably just be set in SpineTracker
 % respond with fov_XY_um
-rst('fov_XY_um',250,250);
-end
-
-%% Respond to SpineTracker
-function rst(varargin)
-%this function is just code shorthand
-write_to_SpineTracker(varargin)
+write_to_SpineTracker('fov_XY_um',250,250);
 end
