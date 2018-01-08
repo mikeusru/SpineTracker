@@ -101,30 +101,35 @@ end
 
 function moveXYZ(x,y,z)
 % move to new XYZ position
+pause(.1)
 write_to_SpineTracker('StageMoveDone',x,y,z)
 end
 
 function grabOneStack()
 % Grab an image stack
 % respond with GrabOneStackDone
+pause(.1)
 write_to_SpineTracker('GrabOneStackDone','C:\Users\mikeu\Documents\Python Scripts\SpineTracker\testing\test_image.tif');
 end
 
 function setZoom(zoom)
 % set zoom to new value
 % respond with Zoom
+pause(.1)
 write_to_SpineTracker('Zoom',zoom);
 end
 
 function runUncaging()
 % initiate uncaging
 % respond with UncagingDone
+pause(.1)
 write_to_SpineTracker('UncagingDone');
 end
 
 function getCurrentPosition()
 % request for current xyz position
 % respond with CurrentPosition
+pause(.1)
 xyz = [randi(250)-125,randi(250)-125,randi(50)-25];
 write_to_SpineTracker('CurrentPosition',xyz(1),xyz(2),xyz(3));
 end
@@ -133,5 +138,6 @@ function getFOV_xy()
 % request FOV size in µm, in x and y
 % this should probably just be set in SpineTracker
 % respond with fov_XY_um
+pause(.1)
 write_to_SpineTracker('fov_XY_um',250,250);
 end

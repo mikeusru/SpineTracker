@@ -1,0 +1,32 @@
+StageMoveDone,39.8438,-2.3438,28
+GrabOneStackDone,C:\Users\mikeu\Documents\Python Scripts\SpineTracker\testing\test_image.tif
+StageMoveDone,84.375,-35.3516,40
+GrabOneStackDone,C:\Users\mikeu\Documents\Python Scripts\SpineTracker\testing\test_image.tif
+StageMoveDone,19.3359,-10.3516,64
+GrabOneStackDone,C:\Users\mikeu\Documents\Python Scripts\SpineTracker\testing\test_image.tif
+StageMoveDone,8.8335,-34.3572,49
+GrabOneStackDone,C:\Users\mikeu\Documents\Python Scripts\SpineTracker\testing\test_image.tif
+StageMoveDone,39.8438,-2.3438,28
+GrabOneStackDone,C:\Users\mikeu\Documents\Python Scripts\SpineTracker\testing\test_image.tif
+StageMoveDone,84.375,-35.3516,40
+GrabOneStackDone,C:\Users\mikeu\Documents\Python Scripts\SpineTracker\testing\test_image.tif
+StageMoveDone,19.3359,-10.3516,64
+GrabOneStackDone,C:\Users\mikeu\Documents\Python Scripts\SpineTracker\testing\test_image.tif
+StageMoveDone,8.8335,-34.3572,49
+GrabOneStackDone,C:\Users\mikeu\Documents\Python Scripts\SpineTracker\testing\test_image.tif
+StageMoveDone,39.8438,-2.3438,28
+GrabOneStackDone,C:\Users\mikeu\Documents\Python Scripts\SpineTracker\testing\test_image.tif
+StageMoveDone,84.375,-35.3516,40
+GrabOneStackDone,C:\Users\mikeu\Documents\Python Scripts\SpineTracker\testing\test_image.tif
+StageMoveDone,19.3359,-10.3516,64
+GrabOneStackDone,C:\Users\mikeu\Documents\Python Scripts\SpineTracker\testing\test_image.tif
+StageMoveDone,8.8335,-34.3572,49
+GrabOneStackDone,C:\Users\mikeu\Documents\Python Scripts\SpineTracker\testing\test_image.tif
+StageMoveDone,39.8438,-2.3438,28
+GrabOneStackDone,C:\Users\mikeu\Documents\Python Scripts\SpineTracker\testing\test_image.tif
+StageMoveDone,84.375,-35.3516,40
+GrabOneStackDone,C:\Users\mikeu\Documents\Python Scripts\SpineTracker\testing\test_image.tif
+StageMoveDone,19.3359,-10.3516,64
+GrabOneStackDone,C:\Users\mikeu\Documents\Python Scripts\SpineTracker\testing\test_image.tif
+StageMoveDone,8.8335,-34.3572,49
+GrabOneStackDone,C:\Users\mikeu\Documents\Python Scripts\SpineTracker\testing\test_image.tif

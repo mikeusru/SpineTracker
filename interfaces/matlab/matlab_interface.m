@@ -21,6 +21,11 @@ end
 
 if strcmp(start_stop,'stop')
     delete(spineTracker.lh);
+    return
+end
+
+if strcmp(start_stop,'reset')
+    delete(spineTracker.lh);
 end
 
 if nargin<2

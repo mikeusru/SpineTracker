@@ -57,7 +57,8 @@ f_positions.set_tight_layout(True)
 
 initDirectory = "../iniFiles/"
 
-#addToQueueLock = threading.Lock()
+#create/refresh log file
+log_file = open('log.txt','w')
 
 def round_math(n, ndigits = 0):
     part = n * 10 ** ndigits
@@ -117,8 +118,11 @@ def remove_keymap_conflicts(new_keys_set):
 def printStatus(followingString):
     if verbose:
         # followingString is a string to add after the function. something like Started or Finished
-        print('\nFunction {0} {1}\n'.format(inspect.stack()[1][3],followingString))
-     
+        string = '\nFunction {0} {1}\n'.format(inspect.stack()[1][3],followingString)
+        print(string)
+        log_file.write(string)
+        
+        
 #output is directional shift [x,y] in pixels. based on Sugar et al (2014) paper
 def computeDrift(imgref,img):
     h,w = imgref.shape
@@ -139,7 +143,7 @@ def computeDrift(imgref,img):
     if np.abs(shiftx) > h/2:
         shiftx = shiftx-np.sign(shiftx)*w
     
-    return{'shiftx':shiftx,'shifty':shifty}
+    return{'shiftx':shiftx[0],'shifty':shifty[0]}
     
 def initializeInitDirectory():
     directory = os.path.dirname(initDirectory)
@@ -196,6 +200,7 @@ class SpineTracker(tk.Tk):
             print('Instruction listener closed')
         except:
             pass
+        log_file.close()
         self.destroy()
         print('goodbye')
 
@@ -272,13 +277,12 @@ class SpineTracker(tk.Tk):
         shiftz = self.measure['shiftz']
         self.positions[posID]['x'] = x + shiftx
         self.positions[posID]['y'] = y + shifty
-        self.positions[posID]['z'] = z + shiftz       
+        self.positions[posID]['z'] = z + shiftz
         self.positions[posID]['xyzShift'] = self.positions[posID]['xyzShift'] + np.array([shiftx,shifty,shiftz])
         self.frames[StartPage].driftLabel.configure(text = 'Detected drift of {0}px in x and {1}px in y'.format(shiftx.item(),shifty.item()))
         end = timeit.timeit()
         elapsedTime = end-startTime
         printStatus('Done after {0}s'.format(elapsedTime))
-        
         self.showNewImages()
         
     def showNewImages(self):
@@ -294,7 +298,6 @@ class SpineTracker(tk.Tk):
             i+=1
         #show best focused image
         maxInd = self.measure['FMlist'].argmax().item()
-        a = self.AFImageAx
         siz = image[0].shape
         rect = patches.Rectangle((0,0),siz[0],siz[1], fill = False, linewidth = 5, edgecolor = 'r')
         a[maxInd].add_patch(rect)
@@ -325,15 +328,14 @@ class SpineTracker(tk.Tk):
         subplotLength = len(image)
         f = self.AFImageFig
         a = self.AFImageAx
-        try:
-            for ax in a:
-                f.delaxes(ax)
+        for ax in a.copy():
+            try:
                 a.remove(ax)
-        except:
-            pass
-            
+                f.delaxes(ax)
+            except:
+                printStatus('axes delete not working')
         for i in range(subplotLength):
-            a.append(f.add_subplot(1,subplotLength,i+1))  
+            a.append(f.add_subplot(1,subplotLength,i+1))
         
     def getCurrentPosition(self):
         if simulation:
@@ -411,9 +413,9 @@ class SpineTracker(tk.Tk):
         self.timerStepsQueue.put(step)
         
     def runStepFromQueue(self):
-        while True:
-            if not self.imagingActive:
-                break
+        while self.imagingActive:
+            # update() function on the GUI is necessary to keep it active
+            self.update()
             if self.stepRunning: #make sure something isn't already running
                 continue
             if not self.timerStepsQueue.empty():
@@ -430,14 +432,20 @@ class SpineTracker(tk.Tk):
             
             #this should actually be set once data from position is received, because drift/af calculation will be done after that
             self.currentPosID = posID
-            #do the steps in threads so they don't freeze up the GUI
-            if step['IU'] == 'Image':
-                self.currentStepThread = threading.Thread(target = self.imageNewPosition, args = [step])
-            elif step['IU'] == 'Uncage':
-                self.currentStepThread = threading.Thread(target = self.uncageNewPosition, args = [step])
-            self.currentStepThread.daemon = True
-            self.currentStepThread.start()
+#            #do the steps in threads so they don't freeze up the GUI
+#            if step['IU'] == 'Image':
+#                self.currentStepThread = threading.Thread(target = self.imageNewPosition, args = [step])
+#            elif step['IU'] == 'Uncage':
+#                self.currentStepThread = threading.Thread(target = self.uncageNewPosition, args = [step])
+#            self.currentStepThread.daemon = True
+#            self.currentStepThread.start()
         
+            #we're already in a thread so maybe don't need another one here
+            if step['IU'] == 'Image':
+                self.imageNewPosition(step)
+            elif step['IU'] == 'Uncage':
+                self.uncageNewPosition(step)
+            
         
     def imageNewPosition(self,step):
         posID, x, y, z = self.parseStep(step)
@@ -546,12 +554,14 @@ class StartPage(ttk.Frame):
              self.posTimers[posID] = PositionTimer(self.controller, individualSteps[posID], self.controller.addStepToQueue, posID)
         self.controller.imagingActive = True
         self.controller.queRun = threading.Thread(target = self.controller.runStepFromQueue)
+        self.controller.queRun.daemon = True
         self.controller.queRun.start()
         
     def stopImaging(self):
         for posID in self.posTimers:
             self.posTimers[posID].stop()
-        self.controller.imagingActive = False        
+        self.controller.imagingActive = False
+                
 
 class DriftPage(ttk.Frame):
     
@@ -1159,6 +1169,9 @@ class PositionTimer(object):
             interval = self.runTimes[self.stepCount] - prevTime
             stepCount = self.stepCount
             self.stepCount += 1
+            # for now, interval is store in minutes. probably a good idea to change it to seconds.
+            interval = interval * 60
+            printStatus('\nTimer Interval = {0}'.format(interval))
             self._timer = threading.Timer(interval,self._run,args=[stepCount])
             self._timer.start()
             self.is_running = True
@@ -1334,6 +1347,7 @@ class getCommandsClass(object):
             print('\nWaiting for Stage Move Completion\n')
         while True:
 #            time.sleep(.05)
+            self.controller.update()
             if self.stageMoveDone:
                 print('Stage Move Done')
                 break
@@ -1342,6 +1356,8 @@ class getCommandsClass(object):
         if verbose:
             print('\nWaiting for Grab to be Finished\n')
         while True:
+            self.controller.update()
+
 #            time.sleep(.05)
             if self.grabOneStackDone:
                 print('\nGrab One Stack Done\n')
@@ -1351,6 +1367,7 @@ class getCommandsClass(object):
         if verbose:
             print('\nWaiting for Current Position\n')
         while True:
+            self.controller.update()
 #            time.sleep(.05)
             if self.positionGrabDone:
                 print('\nGrab One Stack Done\n')
@@ -1360,6 +1377,8 @@ class getCommandsClass(object):
         if verbose:
             print('\nWaiting for Uncaging to be Complete\n')
         while True:
+            self.controller.update()
+
 #            time.sleep(.05)
             if self.uncagingDone:
                 print('\nUncaging Done\n')
