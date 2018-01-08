@@ -544,17 +544,14 @@ class StartPage(ttk.Frame):
         individualSteps = self.controller.individualTimelineSteps
         for posID in individualSteps:
              self.posTimers[posID] = PositionTimer(self.controller, individualSteps[posID], self.controller.addStepToQueue, posID)
-#        self.controller.queueMasterTimer = RepeatedTimer(.03, self.controller.runStepFromQueue)
         self.controller.imagingActive = True
         self.controller.queRun = threading.Thread(target = self.controller.runStepFromQueue)
         self.controller.queRun.start()
         
     def stopImaging(self):
-#        self.controller.queueMasterTimer.stop()
         for posID in self.posTimers:
             self.posTimers[posID].stop()
-        self.controller.imagingActive = False
-        
+        self.controller.imagingActive = False        
 
 class DriftPage(ttk.Frame):
     
@@ -1170,32 +1167,6 @@ class PositionTimer(object):
         self._timer.cancel()
         self.is_running = False
         
-class RepeatedTimer(object):
-    def __init__(self, interval, function, *args, **kwargs):
-        self._timer     = None
-        self.interval   = interval
-        self.function   = function
-        self.args       = args
-        self.kwargs     = kwargs
-        self.is_running = False
-        self.start()
-
-    def _run(self):
-        self.is_running = False
-        self.start()
-        self.function(*self.args, **self.kwargs)
-
-    def start(self):
-        if not self.is_running:
-            self._timer = threading.Timer(self.interval, self._run)
-            self._timer.start()
-            self.is_running = True
-
-    def stop(self):
-        self._timer.cancel()
-        self.is_running = False
-        
-        
 class instructionThread(object):
     def __init__(self,controller, path, filename, function, *args, **kwargs):
         self.controller = controller
@@ -1216,12 +1187,16 @@ class instructionThread(object):
         self.observer.schedule(self.event_handler, path=self.path, recursive = False)
         self.observer.start()
         
-        while True:
-            time.sleep(1)
+        try:
+            while True:
+                time.sleep(1)
+        except KeyboardInterrupt:
+            self.stop()
+                
             
     def stop(self):
         self.observer.stop()
-
+        self.observer.join()
     
 class instructionHandler(FileSystemEventHandler):
     def __init__(self,controller,path, filename, function, *args, **kwargs):
