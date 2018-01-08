@@ -78,6 +78,24 @@ while ~isempty(spineTracker.commandQueue)
                 continue
             end
             getFOV_xy();
+        case 'getscananglexy'
+            disp('getScanAngleXY')
+            if checkArgCount([0,0],argCount)
+                continue
+            end
+            getScanAngleXY();
+        case 'getscananglemultiplier'
+            disp('getScanAngleMultiplier')
+            if checkArgCount([0,0],argCount)
+                continue
+            end
+            getScanAngleMultiplier();
+        case 'getscananglerangereference'
+            disp('getScanAngleRangeReference')
+            if checkArgCount([0,0],argCount)
+                continue
+            end
+            getScanAngleRangeReference();
         otherwise
             disp('COMMAND NOT UNDERSTOOD')
     end
@@ -158,3 +176,19 @@ function getFOV_xy()
 % respond with fov_XY_um
 write_to_SpineTracker('fov_XY_um',250,250);
 end
+
+function getScanAngleXY()
+% request Scan Angle measurements in X and Y
+% respond with ScanAngleXY
+end
+
+function getScanAngleMultiplier()
+% Request Scan Angle Multiplier, slow and fast
+% Respond with ScanAngleMultiplier
+end
+
+function getScanAngleRangeReference()
+% request Scan Angle Range Reference, slow and fast
+% respond with ScanAngleRangeReference
+end
+

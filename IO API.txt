@@ -36,6 +36,21 @@ command = Zoom
 arguments = zoomvalue
 example: Zoom,25
 
+--Sent when new galvo scanning angle is set
+command = ScanAngleXY
+arguments = x,y
+example: ScanAngleXY,0.02,1.2
+
+--sent when scan angle multiplier is requested
+command = ScanAngleMultiplier
+arguments = slow, fast
+example: ScanAngleMultiplier,5,15
+
+--sent when scan angle range reference is requested
+command = ScanAngleRangeReference
+arguments = slow, fast
+example: ScanAngleRangeReference,5,15
+
 
 Output commands are written line by line to instructions_output.txt
 
@@ -76,3 +91,16 @@ command = getFOV_xy
 arguments: None
 example: getFOV_xy
 expected return command: fovXY_um
+
+--Request Galvo Scanning Position--
+command = getScanAngleXY
+example: getScanAngleXY
+expected return command: ScanAngleXY
+
+--Request Galvo Scan Angle Multiplier
+command = getScanAngleMultiplier
+expected return command: ScanAngleMultiplier
+
+--Request Galvo Scan Angle Range Reference
+command = getScanAngleRangeReference
+expected return command: ScanAngleRangeReference

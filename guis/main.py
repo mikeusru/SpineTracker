@@ -1248,15 +1248,25 @@ class sendCommandsClass(object):
     def getFOVsize(self):
         self.writeCommand('getFOV_xy')
         
+    def getScanAngleXY(self):
+        self.writeCommand('getScanAngleXY')
+        
+    def getScanAngleMultiplier(self):
+        self.writeCommand('getScanAngleMultiplier')
+        
+    def getScanAngleRangeReference(self):
+        self.writeCommand('getScanAngleRangeReference')        
+        
+    def getCurrentPosition(self):
+        self.writeCommand('getCurrentPosition','xyz')
+        
     def writeCommand(self,*args):
         command = ",".join([str(x) for x in args])
         if verbose:
             print('\nWriting Command {0}\n'.format(command))
         with open(self.filepath, "a") as f:
             f.write('\n'+command)
-            
-    def getCurrentPosition(self):
-        self.writeCommand('getCurrentPosition','xyz')
+
 
 class getCommandsClass(object):
     def __init__(self, controller, filepath, *args, **kwargs):
@@ -1336,7 +1346,16 @@ class getCommandsClass(object):
             self.settings['fovXY'] = [X,Y]
         elif command == 'zoom':
             checkNumArgs(args,1,1)
-            self.currentZoom = float(args[0])
+            self.controller.currentZoom = float(args[0])
+        elif command == 'scananglexy':
+            checkNumArgs(args,2,2)
+            self.controller.currentScanAngleXY = (float(args[0]), float(args[1]))
+        elif command == 'ScanAngleMultiplier':
+            checkNumArgs(args,2,2)
+            self.controller.scanAngleMultiplier = (float(args[0]), float(args[1]))
+        elif command == 'ScanAngleRangeReference':
+            checkNumArgs(args,2,2)
+            self.controller.scanAngleRangeReference = (float(args[0]), float(args[1]))
         else:
             print("COMMAND NOT UNDERSTOOD")
             
