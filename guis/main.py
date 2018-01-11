@@ -122,7 +122,6 @@ def printStatus(followingString):
         print(string)
         log_file.write(string)
         
-        
 #output is directional shift [x,y] in pixels. based on Sugar et al (2014) paper
 def computeDrift(imgref,img):
     h,w = imgref.shape
@@ -185,7 +184,7 @@ class SpineTracker(tk.Tk):
         self.getCommands = getCommandsClass(self, self.inputFile)
         self.listenToInstructionsFile()
         #define frames (windows) available which will appear in main window
-        for F in (StartPage, DriftPage, PositionsPage, TimelinePage):
+        for F in (StartPage, SettingsPage, PositionsPage, TimelinePage):
             frame = F(container, self)
             self.frames[F] = frame
             container.add(frame, text = F.name)
@@ -245,8 +244,8 @@ class SpineTracker(tk.Tk):
     def loadAcquiredImage(self):
         startTime = timeit.timeit()
         image = io.imread(self.imageFilePath)
-        totalChan = int(self.frames[DriftPage].totalChannelsVar.get())
-        driftChan = int(self.frames[DriftPage].driftCorrectionChannelVar.get())
+        totalChan = int(self.frames[SettingsPage].totalChannelsVar.get())
+        driftChan = int(self.frames[SettingsPage].driftCorrectionChannelVar.get())
         image = image[np.arange(driftChan -1,len(image),totalChan)]
         self.acq['imageStack'] = image
         endTime = timeit.timeit()
@@ -466,10 +465,15 @@ class SpineTracker(tk.Tk):
         x,y,z = [self.positions[posID][xyz] for xyz in ['x','y','z']]
         return(posID, x, y, z)
 
-
     def moveStage(self,x,y,z):
+        if self.parkXYmotor:
+            x_motor, y_motor = self.centerXY
+            self.setScanShift(x,y)
+        else:
+            x_motor = x
+            y_motor = y
         self.getCommands.stageMoveDone = False
-        self.sendCommands.moveStage(x,y,z)
+        self.sendCommands.moveStage(x_motor,y_motor,z)
         self.getCommands.waitForStageMoveDone()
         
     def grabStack(self):
@@ -481,6 +485,29 @@ class SpineTracker(tk.Tk):
         self.getCommands.uncagingDone = False
         self.sendCommands.doUncaging()
         self.getCommands.waitForUncagingDone()
+        
+    def setScanShift(self,x,y):
+        scanShiftFast,scanShiftSlow = self.xyToScanAngle(x,y)
+        self.getCommands.scanShiftDone = False
+        self.sendCommands.setScanShift(scanShiftFast,scanShiftSlow)
+        self.getCommands.waitForScanShiftDone()
+        
+    def xyToScanAngle(self,x,y):
+        scanAngleMultiplier = np.array(self.scanAngleMultiplier)
+        scanAngleRangeReference = np.array(self.scanAngleRangeReference)
+        fov = np.array(self.settings['fovXY'])
+        #convert x and y to relative pixel coordinates
+        x_center, y_center = self.centerXY
+        xc = x - x_center
+        yc = y - y_center
+        fsCoordinates = np.array([xc,yc])
+        fsAngular = np.array([0,0])
+        scanShift = np.array([0,0])
+        fsNormalized = fsCoordinates/fov
+        fsAngular = scanShift + fsNormalized*scanAngleMultiplier*scanAngleRangeReference
+        scanShiftFast, scanShiftSlow = fsAngular
+        return(scanShiftFast,scanShiftSlow)
+        
         
 class StartPage(ttk.Frame):
     
@@ -563,9 +590,9 @@ class StartPage(ttk.Frame):
         self.controller.imagingActive = False
                 
 
-class DriftPage(ttk.Frame):
+class SettingsPage(ttk.Frame):
     
-    name = 'Drift Correction'
+    name = 'Settings'
     
     def __init__(self,parent,controller):
         ttk.Frame.__init__(self,parent)
@@ -580,6 +607,14 @@ class DriftPage(ttk.Frame):
         self.driftCorrectionChannelVar = tk.StringVar(self)
         entry_driftChannel = ttk.Entry(self, textvariable = self.driftCorrectionChannelVar)
         entry_driftChannel.grid(row = 1, column = 1, padx = 10, pady = 10, sticky = 'nw')
+        self.xy_mode = tk.StringVar(self)
+        self.xy_mode.trace('w', self.toggle_xy_mode)
+        rb1 = ttk.Radiobutton(self, text = 'Scan Shift for X,Y', variable = self.xy_mode,
+        		value = 'Galvo')
+        rb1.grid(row = 2, column = 0, sticky = 'nw', pady = 10, padx = 10)
+        rb2 = ttk.Radiobutton(self, text = 'Motor for X,Y', variable = self.xy_mode,
+        		value = 'Motor')
+        rb2.grid(row = 3, column = 0, sticky = 'nw', pady = 10, padx = 10)        
         self.setDefaultSettings()
         
     def setDefaultSettings(self):
@@ -591,7 +626,15 @@ class DriftPage(ttk.Frame):
             self.driftCorrectionChannelVar.set(self.controller.settings['driftCorrectionChannel'])
         except:
             pass
+        self.xy_mode.set("Galvo")
         
+    def toggle_xy_mode(self,*args):
+        mode = self.xy_mode.get()
+        printStatus(mode)
+        if mode == 'Galvo':
+            self.controller.parkXYmotor = True
+        else:
+            self.controller.parkXYmotor = False
         
         
 class PositionsPage(ttk.Frame):
@@ -619,6 +662,7 @@ class PositionsPage(ttk.Frame):
                             command = lambda:controller.showMacroViewWindow())
         button_cellView.grid(row = 2, column = 0, padx = 10, 
                             pady = 10, sticky = 'wn')
+        
         label_imagingZoom = tk.Label(frame_forZoom, text = "Imaging Zoom", font=LARGE_FONT)
         label_imagingZoom.grid(row = 0, column = 0, sticky = 'nw', padx = 10, pady = 10)
         self.imagingZoom= tk.StringVar(self)
@@ -1054,7 +1098,6 @@ class timelineStepsFrame(ttk.Frame):
         stepNameEntry = ttk.Entry(self, width = 30, textvariable = self.stepName)
         stepNameEntry.grid(row = 0, column = 1, sticky = 'nw', padx = 10, pady = 10)
 
-        #This stringvar callback thing isn't working
         self.image_uncage = tk.StringVar(self)
         self.image_uncage.set("Image")
         self.image_uncage.trace('w', self.imageInFromFrame)
@@ -1260,6 +1303,9 @@ class sendCommandsClass(object):
     def getCurrentPosition(self):
         self.writeCommand('getCurrentPosition','xyz')
         
+    def setScanShift(self,scanShiftFast,scanShiftSlow):
+        self.writeCommand('setScanAngleXY',scanShiftFast,scanShiftSlow)
+                
     def writeCommand(self,*args):
         command = ",".join([str(x) for x in args])
         if verbose:
@@ -1343,23 +1389,30 @@ class getCommandsClass(object):
         elif command == 'fovXY_um':
             checkNumArgs(args,2,2)
             X,Y = [float(args[XY]) for XY in [0,1]]
-            self.settings['fovXY'] = [X,Y]
+            self.controller.settings['fovXY'] = [X,Y]
         elif command == 'zoom':
             checkNumArgs(args,1,1)
             self.controller.currentZoom = float(args[0])
         elif command == 'scananglexy':
             checkNumArgs(args,2,2)
+            self.scanShiftDone = True
             self.controller.currentScanAngleXY = (float(args[0]), float(args[1]))
-        elif command == 'ScanAngleMultiplier':
+        elif command == 'scananglemultiplier':
             checkNumArgs(args,2,2)
             self.controller.scanAngleMultiplier = (float(args[0]), float(args[1]))
-        elif command == 'ScanAngleRangeReference':
+        elif command == 'scananglerangereference':
             checkNumArgs(args,2,2)
             self.controller.scanAngleRangeReference = (float(args[0]), float(args[1]))
         else:
             print("COMMAND NOT UNDERSTOOD")
             
-        
+    def waitForScanShiftDone(self):
+        printStatus('Waiting for Scan Shift...')
+        while True:
+            self.controller.update()
+            if self.scanShiftDone:
+                printStatus('Scan Shift Done')
+                break
         
     def waitForStageMoveDone(self):
         if verbose:
@@ -1448,6 +1501,7 @@ class MacroWindow(tk.Tk):
     def loadMacroImage(self):
         if simulation:
             self.image=Image.open("../testing/macroImage.tif")
+            self.controller.centerXY = (0,0)
         self.multi_slice_viewer()
         
     def multi_slice_viewer(self):
@@ -1467,12 +1521,13 @@ class MacroWindow(tk.Tk):
         # xy currently originate from top left of image. 
         # translate them to coordinate plane directionality.
         # also, make them originate from center
+        x_center,y_center = self.controller.centerXY
         xyz_clicked = {'x':x, 'y':y, 'z':z}
         x = x - .5
         y = -y + .5
         #translate coordinates to µm
-        x = x * fovX
-        y = y * fovY
+        x = x * fovX + x_center
+        y = y * fovY + y_center
         #add coordinates to position table
         print('x, y, z = {0}, {1}, {2}'.format(x,y,z))
         xyz = {'x':x, 'y':y, 'z':z}

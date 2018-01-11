@@ -97,6 +97,12 @@ command = getScanAngleXY
 example: getScanAngleXY
 expected return command: ScanAngleXY
 
+--Set Galvo Scanning Position
+command = setScanAngleXY
+arguments: scanShiftFast,scanShiftSlow
+example: setScanAngleXY,0.2,-4
+expected return command: ScanAngleXY
+
 --Request Galvo Scan Angle Multiplier
 command = getScanAngleMultiplier
 expected return command: ScanAngleMultiplier

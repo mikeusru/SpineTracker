@@ -84,6 +84,14 @@ while ~isempty(spineTracker.commandQueue)
                 continue
             end
             getScanAngleXY();
+        case 'setscananglexy'
+            disp('setScanAngleXY')
+            if checkArgCount([2,2],argCount)
+                continue
+            end
+            scanShiftFast = str2double(command(2));
+            scanShiftSlow = str2double(command(3));
+            setScanAngleXY(scanShiftFast,scanShiftSlow);
         case 'getscananglemultiplier'
             disp('getScanAngleMultiplier')
             if checkArgCount([0,0],argCount)
@@ -158,6 +166,13 @@ function getFOV_xy()
 % respond with fov_XY_um
 pause(.1)
 write_to_SpineTracker('fov_XY_um',250,250);
+end
+
+function setScanAngleXY(scanShiftFast,scanShiftSlow)
+pause(.1);
+%set Scan Angle to be set
+%respond with ScanAngleXY
+write_to_SpineTracker('ScanAngleXY',scanShiftFast,scanShiftSlow);
 end
 
 function getScanAngleXY()
