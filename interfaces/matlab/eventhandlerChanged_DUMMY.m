@@ -62,10 +62,12 @@ while ~isempty(spineTracker.commandQueue)
             setZoom(zoom);
         case 'rununcaging'
             disp('rununcaging')
-            if checkArgCount([0,0],argCount)
+            if checkArgCount([2,2],argCount)
                 continue
             end
-            runUncaging();
+            roi_x = command(2);
+            roi_y = command(3);
+            runUncaging(roi_x,roi_y);
         case 'getcurrentposition'
             disp('getcurrentposition')
             if checkArgCount([0,0],argCount)
@@ -145,7 +147,7 @@ pause(.1)
 write_to_SpineTracker('Zoom',zoom);
 end
 
-function runUncaging()
+function runUncaging(roi_x,roi_y)
 % initiate uncaging
 % respond with UncagingDone
 pause(.1)
@@ -176,16 +178,20 @@ write_to_SpineTracker('ScanAngleXY',scanShiftFast,scanShiftSlow);
 end
 
 function getScanAngleXY()
+pause(0.1)
 % request Scan Angle measurements in X and Y
 % respond with ScanAngleXY
+write_to_SpineTracker('ScanAngleXY',0,0);
 end
 
 function getScanAngleMultiplier()
 % Request Scan Angle Multiplier, slow and fast
 % Respond with ScanAngleMultiplier
+write_to_SpineTracker('ScanAngleMultiplier',1,1);
 end
 
 function getScanAngleRangeReference()
 % request Scan Angle Range Reference, slow and fast
 % respond with ScanAngleRangeReference
+write_to_SpineTracker('ScanAngleRangeReference',15,15);
 end

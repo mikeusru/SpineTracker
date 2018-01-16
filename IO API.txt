@@ -76,8 +76,8 @@ expected return command: Zoom
 
 --Do uncaging--
 command = runUncaging
-arguments: None
-example: runUncaging
+arguments: ROI_x_pixels, ROI_y_pixels
+example: runUncaging,37,42
 expected return command: UncagingDone
 
 --Request for current position to be sent--

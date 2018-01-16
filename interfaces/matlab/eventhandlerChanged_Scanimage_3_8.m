@@ -62,10 +62,12 @@ while ~isempty(spineTracker.commandQueue)
             setZoom(zoom);
         case 'rununcaging'
             disp('rununcaging')
-            if checkArgCount([0,0],argCount)
+            if checkArgCount([2,2],argCount)
                 continue
             end
-            runUncaging();
+            roi_x = command(2);
+            roi_y = command(3);
+            runUncaging(roi_x,roi_y);
         case 'getcurrentposition'
             disp('getcurrentposition')
             if checkArgCount([0,0],argCount)
@@ -160,9 +162,46 @@ setZoomValue(str2double(zoom))
 write_to_SpineTracker('Zoom',state.acq.zoomFactor);
 end
 
-function runUncaging()
-global gh
+function runUncaging(roi_x,roi_y)
+global gh state
 % initiate uncaging
+% set up ROI using process similar to yphys_makeRoi
+%% Delete all current ROIs
+for roiNum=1:length(gh.yphys.figure.yphys_roi)
+    if ishandle(gh.yphys.figure.yphys_roi(roiNum))
+        a=findobj('Tag', num2str(roiNum));
+        delete(a);
+    end
+end
+%% define new ROI
+roiNum=1;
+roisize = 6;
+axes(state.internal.axis(1));
+xlimit1 = get(state.internal.axis(1), 'Xlim');
+ylimit1 = get(state.internal.axis(1), 'Ylim');
+x_r = round(roisize*xlimit1(2)/128);
+y_r = round(roisize*ylimit1(2)/128);
+
+roiPosition = round([roi_x - x_r/2, roi_y - y_r/2, x_r, y_r]);
+axes(state.internal.axis(1));
+
+%% show ROI
+axes(state.internal.axis(1));
+gh.yphys.figure.yphys_roi(roiNum) = rectangle('Position', roiPosition, 'Curvature',[1, 1], 'EdgeColor', 'cyan', 'ButtonDownFcn', 'yphys_dragRoi', 'Tag', num2str(roiNum));
+gh.yphys.figure.yphys_roiText(roiNum) = text(roiPosition(1)-3, roiPosition(2)-3, num2str(roiNum), 'Tag', num2str(roiNum), 'ButtonDownFcn', 'yphys_roiDelete');
+set(gh.yphys.figure.yphys_roiText(roiNum), 'Color', 'Red');
+
+axes(state.internal.axis(2));
+gh.yphys.figure.yphys_roi2(roiNum) = rectangle('Position', roiPosition, 'Curvature',[1, 1], 'EdgeColor', 'cyan', 'ButtonDownFcn', 'yphys_dragRoi', 'Tag', num2str(roiNum));
+gh.yphys.figure.yphys_roiText2(roiNum) = text(roiPosition(1)-3, roiPosition(2)-3, num2str(roiNum), 'Tag', num2str(roiNum), 'ButtonDownFcn', 'yphys_roiDelete');
+set(gh.yphys.figure.yphys_roiText2(roiNum), 'Color', 'Red');
+
+axes(state.internal.maxaxis(2));
+gh.yphys.figure.yphys_roi3(roiNum) = rectangle('Position', roiPosition, 'Curvature',[1, 1], 'EdgeColor', 'cyan', 'ButtonDownFcn', 'yphys_dragRoi', 'Tag', num2str(roiNum));
+gh.yphys.figure.yphys_roiText3(roiNum) = text(roiPosition(1)-3, roiPosition(2)-3, num2str(roiNum), 'Tag', num2str(roiNum), 'ButtonDownFcn', 'yphys_roiDelete');
+set(gh.yphys.figure.yphys_roiText3(roiNum), 'Color', 'Red');
+
+updateUAgui;
 % simulate uncaging button press
 yphys_stimScope('start_Callback',gh.yphys.stimScope.start); 
 % respond with UncagingDone
@@ -195,8 +234,13 @@ end
 function setScanAngleXY(scanShiftFast,scanShiftSlow)
 global state
 %set Scan Angle to be set
+state.acq.scanShiftSlow = scanShiftSlow;
+state.acq.scanShiftFast = scanShiftFast;
+updateGUIByGlobal('state.acq.scanShiftSlow');
+updateGUIByGlobal('state.acq.scanShiftFast');
+setupAOData; %needed to reset scanning shift
 %respond with ScanAngleXY
-write_to_SpineTracker('ScanAngleXY',state.acq.scanShiftFast,state.acq.scanShiftSlow);
+getScanAngleXY()
 end
 
 function getScanAngleMultiplier()

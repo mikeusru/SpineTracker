@@ -36,6 +36,11 @@ from PIL import Image, ImageTk, ImageOps, ImageMath
 import math
 import inspect
 import timeit
+import sys
+
+sys.path.append('../helper_classes')
+from DraggableCircle import DraggableCircle
+
 
 #Program running as simulation, without host imaging program
 simulation = True
@@ -223,16 +228,30 @@ class SpineTracker(tk.Tk):
             self.timelineSteps = []
         
     def loadSettings(self):
-        self.settings = {}
-        with open('../iniFiles/settings.txt') as input_file:
-            for line in input_file:
-                key, sep, val = [x.strip() for x in line.split()]
-                try:
-                    val = eval(val)
-                except:
-                    pass
-                self.settings[key] = val  
- 
+        try:
+            self.settings = pickle.load(open(initDirectory+'user_settings.p','rb'))
+        except:
+            self.settings = {}
+        self.checkSettings()
+        
+    def checkSettings(self):
+        defaultSettings = {'driftCorrectionChannel' : 1,
+                'fovXY' : (250,250),
+                'stagger' : 10,
+                'totalChannels' : 2,
+                'imagingZoom' : 30,
+                'imagingSlices' : 3,
+                'referenceZoom' : 15,
+                'referenceSlices' : 10
+                }
+        flag = False
+        for key in defaultSettings:
+            if key not in self.settings.keys():
+                self.settings[key] = defaultSettings[key]
+                flag = True
+        if flag:
+            self.saveSettings()
+                
         #measure autofocus of image
     def loadTestImage(self,cont): #for testing purposes only
         image = io.imread("../testing/test_image.tif")
@@ -241,17 +260,14 @@ class SpineTracker(tk.Tk):
         self.createFigureForAFImages()
 #        return(image)
         
-    def loadAcquiredImage(self):
-        startTime = timeit.timeit()
+    def loadAcquiredImage(self, updateFigure = True):
         image = io.imread(self.imageFilePath)
         totalChan = int(self.frames[SettingsPage].totalChannelsVar.get())
         driftChan = int(self.frames[SettingsPage].driftCorrectionChannelVar.get())
         image = image[np.arange(driftChan -1,len(image),totalChan)]
         self.acq['imageStack'] = image
-        endTime = timeit.timeit()
-        elapsedTime = endTime - startTime
-        printStatus('Done after {0}s'.format(elapsedTime))
-        self.createFigureForAFImages()
+        if updateFigure:
+            self.createFigureForAFImages()
     
     def loadTestRefImage(self,cont): #for testing purposes only
         imgref = io.imread("../testing/test_refimg.tif")
@@ -366,6 +382,8 @@ class SpineTracker(tk.Tk):
         self.positions[posID]['refImg'] = self.acq['imgref_imaging']
         self.positions[posID]['refImgZoomout'] = self.acq['imgref_ref']
         self.positions[posID]['xyzShift'] = np.array([0,0,0])
+        roipos = np.array(self.positions[posID]['refImg'].shape)/2
+        self.positions[posID]['roi_position'] = roipos
     
     def addPosition(self,cont,xyz = None, refImages = None):
         if xyz is None:
@@ -405,7 +423,15 @@ class SpineTracker(tk.Tk):
     def backupPositions(self):
         positions = self.positions
         pickle.dump(positions, open(initDirectory+'positions.p','wb'))
+
+    def updateSettings(self,key,source,*args):
+        self.settings[key] = source.get()
+        self.saveSettings()
         
+    def saveSettings(self):
+        user_settings = self.settings
+        pickle.dump(user_settings, open(initDirectory+'user_settings.p','wb'))
+              
     def addStepToQueue(self,step,posID):
         step = step.copy()
         step.update(dict(posID = posID))
@@ -456,8 +482,9 @@ class SpineTracker(tk.Tk):
         
     def uncageNewPosition(self,step):
         posID, x, y, z = self.parseStep(step)
+        roi_x,roi_y = self.positions[posID]['roi_position']
         self.moveStage(x,y,z)
-        self.uncage()
+        self.uncage(roi_x,roi_y)
         self.stepRunning = False
 
     def parseStep(self,step):
@@ -481,9 +508,9 @@ class SpineTracker(tk.Tk):
         self.sendCommands.grabOneStack()
         self.getCommands.waitForGrabDone()
         
-    def uncage(self):
+    def uncage(self,roi_x,roi_y):
         self.getCommands.uncagingDone = False
-        self.sendCommands.doUncaging()
+        self.sendCommands.doUncaging(roi_x,roi_y)
         self.getCommands.waitForUncagingDone()
         
     def setScanShift(self,x,y):
@@ -507,6 +534,14 @@ class SpineTracker(tk.Tk):
         fsAngular = scanShift + fsNormalized*scanAngleMultiplier*scanAngleRangeReference
         scanShiftFast, scanShiftSlow = fsAngular
         return(scanShiftFast,scanShiftSlow)
+        
+    def getScanProps(self):
+        self.getCommands.scanAngleMultiplierDone= False
+        self.sendCommands.getScanAngleMultiplier()
+        self.getCommands.scanAngleRangeReferenceDone = False
+        self.sendCommands.getScanAngleRangeReference()
+        
+    
         
         
 class StartPage(ttk.Frame):
@@ -573,12 +608,16 @@ class StartPage(ttk.Frame):
                 self.canvas[key].draw_idle()
             
     def startImaging(self):
+        #get scan angle conversion properties
+        self.controller.getScanProps()
+        #set up timers
         self.posTimers = {}
         with self.controller.timerStepsQueue.mutex:
             self.controller.timerStepsQueue.queue.clear()
         individualSteps = self.controller.individualTimelineSteps
         for posID in individualSteps:
              self.posTimers[posID] = PositionTimer(self.controller, individualSteps[posID], self.controller.addStepToQueue, posID)
+        #start imaging
         self.controller.imagingActive = True
         self.controller.queRun = threading.Thread(target = self.controller.runStepFromQueue)
         self.controller.queRun.daemon = True
@@ -614,7 +653,11 @@ class SettingsPage(ttk.Frame):
         rb1.grid(row = 2, column = 0, sticky = 'nw', pady = 10, padx = 10)
         rb2 = ttk.Radiobutton(self, text = 'Motor for X,Y', variable = self.xy_mode,
         		value = 'Motor')
-        rb2.grid(row = 3, column = 0, sticky = 'nw', pady = 10, padx = 10)        
+        rb2.grid(row = 3, column = 0, sticky = 'nw', pady = 10, padx = 10)
+        self.uncaging_roi_toggle = tk.BooleanVar(self)        
+        cb = ttk.Checkbutton(self,text = "Show Unaging ROI", 
+                             variable = self.uncaging_roi_toggle)
+        cb.grid(row = 4, column = 0, sticky = 'nw', pady = 10, padx = 10)
         self.setDefaultSettings()
         
     def setDefaultSettings(self):
@@ -627,6 +670,7 @@ class SettingsPage(ttk.Frame):
         except:
             pass
         self.xy_mode.set("Galvo")
+        self.uncaging_roi_toggle.set(True)
         
     def toggle_xy_mode(self,*args):
         mode = self.xy_mode.get()
@@ -666,26 +710,35 @@ class PositionsPage(ttk.Frame):
         label_imagingZoom = tk.Label(frame_forZoom, text = "Imaging Zoom", font=LARGE_FONT)
         label_imagingZoom.grid(row = 0, column = 0, sticky = 'nw', padx = 10, pady = 10)
         self.imagingZoom= tk.StringVar(self)
-        self.imagingZoom.set(30)
+        self.imagingZoom.set(self.controller.settings['imagingZoom'])
+        self.imagingZoom.trace('w', lambda a,b,c,source = self.imagingZoom, name = 'imagingZoom': 
+            self.controller.updateSettings(name,source,a,b,c))
+
         entry_imagingZoom = ttk.Entry(frame_forZoom, textvariable = self.imagingZoom)
         entry_imagingZoom.grid(row = 0, column = 1, padx = 10, pady = 10, sticky = 'nw')
         label_refZoom = tk.Label(frame_forZoom, text = "Reference Zoom", font=LARGE_FONT)
         label_refZoom.grid(row = 0, column = 2, sticky = 'nw', padx = 10, pady = 10)
         self.refZoom = tk.StringVar(self)
-        self.refZoom.set(15)
+        self.refZoom.set(self.controller.settings['referenceZoom'])
+        self.refZoom.trace('w', lambda a,b,c, source = self.refZoom, name = 'referenceZoom' : 
+            self.controller.updateSettings(name, source, a,b,c))
         entry_refZoom = ttk.Entry(frame_forZoom, textvariable = self.refZoom)
         entry_refZoom.grid(row = 0, column = 3, padx = 10, pady = 10, sticky = 'nw')
         
         label_imagingSlices = tk.Label(frame_forZoom, text = "Imaging Slices", font=LARGE_FONT)
         label_imagingSlices.grid(row = 1, column = 0, sticky = 'nw', padx = 10, pady = 10)
         self.imagingSlices= tk.StringVar(self)
-        self.imagingSlices.set(3)
+        self.imagingSlices.set(self.controller.settings['imagingSlices'])
+        self.imagingSlices.trace('w', lambda a,b,c, source = self.imagingSlices, name = 'imagingSlices' : 
+            self.controller.updateSettings(name, source, a,b,c))
         entry_imagingSlices = ttk.Entry(frame_forZoom, textvariable = self.imagingSlices)
         entry_imagingSlices.grid(row = 1, column = 1, padx = 10, pady = 10, sticky = 'nw')
         label_refSlices = tk.Label(frame_forZoom, text = "Reference Slices", font=LARGE_FONT)
         label_refSlices.grid(row = 1, column = 2, sticky = 'nw', padx = 10, pady = 10)
         self.refSlices = tk.StringVar(self)
-        self.refSlices.set(10)
+        self.refSlices.set(self.controller.settings['referenceSlices'])
+        self.refSlices.trace('w', lambda a,b,c, source = self.refSlices, name = 'referenceSlices' : 
+            self.controller.updateSettings(name, source, a,b,c))
         entry_refSlices = ttk.Entry(frame_forZoom, textvariable = self.refSlices)
         entry_refSlices.grid(row = 1, column = 3, padx = 10, pady = 10, sticky = 'nw')
         
@@ -848,9 +901,20 @@ class PositionsPage(ttk.Frame):
             ax.clear()
             ax.axis('off')
             ax.imshow(r)
+        self.drawROI(posID,self.controller.refImgAx[0])
         self.canvas_previewRefImages.draw_idle()
-        
-
+    
+    def drawROI(self,posID,ax):
+        if self.controller.frames[SettingsPage].uncaging_roi_toggle:
+            axWidth = abs(np.diff(ax.get_xlim()).item())
+            x,y = self.controller.positions[posID]['roi_position']
+            circ = patches.Circle((x,y),radius = axWidth / 20 ,fill = False, linewidth = axWidth / 20, edgecolor = 'r')
+            ax.add_patch(circ)
+            dc = DraggableCircle(self,self.controller.positions[posID],circ)
+            dc.connect()
+            self.draggable_circle = dc
+            
+            
 class TimelinePage(ttk.Frame):
     
     name = 'Timeline'
@@ -1285,8 +1349,8 @@ class sendCommandsClass(object):
     def setZoom(self,zoom):
         self.writeCommand('setZoom', zoom)
         
-    def doUncaging(self):
-        self.writeCommand('runUncaging')
+    def doUncaging(self,roi_x,roi_y):
+        self.writeCommand('runUncaging',roi_x,roi_y)
         
     def getFOVsize(self):
         self.writeCommand('getFOV_xy')
@@ -1364,20 +1428,17 @@ class getCommandsClass(object):
         command = command.lower()
         if len(lineParts) > 1:
             args = lineParts[1:]
-        if command == 'grabfinished':
-            """no args"""
-            print('grabfinisheeddddd yeah')
         elif command == 'stagemovedone':
-            self.stageMoveDone = True
             checkNumArgs(args,3,3)
             x,y,z = [float(args[xyz]) for xyz in [0,1,2]]
             if verbose:
                 print('\nStage Moved to x= {0} , y = {1}, z = {2}\n'.format(x,y,z))
+            self.stageMoveDone = True
         elif command == 'grabonestackdone':
-            self.grabOneStackDone = True
             #commands need to be separated by commas, not spaces, otherwise file paths will cause problems
             checkNumArgs(args,1,1)
             self.controller.imageFilePath = args[0]
+            self.grabOneStackDone = True
         elif command == 'currentposition':
             checkNumArgs(args,3,3)
             x,y,z = [float(args[xyz]) for xyz in [0,1,2]]
@@ -1393,6 +1454,7 @@ class getCommandsClass(object):
         elif command == 'zoom':
             checkNumArgs(args,1,1)
             self.controller.currentZoom = float(args[0])
+            self.zoomDone = True
         elif command == 'scananglexy':
             checkNumArgs(args,2,2)
             self.scanShiftDone = True
@@ -1400,9 +1462,11 @@ class getCommandsClass(object):
         elif command == 'scananglemultiplier':
             checkNumArgs(args,2,2)
             self.controller.scanAngleMultiplier = (float(args[0]), float(args[1]))
+            self.scanAngleMultiplierDone = True
         elif command == 'scananglerangereference':
             checkNumArgs(args,2,2)
             self.controller.scanAngleRangeReference = (float(args[0]), float(args[1]))
+            self.scanAngleRangeReferenceDone = True
         else:
             print("COMMAND NOT UNDERSTOOD")
             
@@ -1456,6 +1520,33 @@ class getCommandsClass(object):
                 print('\nUncaging Done\n')
                 break
             
+    def waitForZoom(self):
+        if verbose:
+            print('\nWaiting for Zoom\n')
+        while True:
+            self.controller.update()
+            if self.zoomDone:
+                print('\zoomDone\n')
+                break
+
+    def waitForScanAngleMultiplier(self):
+        if verbose:
+            print('\nWaiting for scanAngleMultiplier\n')
+        while True:
+            self.controller.update()
+            if self.scanAngleMultiplierDone:
+                print('\scanAngleMultiplier Done\n')
+                break
+            
+    def waitForScanAngleRangeReference(self):
+        if verbose:
+            print('\nWaiting for scanAngleRangeReference\n')
+        while True:
+            self.controller.update()
+            if self.scanAngleRangeReferenceDone:
+                print('\scanAngleRangeReference Done\n')
+                break
+            
             
 class MacroWindow(tk.Tk):
     def __init__(self, controller, *args, **kwargs):      
@@ -1463,27 +1554,36 @@ class MacroWindow(tk.Tk):
         
         #set properties for main window
         tk.Tk.wm_title(self, "Macro View")
-        tk.Tk.geometry(self, newGeometry = '700x700+200+200')
+        tk.Tk.geometry(self, newGeometry = '700x800+200+200')
         #define container for what's in the window
         self.controller = controller
         self.addScrollingFigure()
         self.scale_z = tk.Scale(self.frame_canvas, orient = tk.VERTICAL)
         self.scale_z.grid(row = 0, column = 2, sticky = 'ns')
         frame_buttons = ttk.Frame(self)
-        frame_buttons.grid(row = 1, column = 0, sticky = 'nsew')
-        button_loadMacroImage = ttk.Button(frame_buttons,text = "Load Test Macro Image", command = 
+        frame_buttons.grid(row = 2, column = 0, sticky = 'nsew')
+        button_loadTestMacroImage = ttk.Button(frame_buttons,text = "Load Test Macro Image", command = 
                             lambda: self.loadMacroImage())
-        button_loadMacroImage.grid(row = 0, column = 0, padx = 10, pady = 10, sticky = 'nw')
+        button_loadTestMacroImage.grid(row = 2, column = 0, padx = 10, pady = 10, sticky = 'nw')
         label_macroZoom = tk.Label(frame_buttons, text = "Macro Zoom", font=LARGE_FONT)
-        label_macroZoom.grid(row = 0, column = 1, sticky = 'nw', padx = 10, pady = 10)
+        label_macroZoom.grid(row = 0, column = 0, sticky = 'nw', padx = 10, pady = 10)
         self.macroZoom= tk.StringVar(self)
         entry_macroZoom = ttk.Entry(frame_buttons, textvariable = self.macroZoom, width = 3)
-        entry_macroZoom.grid(row = 0, column = 2, padx = 10, pady = 10, sticky = 'nw')             
+        entry_macroZoom.grid(row = 0, column = 1, padx = 10, pady = 10, sticky = 'nw')             
         self.macroZoom.set(1)
         self.scale_zoom = tk.Scale(self, orient = tk.HORIZONTAL)
-        self.scale_zoom.grid(row = 2, column = 0, sticky = 'ew')
+        self.scale_zoom.grid(row = 1, column = 0, sticky = 'ew')
         self.scale_zoom.config(command = self.changeSize, from_=.1, to=5, resolution = .1)
         self.scale_zoom.set(2)        
+        label_z_slices = tk.Label(frame_buttons, text = "Number of Z Slices", font = LARGE_FONT)
+        label_z_slices.grid(row = 1, column = 0, padx = 10, pady = 10, sticky = 'nw')
+        self.num_z_slices = tk.StringVar(self)
+        self.num_z_slices.set(10)
+        entry_z_slices = ttk.Entry(frame_buttons, textvariable = self.num_z_slices, width = 4)
+        entry_z_slices.grid(row = 1, column = 1, padx = 10, pady = 10, sticky = 'nw')
+        button_loadMacroImage = ttk.Button(frame_buttons,text = "Grab Macro Image", command = 
+                            lambda: self.loadMacroImage())
+        button_loadMacroImage.grid(row = 2, column = 1, padx = 10, pady = 10, sticky = 'nw')
         
     def addScrollingFigure(self):
         self.frame_canvas = ttk.Frame(self)
@@ -1502,6 +1602,25 @@ class MacroWindow(tk.Tk):
         if simulation:
             self.image=Image.open("../testing/macroImage.tif")
             self.controller.centerXY = (0,0)
+        else:
+            #set zoom
+            macroZoom = float(self.macroZoom.get())
+            self.controller.getCommands.zoomDone = False
+            self.controller.sendCommands.setZoom(macroZoom)
+            self.controller.getCommands.waitForZoom()
+            #set Z slice number
+            
+            #grab stack
+            self.controller.getCommands.grabOneStackDone = False
+            self.controller.sendCommands.grabOneStack()
+            self.controller.getCommands.waitForGrabDone()
+            self.controller.loadAcquiredImage(updateFigure = False)
+            self.image = self.controller.acq['imageStack']
+            #get the motor coordinates
+            self.controller.getCurrentPosition()
+            x,y,z = self.currentCoordinates
+            self.controller.centerXY = (x,y)
+            
         self.multi_slice_viewer()
         
     def multi_slice_viewer(self):
@@ -1644,7 +1763,11 @@ class ScrolledCanvas(tk.Frame):
 app = SpineTracker()
 #ani = animation.FuncAnimation(app.AFImageFig, app.animate, interval = 1000)
 
-app.mainloop()
+try:
+    app.mainloop()
+except(KeyboardInterrupt, SystemExit):
+    raise
+    
 
 ###################
 #s = sendCommandsClass(app, '../instructions_output.txt')
