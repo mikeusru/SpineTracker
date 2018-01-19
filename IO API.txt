@@ -51,6 +51,11 @@ command = ScanAngleRangeReference
 arguments = slow, fast
 example: ScanAngleRangeReference,5,15
 
+--sent when number of Z slices is requested to change
+command = ZSliceNum
+arguments = number of slices
+example: ZSliceNum,10
+
 
 Output commands are written line by line to instructions_output.txt
 
@@ -94,6 +99,7 @@ expected return command: fovXY_um
 
 --Request Galvo Scanning Position--
 command = getScanAngleXY
+arguments: None
 example: getScanAngleXY
 expected return command: ScanAngleXY
 
@@ -105,8 +111,16 @@ expected return command: ScanAngleXY
 
 --Request Galvo Scan Angle Multiplier
 command = getScanAngleMultiplier
+arguments: None
 expected return command: ScanAngleMultiplier
 
 --Request Galvo Scan Angle Range Reference
 command = getScanAngleRangeReference
+arguments: None
 expected return command: ScanAngleRangeReference
+
+--Set Number of Z Slices
+command = setZSliceNum
+arguments: zSliceNum
+example: setZSliceNum,10
+expected return command: ZSliceNum

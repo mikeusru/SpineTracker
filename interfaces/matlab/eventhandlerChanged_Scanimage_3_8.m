@@ -106,6 +106,13 @@ while ~isempty(spineTracker.commandQueue)
                 continue
             end
             getScanAngleRangeReference();
+        case 'setzslicenum'
+            disp('getScanAngleRangeReference')
+            if checkArgCount([1,1],argCount)
+                continue
+            end
+            z_slice_num = str2double(command(2));
+            setZSliceNum(z_slice_num);
         otherwise
             disp('COMMAND NOT UNDERSTOOD')
     end
@@ -257,3 +264,8 @@ global state
 write_to_SpineTracker('ScanAngleRangeReference',state.init.scanAngularRangeReferenceFast,state.init.scanAngularRangeReferenceSlow);
 end
 
+function setZSliceNum(z_slice_num)
+% set number of Z slices to image when grabbig stack
+% respond with ZSliceNum
+write_to_SpineTracker('ZSliceNum',z_slice_num);
+end

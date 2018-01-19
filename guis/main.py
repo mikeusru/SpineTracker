@@ -360,9 +360,10 @@ class SpineTracker(tk.Tk):
             y = np.random.randint(-100,100)
             z = np.random.randint(-100,100)
         else:
-            self.getCommands.positionGrabDone = False
+            flag = 'currentPosition'
+            self.getCommands.receivedFlags[flag] = False
             self.sendCommands.getCurrentPosition()
-            self.getCommands.waitForCurrentPosition()
+            self.getCommands.waitForReceivedFlag(flag)
             x,y,z = self.currentCoordinates
         return({'x':x,'y':y,'z':z})
     
@@ -499,25 +500,36 @@ class SpineTracker(tk.Tk):
         else:
             x_motor = x
             y_motor = y
-        self.getCommands.stageMoveDone = False
+        flag = 'stageMoveDone'
+        self.getCommands.receivedFlags[flag] = False
         self.sendCommands.moveStage(x_motor,y_motor,z)
-        self.getCommands.waitForStageMoveDone()
+        self.getCommands.waitForReceivedFlag(flag)
         
     def grabStack(self):
-        self.getCommands.grabOneStackDone = False
+        flag = 'grabOneStackDone'
+        self.getCommands.receivedFlags[flag] = False
         self.sendCommands.grabOneStack()
-        self.getCommands.waitForGrabDone()
+        self.getCommands.waitForReceivedFlag(flag)
         
     def uncage(self,roi_x,roi_y):
-        self.getCommands.uncagingDone = False
+        flag = 'uncagingDone'
+        self.getCommands.receivedFlags[flag] = False
         self.sendCommands.doUncaging(roi_x,roi_y)
-        self.getCommands.waitForUncagingDone()
+        self.getCommands.waitForReceivedFlag(flag)
         
     def setScanShift(self,x,y):
         scanShiftFast,scanShiftSlow = self.xyToScanAngle(x,y)
-        self.getCommands.scanShiftDone = False
+        flag = 'scanAngleXY'
+        self.getCommands.receivedFlags[flag] = False
         self.sendCommands.setScanShift(scanShiftFast,scanShiftSlow)
-        self.getCommands.waitForScanShiftDone()
+        self.getCommands.waitForReceivedFlag(flag)
+        
+    def setZSliceNum(self,z_slice_num):
+        flag = 'z_slice_num'
+        self.getCommands.receivedFlags[flag] = False
+        self.sendCommands.setZSliceNum(z_slice_num)
+        self.getCommands.waitForReceivedFlag(flag)
+        
         
     def xyToScanAngle(self,x,y):
         scanAngleMultiplier = np.array(self.scanAngleMultiplier)
@@ -536,11 +548,21 @@ class SpineTracker(tk.Tk):
         return(scanShiftFast,scanShiftSlow)
         
     def getScanProps(self):
-        self.getCommands.scanAngleMultiplierDone= False
+        flag = 'scanAngleMultiplier'
+        self.getCommands.receivedFlags[flag] = False
         self.sendCommands.getScanAngleMultiplier()
-        self.getCommands.scanAngleRangeReferenceDone = False
-        self.sendCommands.getScanAngleRangeReference()
+        self.getCommands.waitForReceivedFlag(flag)
         
+        flag = 'scanAngleRangeReference'
+        self.getCommands.receivedFlags[flag] = False
+        self.sendCommands.getScanAngleRangeReference()
+        self.getCommands.waitForReceivedFlag(flag)
+        
+    def setZoom(self,zoom):
+        flag = 'zoom'
+        self.getCommands.receivedFlags[flag] = False
+        self.sendCommands.setZoom(zoom)
+        self.getCommands.waitForReceivedFlag(flag)
     
         
         
@@ -1369,11 +1391,13 @@ class sendCommandsClass(object):
         
     def setScanShift(self,scanShiftFast,scanShiftSlow):
         self.writeCommand('setScanAngleXY',scanShiftFast,scanShiftSlow)
+        
+    def setZSliceNum(self,z_slice_num):
+        self.writeCommand('setZSliceNum',z_slice_num)
                 
     def writeCommand(self,*args):
         command = ",".join([str(x) for x in args])
-        if verbose:
-            print('\nWriting Command {0}\n'.format(command))
+        printStatus('\nWriting Command {0}\n'.format(command))
         with open(self.filepath, "a") as f:
             f.write('\n'+command)
 
@@ -1383,6 +1407,7 @@ class getCommandsClass(object):
         self.controller = controller
         self.instructions = controller.instructions
         self.filepath = filepath
+        self.receivedFlags = {}
         if not os.path.isfile(self.filepath):
             open(self.filepath, 'a').close()
     
@@ -1433,119 +1458,54 @@ class getCommandsClass(object):
             x,y,z = [float(args[xyz]) for xyz in [0,1,2]]
             if verbose:
                 print('\nStage Moved to x= {0} , y = {1}, z = {2}\n'.format(x,y,z))
-            self.stageMoveDone = True
+            self.receivedFlags['stageMoveDone'] = True
         elif command == 'grabonestackdone':
             #commands need to be separated by commas, not spaces, otherwise file paths will cause problems
             checkNumArgs(args,1,1)
             self.controller.imageFilePath = args[0]
-            self.grabOneStackDone = True
+            self.receivedFlags['grabOneStackDone'] = True
         elif command == 'currentposition':
             checkNumArgs(args,3,3)
             x,y,z = [float(args[xyz]) for xyz in [0,1,2]]
             self.controller.currentCoordinates = [x,y,z]
-            self.positionGrabDone = True
+            self.receivedFlags['currentPosition'] = True
         elif command == 'uncagingdone':
             checkNumArgs(args,0,0)
-            self.uncagingDone = True        
+            self.receivedFlags['UncagingDone'] = True
         elif command == 'fovXY_um':
             checkNumArgs(args,2,2)
             X,Y = [float(args[XY]) for XY in [0,1]]
             self.controller.settings['fovXY'] = [X,Y]
+            self.receivedFlags['fovXY'] = True
         elif command == 'zoom':
             checkNumArgs(args,1,1)
             self.controller.currentZoom = float(args[0])
-            self.zoomDone = True
+            self.receivedFlags['zoom'] = True
         elif command == 'scananglexy':
             checkNumArgs(args,2,2)
-            self.scanShiftDone = True
             self.controller.currentScanAngleXY = (float(args[0]), float(args[1]))
+            self.receivedFlags['scanAngleXY'] = True
         elif command == 'scananglemultiplier':
             checkNumArgs(args,2,2)
             self.controller.scanAngleMultiplier = (float(args[0]), float(args[1]))
-            self.scanAngleMultiplierDone = True
+            self.receivedFlags['scanAngleMultiplier'] = True
         elif command == 'scananglerangereference':
             checkNumArgs(args,2,2)
             self.controller.scanAngleRangeReference = (float(args[0]), float(args[1]))
-            self.scanAngleRangeReferenceDone = True
+            self.receivedFlags['scanAngleRangeReference'] = True
+        elif command == 'zslicenum':
+            checkNumArgs(args,1,1)
+            self.controller.acq['z_slice_num'] = float(args[0])
+            self.receivedFlags['z_slice_num'] = True
         else:
             print("COMMAND NOT UNDERSTOOD")
             
-    def waitForScanShiftDone(self):
-        printStatus('Waiting for Scan Shift...')
+    def waitForReceivedFlag(self,flag):
+        printStatus('Waiting for {0}'.format(flag))
         while True:
             self.controller.update()
-            if self.scanShiftDone:
-                printStatus('Scan Shift Done')
-                break
-        
-    def waitForStageMoveDone(self):
-        if verbose:
-            print('\nWaiting for Stage Move Completion\n')
-        while True:
-#            time.sleep(.05)
-            self.controller.update()
-            if self.stageMoveDone:
-                print('Stage Move Done')
-                break
-              
-    def waitForGrabDone(self):
-        if verbose:
-            print('\nWaiting for Grab to be Finished\n')
-        while True:
-            self.controller.update()
-
-#            time.sleep(.05)
-            if self.grabOneStackDone:
-                print('\nGrab One Stack Done\n')
-                break
-            
-    def waitForCurrentPosition(self):
-        if verbose:
-            print('\nWaiting for Current Position\n')
-        while True:
-            self.controller.update()
-#            time.sleep(.05)
-            if self.positionGrabDone:
-                print('\nGrab One Stack Done\n')
-                break
-
-    def waitForUncagingDone(self):
-        if verbose:
-            print('\nWaiting for Uncaging to be Complete\n')
-        while True:
-            self.controller.update()
-
-#            time.sleep(.05)
-            if self.uncagingDone:
-                print('\nUncaging Done\n')
-                break
-            
-    def waitForZoom(self):
-        if verbose:
-            print('\nWaiting for Zoom\n')
-        while True:
-            self.controller.update()
-            if self.zoomDone:
-                print('\zoomDone\n')
-                break
-
-    def waitForScanAngleMultiplier(self):
-        if verbose:
-            print('\nWaiting for scanAngleMultiplier\n')
-        while True:
-            self.controller.update()
-            if self.scanAngleMultiplierDone:
-                print('\scanAngleMultiplier Done\n')
-                break
-            
-    def waitForScanAngleRangeReference(self):
-        if verbose:
-            print('\nWaiting for scanAngleRangeReference\n')
-        while True:
-            self.controller.update()
-            if self.scanAngleRangeReferenceDone:
-                print('\scanAngleRangeReference Done\n')
-                break
+            if self.receivedFlags[flag]:
+                printStatus('{0} received'.format(flag))
             
             
 class MacroWindow(tk.Tk):
@@ -1605,15 +1565,12 @@ class MacroWindow(tk.Tk):
         else:
             #set zoom
             macroZoom = float(self.macroZoom.get())
-            self.controller.getCommands.zoomDone = False
-            self.controller.sendCommands.setZoom(macroZoom)
-            self.controller.getCommands.waitForZoom()
+            self.controller.setZoom(macroZoom)
             #set Z slice number
-            
+            z_slice_num = float(self.num_z_slices.get())
+            self.controller.setZSliceNum(z_slice_num)
             #grab stack
-            self.controller.getCommands.grabOneStackDone = False
-            self.controller.sendCommands.grabOneStack()
-            self.controller.getCommands.waitForGrabDone()
+            self.controller.grabStack()
             self.controller.loadAcquiredImage(updateFigure = False)
             self.image = self.controller.acq['imageStack']
             #get the motor coordinates
