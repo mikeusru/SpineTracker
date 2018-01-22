@@ -265,7 +265,10 @@ write_to_SpineTracker('ScanAngleRangeReference',state.init.scanAngularRangeRefer
 end
 
 function setZSliceNum(z_slice_num)
+global state gh
 % set number of Z slices to image when grabbig stack
+set(gh.motorControls.etNumberOfZSlices,'String',num2str(numZslices));
+motorControls('etNumberOfZSlices_Callback',gh.motorControls.etNumberOfZSlices);
 % respond with ZSliceNum
-write_to_SpineTracker('ZSliceNum',z_slice_num);
+write_to_SpineTracker('ZSliceNum',state.acq.numberOfZSlices);
 end

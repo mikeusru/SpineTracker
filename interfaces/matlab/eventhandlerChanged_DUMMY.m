@@ -9,7 +9,7 @@ function readNewInstructions(fullpath)
 %%variable, and to the commandQueue
 global spineTracker
 fid = fopen(fullpath,'r');
-ii = 0;
+ii = 0;we
 commandLen = length(spineTracker.allCommands);
 while ~feof(fid)
     line_text = fgets(fid); %read line by line
