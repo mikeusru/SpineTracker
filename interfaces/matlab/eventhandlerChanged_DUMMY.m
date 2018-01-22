@@ -9,7 +9,7 @@ function readNewInstructions(fullpath)
 %%variable, and to the commandQueue
 global spineTracker
 fid = fopen(fullpath,'r');
-ii = 0;we
+ii = 0;
 commandLen = length(spineTracker.allCommands);
 while ~feof(fid)
     line_text = fgets(fid); %read line by line
@@ -151,6 +151,7 @@ end
 function setZoom(zoom)
 % set zoom to new value
 % respond with Zoom
+zoom = str2double(zoom);
 pause(.1)
 write_to_SpineTracker('Zoom',zoom);
 end

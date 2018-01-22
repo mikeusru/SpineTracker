@@ -188,6 +188,7 @@ class SpineTracker(tk.Tk):
         self.sendCommands = sendCommandsClass(self, self.outputFile)
         self.getCommands = getCommandsClass(self, self.inputFile)
         self.listenToInstructionsFile()
+        self.centerXY = (0,0)
         #define frames (windows) available which will appear in main window
         for F in (StartPage, SettingsPage, PositionsPage, TimelinePage):
             frame = F(container, self)
@@ -279,7 +280,6 @@ class SpineTracker(tk.Tk):
     def runXYZ_DriftCorrection(self, posID = None):
         if 'imageStack' not in self.acq:
             return
-        startTime = timeit.timeit()
         if posID == None:
             posID = self.currentPosID
         shape = self.acq['imageStack'][0].shape
@@ -295,9 +295,6 @@ class SpineTracker(tk.Tk):
         self.positions[posID]['z'] = z + shiftz
         self.positions[posID]['xyzShift'] = self.positions[posID]['xyzShift'] + np.array([shiftx,shifty,shiftz])
         self.frames[StartPage].driftLabel.configure(text = 'Detected drift of {0}px in x and {1}px in y'.format(shiftx.item(),shifty.item()))
-        end = timeit.timeit()
-        elapsedTime = end-startTime
-        printStatus('Done after {0}s'.format(elapsedTime))
         self.showNewImages()
         
     def showNewImages(self):
@@ -329,7 +326,10 @@ class SpineTracker(tk.Tk):
         
     def calcDrift(self):
         image = np.max(self.acq['imageStack'],0)
-        imgref = self.acq['imgref_imaging']
+        if self.acq['currentZoom'] == float(self.frames[PositionsPage].imagingZoom.get()):
+            imgref = self.acq['imgref_imaging']
+        else:
+            imgref = self.acq['imgref_ref']
         shift = computeDrift(imgref,image)
         shiftx = shift['shiftx']
         shifty = shift['shifty']    
@@ -563,7 +563,6 @@ class SpineTracker(tk.Tk):
         self.getCommands.receivedFlags[flag] = False
         self.sendCommands.setZoom(zoom)
         self.getCommands.waitForReceivedFlag(flag)
-    
         
         
 class StartPage(ttk.Frame):
@@ -632,6 +631,8 @@ class StartPage(ttk.Frame):
     def startImaging(self):
         #get scan angle conversion properties
         self.controller.getScanProps()
+        #this probably needs to move somewhere else later
+        self.controller.setZoom(float(self.controller.frames[PositionsPage].imagingZoom.get()))
         #set up timers
         self.posTimers = {}
         with self.controller.timerStepsQueue.mutex:
@@ -1453,7 +1454,10 @@ class getCommandsClass(object):
         command = command.lower()
         if len(lineParts) > 1:
             args = lineParts[1:]
-        elif command == 'stagemovedone':
+        else:
+            args = []
+            
+        if command == 'stagemovedone':
             checkNumArgs(args,3,3)
             x,y,z = [float(args[xyz]) for xyz in [0,1,2]]
             if verbose:
@@ -1479,7 +1483,7 @@ class getCommandsClass(object):
             self.receivedFlags['fovXY'] = True
         elif command == 'zoom':
             checkNumArgs(args,1,1)
-            self.controller.currentZoom = float(args[0])
+            self.controller.acq['currentZoom'] = float(args[0])
             self.receivedFlags['zoom'] = True
         elif command == 'scananglexy':
             checkNumArgs(args,2,2)
@@ -1506,6 +1510,7 @@ class getCommandsClass(object):
             self.controller.update()
             if self.receivedFlags[flag]:
                 printStatus('{0} received'.format(flag))
+                break
             
             
 class MacroWindow(tk.Tk):
