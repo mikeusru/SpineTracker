@@ -457,15 +457,7 @@ class SpineTracker(tk.Tk):
             print('{0} {1} Timer {2} running at {3}s '.format(ex, step['IU'], posID, dt.datetime.now().second))
             
             #this should actually be set once data from position is received, because drift/af calculation will be done after that
-            self.currentPosID = posID
-#            #do the steps in threads so they don't freeze up the GUI
-#            if step['IU'] == 'Image':
-#                self.currentStepThread = threading.Thread(target = self.imageNewPosition, args = [step])
-#            elif step['IU'] == 'Uncage':
-#                self.currentStepThread = threading.Thread(target = self.uncageNewPosition, args = [step])
-#            self.currentStepThread.daemon = True
-#            self.currentStepThread.start()
-        
+            self.currentPosID = posID       
             #we're already in a thread so maybe don't need another one here
             if step['IU'] == 'Image':
                 self.imageNewPosition(step)
