@@ -267,7 +267,7 @@ end
 function setZSliceNum(z_slice_num)
 global state gh
 % set number of Z slices to image when grabbig stack
-set(gh.motorControls.etNumberOfZSlices,'String',num2str(numZslices));
+set(gh.motorControls.etNumberOfZSlices,'String',num2str(z_slice_num));
 motorControls('etNumberOfZSlices_Callback',gh.motorControls.etNumberOfZSlices);
 % respond with ZSliceNum
 write_to_SpineTracker('ZSliceNum',state.acq.numberOfZSlices);
