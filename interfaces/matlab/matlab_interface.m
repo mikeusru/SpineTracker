@@ -30,6 +30,8 @@ end
 
 if nargin<2
     reader_function = @eventhandlerChanged_DUMMY;
+end
+
 spineTracker.allCommands = {}; %initialize cell list of commands
 spineTracker.commandQueue = {}; %initialize cell list of commands in queue
 myfile = 'instructions_output.txt';
@@ -43,4 +45,3 @@ spineTracker.fileWatcherObject = System.IO.FileSystemWatcher(parentdir);
 spineTracker.fileWatcherObject.Filter = myfile;
 spineTracker.fileWatcherObject.EnableRaisingEvents = true;
 spineTracker.lh = addlistener(spineTracker.fileWatcherObject,'Changed',reader_function);
-end
