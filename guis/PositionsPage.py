@@ -4,7 +4,7 @@ import matplotlib
 import numpy as np
 from guis.SettingsPage import SettingsPage
 from utilities.DraggableCircle import DraggableCircle
-from utilities.helper_functions import fitFigToCanvas
+from utilities.helper_functions import fit_fig_to_canvas
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 from matplotlib import patches
@@ -187,8 +187,8 @@ class PositionsPage(ttk.Frame):
         self.gui['canvas_positions'].draw_idle()
 
     def on_visibility(self, event):
-        fitFigToCanvas(self.gui['f_positions'], self.gui['canvas_positions'],
-                       self.controller.get_app_param('fig_dpi'))
+        fit_fig_to_canvas(self.gui['f_positions'], self.gui['canvas_positions'],
+                          self.controller.get_app_param('fig_dpi'))
         self.redraw_position_table()
         self.gui['canvas_preview_ref_images'].draw_idle()
 

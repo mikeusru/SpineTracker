@@ -2,8 +2,8 @@ import tkinter as tk
 from tkinter import ttk
 import matplotlib
 import numpy as np
-from utilities.helper_functions import fitFigToCanvas
-from utilities.math_helpers import floatOrZero, floatOrNone
+from utilities.helper_functions import fit_fig_to_canvas
+from utilities.math_helpers import float_or_zero, float_or_none
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib import patches
 import pickle
@@ -22,6 +22,7 @@ class TimelinePage(ttk.Frame):
         self.gui['tFrame'] = TimelineStepsFrame(self, controller)
         self.gui['tFrame'].grid(row=0, column=0, columnspan=1)
         self.gui['f_timeline'] = self.controller.shared_figs['f_timeline']
+        self.gui['a_timeline'] = self.controller.shared_figs['a_timeline']
         self.gui['canvas_timeline'] = FigureCanvasTkAgg(self.gui['f_timeline'], self)
         self.gui['canvas_timeline'].get_tk_widget().config(borderwidth=1, background='gray', highlightcolor='gray',
                                                            highlightbackground='gray')
@@ -58,15 +59,15 @@ class TimelinePage(ttk.Frame):
         tree.configure(yscrollcommand=scroll.set)
 
     def on_visibility(self, event):
-        fitFigToCanvas(self.gui['f_timeline'], self.gui['canvas_timeline'],
-                       self.controller.get_app_param('fig_dpi'))
+        fit_fig_to_canvas(self.gui['f_timeline'], self.gui['canvas_timeline'],
+                          self.controller.get_app_param('fig_dpi'))
         self.gui['canvas_timeline'].draw_idle()
         self.create_timeline_chart()
 
     def create_timeline_chart(self, *args):
         timeline_steps = self.controller.timelineSteps
         positions = self.controller.positions
-        stagger = floatOrZero(self.gui['tFrame'].staggerEntryVar.get())
+        stagger = float_or_zero(self.gui['tFrame'].staggerEntryVar.get())
 
         if len(timeline_steps) == 0:
             return
@@ -154,7 +155,7 @@ class TimelinePage(ttk.Frame):
                 print('loop running too long')
                 break
 
-        self.controller.a_timeline.clear()
+        self.gui['a_timeline'].clear()
         y_ind = 0
         for key in individual_steps:
             yrange = (y_ind - .4, 0.8)
@@ -169,19 +170,19 @@ class TimelinePage(ttk.Frame):
                     c.append('green')  # exclusive imaging
                 else:
                     c.append('red')  # uncaging
-            self.controller.a_timeline.broken_barh(xranges, yrange, color=c, edgecolor='black')
-        self.controller.a_timeline.set_yticks(list(range(len(pos_ids))))
-        self.controller.a_timeline.set_yticklabels(ylabels1)
-        self.controller.a_timeline.axis('tight')
-        self.controller.a_timeline.set_ylim(auto=True)
-        self.controller.a_timeline.grid(color='k', linestyle=':')
-        y1, y2 = self.controller.a_timeline.get_ylim()
+            self.gui['a_timeline'].broken_barh(xranges, yrange, color=c, edgecolor='black')
+        self.gui['a_timeline'].set_yticks(list(range(len(pos_ids))))
+        self.gui['a_timeline'].set_yticklabels(ylabels1)
+        self.gui['a_timeline'].axis('tight')
+        self.gui['a_timeline'].set_ylim(auto=True)
+        self.gui['a_timeline'].grid(color='k', linestyle=':')
+        y1, y2 = self.gui['a_timeline'].get_ylim()
         if y2 > y1:
-            self.controller.a_timeline.invert_yaxis()
+            self.gui['a_timeline'].invert_yaxis()
         legend_patch_red = patches.Patch(color='red', label='Uncaging')
         legend_patch_blue = patches.Patch(color='blue', label='Imaging')
         legend_patch_green = patches.Patch(color='green', label='Exclusive Imaging')
-        self.controller.a_timeline.legend(handles=[legend_patch_red, legend_patch_blue, legend_patch_green])
+        self.gui['a_timeline'].legend(handles=[legend_patch_red, legend_patch_blue, legend_patch_green])
         self.controller.individualTimelineSteps = individual_steps
         self.gui['canvas_timeline'].draw_idle()
 
@@ -318,8 +319,8 @@ class TimelineStepsFrame(ttk.Frame):
     def add_step_callback(self, cont, ind=None):
         # get values
         step_name = self.stepName.get()
-        period = floatOrNone(self.periodEntryVar.get())
-        duration = floatOrNone(self.durationEntryVar.get())
+        period = float_or_none(self.periodEntryVar.get())
+        duration = float_or_none(self.durationEntryVar.get())
         imaging_or_uncaging = self.image_uncage.get()
         exclusive = self.exclusiveVar.get()
         cont.add_timeline_step({'SN': step_name,

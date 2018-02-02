@@ -1,6 +1,8 @@
 import os
+import matplotlib.pyplot as plt
 
-def fitFigToCanvas(fig, canv, fig_dpi):
+
+def fit_fig_to_canvas(fig, canv, fig_dpi):
     # TODO: add fig_dpi to calls for this function, or put it in a Class with DPI info
     h = canv.get_tk_widget().winfo_height()
     w = canv.get_tk_widget().winfo_width()
@@ -15,7 +17,8 @@ def remove_keymap_conflicts(new_keys_set):
             for key in remove_list:
                 keys.remove(key)
 
-def initializeInitDirectory(initDirectory):
+
+def initialize_init_directory(initDirectory):
     directory = os.path.dirname(initDirectory)
     try:
         os.stat(directory)

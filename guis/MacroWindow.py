@@ -51,7 +51,7 @@ class MacroWindow(tk.Tk):
         self.gui['label_macro_zoom'].grid(row=0, column=0, sticky='nw', padx=10, pady=10)
         self.gui['entry_macro_zoom'].grid(row=0, column=1, padx=10, pady=10, sticky='nw')
         self.gui['scale_zoom'].grid(row=1, column=0, sticky='ew')
-        self.gui['scale_zoom'].config(command=self.change_size, from_=.1, to=5, resolution=.1)
+        self.gui['scale_zoom'].config(command=self.change_image_size, from_=.1, to=5, resolution=.1)
         self.gui['scale_zoom'].set(2)
 
         self.gui['label_z_slices'].grid(row=1, column=0, padx=10, pady=10, sticky='nw')
@@ -60,11 +60,11 @@ class MacroWindow(tk.Tk):
         self.gui['button_load_macro_image'].grid(row=2, column=1, padx=10, pady=10, sticky='nw')
 
         # Define other settings
-        self.image = controller.acq['imageStack']
+        # self.image = controller.acq.get('imageStack',np.zeros(128))
         self.slice_index = 0
         self.data = dict()
 
-    def change_size(self):
+    def change_image_size(self, event):
         try:
             self.image
         except:

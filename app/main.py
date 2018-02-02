@@ -27,8 +27,8 @@ from guis.TimelinePage import TimelinePage
 from io_communication.GetCommands import GetCommands
 from io_communication.SendCommands import SendCommands
 from io_communication.file_listeners import InstructionThread
-from utilities.helper_functions import initializeInitDirectory
-from utilities.math_helpers import focusMeasure, computeDrift
+from utilities.helper_functions import initialize_init_directory
+from utilities.math_helpers import focus_measure, compute_drift
 
 matplotlib.use("TkAgg")
 style.use("ggplot")
@@ -58,7 +58,6 @@ class SpineTracker(tk.Tk):
         container.pack(side="top", fill="both", expand=True)
         self.initialize_timeline_steps()
         self.initialize_positions()
-        self.set_default_app_params()
         self.load_settings()
         self.frames = {}
         self.windows = {}
@@ -72,12 +71,12 @@ class SpineTracker(tk.Tk):
         self.inputFile = "../instructions_input.txt"
         self.sendCommands = SendCommands(self, self.outputFile)
         self.getCommands = GetCommands(self, self.inputFile)
-        self.listen_to_instructions_file()
 
-        # Shared timeline figuree
+        # Shared Timeline Figure
+        self.shared_figs = dict()
         self.shared_figs['f_timeline'] = Figure(figsize=(5, 2), dpi=self.get_app_param('fig_dpi'))
         self.shared_figs['f_timeline'].set_tight_layout(True)
-        self.shared_figs['a_timeline'] = self.gui['f_timeline'].add_subplot(111)
+        self.shared_figs['a_timeline'] = self.shared_figs['f_timeline'].add_subplot(111)
 
         # Shared Positions Figure
         self.shared_figs['f_positions'] = Figure(figsize=(3, 3), dpi=self.get_app_param('fig_dpi'))
@@ -94,7 +93,7 @@ class SpineTracker(tk.Tk):
         self.ins_thread.start()
 
         self.centerXY = (0, 0)
-        initializeInitDirectory(self.get_app_param('initDirectory'))
+        initialize_init_directory(self.get_app_param('initDirectory'))
         # create/refresh log file
         self.log_file = open('log.txt', 'w')
 
@@ -248,7 +247,7 @@ class SpineTracker(tk.Tk):
         image = self.acq['imageStack']
         fm = np.array([])
         for im in image:
-            fm = np.append(fm, (focusMeasure(im)))
+            fm = np.append(fm, (focus_measure(im)))
         self.measure['shiftz'] = fm.argmax().item() - np.floor(
             len(image) / 2)  # this needs to be checked obviously, depending on how Z info is dealt with
         self.measure['FMlist'] = fm
@@ -259,7 +258,7 @@ class SpineTracker(tk.Tk):
             imgref = self.acq['imgref_imaging']
         else:
             imgref = self.acq['imgref_ref']
-        shift = computeDrift(imgref, image)
+        shift = compute_drift(imgref, image)
         shiftx = shift['shiftx']
         shifty = shift['shifty']
         self.measure['shiftxy'] = (shiftx, shifty)
