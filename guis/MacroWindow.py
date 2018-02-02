@@ -107,26 +107,26 @@ class MacroWindow(tk.Tk):
         # add coordinates to position table
         print('x, y, z = {0}, {1}, {2}'.format(x, y, z))
         xyz = {'x': x, 'y': y, 'z': z}
-        self.getRefImageFromMacro(xyz_clicked)
+        self.get_ref_images_from_macro(xyz_clicked)
         self.controller.add_position(self.controller.frames[PositionsPage], xyz=xyz, refImages=self.refImages)
 
-    def getRefImageFromMacro(self, xyz_clicked):
-        macroZoom = float(self.macroZoom.get())
-        imagingZoom = float(self.controller.frames[PositionsPage].imagingZoom.get())
-        refZoom = float(self.controller.frames[PositionsPage].refZoom.get())
-        imagingSlices = int(self.controller.frames[PositionsPage].imagingSlices.get())
-        refSlices = int(self.controller.frames[PositionsPage].refSlices.get())
+    def get_ref_images_from_macro(self, xyz_clicked):
+        macro_zoom = float(self.macroZoom.get())
+        imaging_zoom = float(self.controller.frames[PositionsPage].imagingZoom.get())
+        ref_zoom = float(self.controller.frames[PositionsPage].refZoom.get())
+        imaging_slices = int(self.controller.frames[PositionsPage].imagingSlices.get())
+        ref_slices = int(self.controller.frames[PositionsPage].refSlices.get())
 
         frame = self.slice_index
-        imagingSlices_ind = range(int(round_math(frame - imagingSlices / 2)),
-                                  int(round_math(frame + imagingSlices / 2)))
-        refSlices_ind = range(int(round_math(frame - refSlices / 2)), int(round_math(frame + refSlices / 2)))
+        imagingSlices_ind = range(int(round_math(frame - imaging_slices / 2)),
+                                  int(round_math(frame + imaging_slices / 2)))
+        refSlices_ind = range(int(round_math(frame - ref_slices / 2)), int(round_math(frame + ref_slices / 2)))
 
         height, width = self.image.size
-        boxX_imaging = width / imagingZoom * macroZoom
-        boxY_imaging = height / imagingZoom * macroZoom
-        boxX_ref = width / refZoom * macroZoom
-        boxY_ref = height / refZoom * macroZoom
+        boxX_imaging = width / imaging_zoom * macro_zoom
+        boxY_imaging = height / imaging_zoom * macro_zoom
+        boxX_ref = width / ref_zoom * macro_zoom
+        boxY_ref = height / ref_zoom * macro_zoom
         x_clicked_pixel = width * xyz_clicked['x']
         y_clicked_pixel = height * xyz_clicked['y']
         xIndex_imaging = np.s_[int(round_math(x_clicked_pixel - boxX_imaging / 2)): int(

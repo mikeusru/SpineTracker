@@ -1,40 +1,13 @@
 import tkinter as tk
 from tkinter import ttk
-import numpy as np
-from scipy import ndimage
-from skimage import io, transform
 import matplotlib
-
-from utilities.DraggableCircle import DraggableCircle
-from utilities.helper_functions import fitFigToCanvas, initializeInitDirectory
-from utilities.math_helpers import floatOrZero, floatOrNone, round_math, focusMeasure, computeDrift
-
-matplotlib.use("TkAgg")
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
-from matplotlib.figure import Figure
-import matplotlib.animation as animation
-from matplotlib import style
-import matplotlib.gridspec as gridspec
+import numpy as np
+from utilities.helper_functions import fitFigToCanvas
+from utilities.math_helpers import floatOrZero, floatOrNone
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib import patches
-import datetime as dt
-import matplotlib.pyplot as plt
-import matplotlib.font_manager as font_manager
-import matplotlib.dates
-import matplotlib.colorbar as colorbar
-from matplotlib.dates import MONTHLY, DateFormatter, rrulewrapper, RRuleLocator
 import pickle
-import os
-import threading
-import time
-from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler
-from queue import Queue
-import cv2
-from PIL import Image, ImageTk, ImageOps, ImageMath
-import math
-import inspect
-import timeit
-import sys
+matplotlib.use("TkAgg")
 
 class TimelinePage(ttk.Frame):
     name = 'Timeline'
@@ -83,14 +56,14 @@ class TimelinePage(ttk.Frame):
         self.timelineTree = tree
 
     def on_visibility(self, event):
-        fitFigToCanvas(f_timeline, self.canvas_timeline)
+        fitFigToCanvas(self.controller.f_timeline, self.canvas_timeline, self.controller.get_app_param('fig_dpi'))
         #        h = self.canvas_timeline.get_tk_widget().winfo_height()
         #        w = self.canvas_timeline.get_tk_widget().winfo_width()
         #        f_timeline.set_size_inches(w/fig_dpi,h/fig_dpi)
         self.canvas_timeline.draw_idle()
-        self.createTimelineChart()
+        self.create_timeline_chart()
 
-    def createTimelineChart(self, *args):
+    def create_timeline_chart(self, *args):
         timelineSteps = self.controller.timelineSteps
         positions = self.controller.positions
         stagger = floatOrZero(self.tFrame.staggerEntryVar.get())
@@ -185,7 +158,7 @@ class TimelinePage(ttk.Frame):
                 print('loop running too long')
                 break
 
-        a_timeline.clear()
+        self.controller.a_timeline.clear()
         yInd = 0
         for key in individualSteps:
             yrange = (yInd - .4, 0.8)
@@ -200,19 +173,19 @@ class TimelinePage(ttk.Frame):
                     c.append('green')  # exclusive imaging
                 else:
                     c.append('red')  # uncaging
-            a_timeline.broken_barh(xranges, yrange, color=c, edgecolor='black')
-        a_timeline.set_yticks(list(range(len(posIDs))))
-        a_timeline.set_yticklabels(ylabels1)
-        a_timeline.axis('tight')
-        a_timeline.set_ylim(auto=True)
-        a_timeline.grid(color='k', linestyle=':')
-        y1, y2 = a_timeline.get_ylim()
+            self.controller.a_timeline.broken_barh(xranges, yrange, color=c, edgecolor='black')
+        self.controller.a_timeline.set_yticks(list(range(len(posIDs))))
+        self.controller.a_timeline.set_yticklabels(ylabels1)
+        self.controller.a_timeline.axis('tight')
+        self.controller.a_timeline.set_ylim(auto=True)
+        self.controller.a_timeline.grid(color='k', linestyle=':')
+        y1, y2 = self.controller.a_timeline.get_ylim()
         if y2 > y1:
-            a_timeline.invert_yaxis()
+            self.controller.a_timeline.invert_yaxis()
         legendPatchRed = patches.Patch(color='red', label='Uncaging')
         legendPatchBlue = patches.Patch(color='blue', label='Imaging')
         legendPatchGreen = patches.Patch(color='green', label='Exclusive Imaging')
-        a_timeline.legend(handles=[legendPatchRed, legendPatchBlue, legendPatchGreen])
+        self.controller.a_timeline.legend(handles=[legendPatchRed, legendPatchBlue, legendPatchGreen])
         self.controller.individualTimelineSteps = individualSteps
         self.canvas_timeline.draw_idle()
 
@@ -266,17 +239,17 @@ class TimelinePage(ttk.Frame):
             tree.insert("", ii, text=str(ii), values=(SN, IU, EX, P, D))
             ii += 1
 
-        self.createTimelineChart()
+        self.create_timeline_chart()
 
     def backupTimeline(self):
         timelineSteps = self.controller.timelineSteps
-        pickle.dump(timelineSteps, open(initDirectory + 'timelineSteps.p', 'wb'))
+        pickle.dump(timelineSteps, open(self.controller.get_app_param('initDirectory') + 'timelineSteps.p', 'wb'))
 
 class TimelineStepsFrame(ttk.Frame):
     def __init__(self, parent, controller):
         ttk.Frame.__init__(self, parent)
         self.controller = controller
-        label1 = ttk.Label(self, text='Step Name:', font=LARGE_FONT)
+        label1 = ttk.Label(self, text='Step Name:', font=self.controller.get_app_param('large_font'))
         label1.grid(row=0, column=0, sticky='nw', padx=10, pady=10)
         self.stepName = tk.StringVar(self)
         stepNameEntry = ttk.Entry(self, width=30, textvariable=self.stepName)
@@ -295,19 +268,19 @@ class TimelineStepsFrame(ttk.Frame):
                               value='Image')
         rb1.grid(row=1, column=0, sticky='nw', pady=10, padx=10)
 
-        periodLabel1 = ttk.Label(imageInfoFrame, text='  Period: ', font=LARGE_FONT)
+        periodLabel1 = ttk.Label(imageInfoFrame, text='  Period: ', font=self.controller.get_app_param('large_font'))
         periodLabel1.pack(anchor='w', side='left')
         self.periodEntryVar = tk.StringVar(self)
         periodEntry = ttk.Entry(imageInfoFrame, width=4, textvariable=self.periodEntryVar)
         periodEntry.pack(anchor='w', side='left')
-        periodLabel2 = ttk.Label(imageInfoFrame, text='sec, ', font=LARGE_FONT)
+        periodLabel2 = ttk.Label(imageInfoFrame, text='sec, ', font=self.controller.get_app_param('large_font'))
         periodLabel2.pack(anchor='w', side='left')
-        durationLabel1 = ttk.Label(imageInfoFrame, text='Duration: ', font=LARGE_FONT)
+        durationLabel1 = ttk.Label(imageInfoFrame, text='Duration: ', font=self.controller.get_app_param('large_font'))
         durationLabel1.pack(anchor='w', side='left')
         self.durationEntryVar = tk.StringVar(self)
         durationEntry = ttk.Entry(imageInfoFrame, width=4, textvariable=self.durationEntryVar)
         durationEntry.pack(anchor='w', side='left')
-        durationLabel2 = ttk.Label(imageInfoFrame, text='min', font=LARGE_FONT)
+        durationLabel2 = ttk.Label(imageInfoFrame, text='min', font=self.controller.get_app_param('large_font'))
         durationLabel2.pack(anchor='w', side='left')
 
         rb2 = ttk.Radiobutton(self, text='Uncage', variable=self.image_uncage,
@@ -319,17 +292,17 @@ class TimelineStepsFrame(ttk.Frame):
         exclusiveCB.grid(row=2, column=1, sticky='nw', padx=10, pady=3)
         staggerFrame = ttk.Frame(self)
         staggerFrame.grid(row=4, column=0, sticky='nw', columnspan=2)
-        staggerLabel1 = ttk.Label(staggerFrame, text='Stagger: ', font=LARGE_FONT)
+        staggerLabel1 = ttk.Label(staggerFrame, text='Stagger: ', font=self.controller.get_app_param('large_font'))
         staggerLabel1.grid(row=0, column=0, sticky='nw', padx=10, pady=10)
         self.staggerEntryVar = tk.StringVar(self)
         try:
             self.staggerEntryVar.set(controller.settings['stagger'])
         except:
             pass
-        self.staggerEntryVar.trace('w', parent.createTimelineChart)
+        self.staggerEntryVar.trace('w', parent.create_timeline_chart)
         staggerEntry = ttk.Entry(staggerFrame, width=4, textvariable=self.staggerEntryVar)
         staggerEntry.grid(row=0, column=1, sticky='nw', padx=0, pady=10)
-        staggerLabel2 = ttk.Label(staggerFrame, text='min', font=LARGE_FONT)
+        staggerLabel2 = ttk.Label(staggerFrame, text='min', font=self.controller.get_app_param('large_font'))
         staggerLabel2.grid(row=0, column=2, sticky='nw', padx=0, pady=10)
 
         button = ttk.Button(self, text="Add Step",

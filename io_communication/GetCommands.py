@@ -1,49 +1,5 @@
-
-import tkinter as tk
-from tkinter import ttk
-import numpy as np
-# from scipy import ndimage
-from skimage import io, transform
-import matplotlib
-
-from guis.MacroWindow import MacroWindow
-from guis.PositionsPage import PositionsPage
-from guis.StartPage import StartPage
-from guis.SettingsPage import SettingsPage
-from guis.TimelinePage import TimelinePage
-# from utilities.DraggableCircle import DraggableCircle
-from io_communication.GetCommands import GetCommands
-from io_communication.SendCommands import SendCommands
-from io_communication.file_listeners import InstructionThread
-from utilities.helper_functions import fitFigToCanvas, initializeInitDirectory
-from utilities.math_helpers import floatOrZero, floatOrNone, round_math, focusMeasure, computeDrift
-
-matplotlib.use("TkAgg")
-# from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
-from matplotlib.figure import Figure
-# import matplotlib.animation as animation
-from matplotlib import style
-# import matplotlib.gridspec as gridspec
-from matplotlib import patches
-import datetime as dt
-# import matplotlib.pyplot as plt
-# import matplotlib.font_manager as font_manager
-# import matplotlib.dates
-# import matplotlib.colorbar as colorbar
-# from matplotlib.dates import MONTHLY, DateFormatter, rrulewrapper, RRuleLocator
-import pickle
 import os
-import threading
-import time
-from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler
-from queue import Queue
-# import cv2
-from PIL import Image, ImageTk, ImageOps, ImageMath
-# import math
-import inspect
-# import timeit
-# import sys
+
 
 class GetCommands(object):
     def __init__(self, controller, filepath, *args, **kwargs):
@@ -65,7 +21,7 @@ class GetCommands(object):
             if len(line) > 0:
                 ii += 1
             if ii > instLen:
-                if verbose:
+                if self.controller.get_app_param('verbose'):
                     print('\nnew line {0}\n'.format(ii))
                     print('\nnew instructions received\n')
                     print('\n{0}\n'.format(line))
@@ -104,7 +60,7 @@ class GetCommands(object):
         if command == 'stagemovedone':
             checkNumArgs(args, 3, 3)
             x, y, z = [float(args[xyz]) for xyz in [0, 1, 2]]
-            if verbose:
+            if self.controller.get_app_param('verbose'):
                 print('\nStage Moved to x= {0} , y = {1}, z = {2}\n'.format(x, y, z))
             self.receivedFlags['stageMoveDone'] = True
         elif command == 'grabonestackdone':
@@ -149,9 +105,9 @@ class GetCommands(object):
             print("COMMAND NOT UNDERSTOOD")
 
     def waitForReceivedFlag(self, flag):
-        printStatus('Waiting for {0}'.format(flag))
+        self.controller.print_status('Waiting for {0}'.format(flag))
         while True:
             self.controller.update()
             if self.receivedFlags[flag]:
-                printStatus('{0} received'.format(flag))
+                self.controller.print_status('{0} received'.format(flag))
                 break

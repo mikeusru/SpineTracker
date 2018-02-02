@@ -303,22 +303,22 @@ class SpineTracker(tk.Tk):
             xyz = self.get_current_position()
         # add position to table
         self.create_new_pos(xyz, ref_images=ref_images)
-        cont.redrawPositionTable()
+        cont.redraw_position_table()
         self.backup_positions()
 
     def clear_positions(self, cont):
         self.positions = {}
-        cont.redrawPositionTable()
+        cont.redraw_position_table()
 
     def delete_positions(self, pos_id):
         del self.positions[pos_id]
-        self.frames[PositionsPage].redrawPositionTable()
+        self.frames[PositionsPage].redraw_position_table()
         self.backup_positions()
 
     def update_position(self, pos_id):
         xyz = self.get_current_position()
         self.positions[pos_id].update(xyz)
-        self.frames[PositionsPage].redrawPositionTable()
+        self.frames[PositionsPage].redraw_position_table()
         self.backup_positions()
 
     def add_timeline_step(self, step_dict, ind=None):
