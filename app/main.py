@@ -75,15 +75,22 @@ class SpineTracker(tk.Tk):
         self.listen_to_instructions_file()
 
         # Shared timeline figuree
-        self.f_timeline = Figure(figsize=(5, 2), dpi=self.get_app_param('fig_dpi'))
-        self.f_timeline.set_tight_layout(True)
-        self.a_timeline = self.f_timeline.add_subplot(111)
+        self.shared_figs['f_timeline'] = Figure(figsize=(5, 2), dpi=self.get_app_param('fig_dpi'))
+        self.shared_figs['f_timeline'].set_tight_layout(True)
+        self.shared_figs['a_timeline'] = self.gui['f_timeline'].add_subplot(111)
+
+        # Shared Positions Figure
+        self.shared_figs['f_positions'] = Figure(figsize=(3, 3), dpi=self.get_app_param('fig_dpi'))
+        self.shared_figs['f_positions'].subplots_adjust(left=0, right=1, bottom=0, top=1)
+        self.shared_figs['f_positions'].set_tight_layout(True)
+        self.shared_figs['f_positions'].set_size_inches(4, 4)
+
 
         # initialize instructions listener
         path, filename = os.path.split(self.inputFile)
         with self.instructions_in_queue.mutex:
             self.instructions_in_queue.queue.clear()
-        self.ins_thread = InstructionThread(self, path, filename, self.getCommands.readNewInstructions)
+        self.ins_thread = InstructionThread(self, path, filename, self.getCommands.read_new_instructions)
         self.ins_thread.start()
 
         self.centerXY = (0, 0)
@@ -102,8 +109,17 @@ class SpineTracker(tk.Tk):
     def set_app_param(self, k, v):
         self.app_params[k] = v
 
-    def get_app_param(self, k):
-        return self.app_params.get(k, None)
+    def get_app_param(self, k, *args):
+        param = self.app_params.get(k, None)
+        if param is None and args:
+            param = args[0]
+        return param
+
+    def get_settings(self,k, *args):
+        setting = self.settings.get(k, None)
+        if setting is None and args:
+            setting = args[0]
+        return setting
 
     def show_macro_view_window(self):
         self.windows[MacroWindow] = MacroWindow(self)
@@ -274,8 +290,8 @@ class SpineTracker(tk.Tk):
         else:
             flag = 'currentPosition'
             self.getCommands.receivedFlags[flag] = False
-            self.sendCommands.getCurrentPosition()
-            self.getCommands.waitForReceivedFlag(flag)
+            self.sendCommands.get_current_position()
+            self.getCommands.wait_for_received_flag(flag)
             x, y, z = self.currentCoordinates
         return {'x': x, 'y': y, 'z': z}
 
@@ -329,7 +345,7 @@ class SpineTracker(tk.Tk):
         else:
             self.timelineSteps.insert(ind, step_dict)
 
-        self.frames[TimelinePage].drawTimelineSteps()
+        self.frames[TimelinePage].draw_timeline_steps()
 
     def backup_positions(self):
         positions = self.positions
@@ -404,33 +420,33 @@ class SpineTracker(tk.Tk):
             y_motor = y
         flag = 'stageMoveDone'
         self.getCommands.receivedFlags[flag] = False
-        self.sendCommands.moveStage(x_motor, y_motor, z)
-        self.getCommands.waitForReceivedFlag(flag)
+        self.sendCommands.move_stage(x_motor, y_motor, z)
+        self.getCommands.wait_for_received_flag(flag)
 
     def grab_stack(self):
         flag = 'grabOneStackDone'
         self.getCommands.receivedFlags[flag] = False
-        self.sendCommands.grabOneStack()
-        self.getCommands.waitForReceivedFlag(flag)
+        self.sendCommands.grab_one_stack()
+        self.getCommands.wait_for_received_flag(flag)
 
     def uncage(self, roi_x, roi_y):
         flag = 'uncagingDone'
         self.getCommands.receivedFlags[flag] = False
-        self.sendCommands.doUncaging(roi_x, roi_y)
-        self.getCommands.waitForReceivedFlag(flag)
+        self.sendCommands.do_uncaging(roi_x, roi_y)
+        self.getCommands.wait_for_received_flag(flag)
 
     def set_scan_shift(self, x, y):
         scan_shift_fast, scan_shift_slow = self.xy_to_scan_angle(x, y)
         flag = 'scanAngleXY'
         self.getCommands.receivedFlags[flag] = False
-        self.sendCommands.setScanShift(scan_shift_fast, scan_shift_slow)
-        self.getCommands.waitForReceivedFlag(flag)
+        self.sendCommands.set_scan_shift(scan_shift_fast, scan_shift_slow)
+        self.getCommands.wait_for_received_flag(flag)
 
     def set_z_slice_num(self, z_slice_num):
         flag = 'z_slice_num'
         self.getCommands.receivedFlags[flag] = False
-        self.sendCommands.setZSliceNum(z_slice_num)
-        self.getCommands.waitForReceivedFlag(flag)
+        self.sendCommands.set_z_slice_num(z_slice_num)
+        self.getCommands.wait_for_received_flag(flag)
 
     def xy_to_scan_angle(self, x, y):
         scan_angle_multiplier = np.array(self.scanAngleMultiplier)
@@ -450,19 +466,19 @@ class SpineTracker(tk.Tk):
     def get_scan_props(self):
         flag = 'scanAngleMultiplier'
         self.getCommands.receivedFlags[flag] = False
-        self.sendCommands.getScanAngleMultiplier()
-        self.getCommands.waitForReceivedFlag(flag)
+        self.sendCommands.get_scan_angle_multiplier()
+        self.getCommands.wait_for_received_flag(flag)
 
         flag = 'scanAngleRangeReference'
         self.getCommands.receivedFlags[flag] = False
-        self.sendCommands.getScanAngleRangeReference()
-        self.getCommands.waitForReceivedFlag(flag)
+        self.sendCommands.get_scan_angle_range_reference()
+        self.getCommands.wait_for_received_flag(flag)
 
     def set_zoom(self, zoom):
         flag = 'zoom'
         self.getCommands.receivedFlags[flag] = False
-        self.sendCommands.setZoom(zoom)
-        self.getCommands.waitForReceivedFlag(flag)
+        self.sendCommands.set_zoom(zoom)
+        self.getCommands.wait_for_received_flag(flag)
 
     def print_status(self, following_string):
         if self.app_params['verbose']:

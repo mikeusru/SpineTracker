@@ -1,49 +1,50 @@
 import os
 
+
 class SendCommands(object):
-    def __init__(self, controller, filepath, *args, **kwargs):
+    def __init__(self, controller, file_path, *args, **kwargs):
         self.controller = controller
-        self.filepath = filepath
+        self.file_path = file_path
         self.args = args
         self.kwargs = kwargs
-        if not os.path.isfile(filepath):
-            open(filepath, 'a').close()
+        if not os.path.isfile(file_path):
+            open(file_path, 'a').close()
 
-    def moveStage(self, x, y, z):
-        self.writeCommand('moveXYZ', x, y, z)
+    def move_stage(self, x, y, z):
+        self.write_command('moveXYZ', x, y, z)
 
-    def grabOneStack(self):
-        self.writeCommand('grabOneStack')
+    def grab_one_stack(self):
+        self.write_command('grabOneStack')
 
-    def setZoom(self, zoom):
-        self.writeCommand('setZoom', zoom)
+    def set_zoom(self, zoom):
+        self.write_command('setZoom', zoom)
 
-    def doUncaging(self, roi_x, roi_y):
-        self.writeCommand('runUncaging', roi_x, roi_y)
+    def do_uncaging(self, roi_x, roi_y):
+        self.write_command('runUncaging', roi_x, roi_y)
 
-    def getFOVsize(self):
-        self.writeCommand('getFOV_xy')
+    def get_fov_size(self):
+        self.write_command('getFOV_xy')
 
-    def getScanAngleXY(self):
-        self.writeCommand('getScanAngleXY')
+    def get_scan_angle_xy(self):
+        self.write_command('getScanAngleXY')
 
-    def getScanAngleMultiplier(self):
-        self.writeCommand('getScanAngleMultiplier')
+    def get_scan_angle_multiplier(self):
+        self.write_command('getScanAngleMultiplier')
 
-    def getScanAngleRangeReference(self):
-        self.writeCommand('getScanAngleRangeReference')
+    def get_scan_angle_range_reference(self):
+        self.write_command('getScanAngleRangeReference')
 
-    def getCurrentPosition(self):
-        self.writeCommand('getCurrentPosition', 'xyz')
+    def get_current_position(self):
+        self.write_command('getCurrentPosition', 'xyz')
 
-    def setScanShift(self, scanShiftFast, scanShiftSlow):
-        self.writeCommand('setScanAngleXY', scanShiftFast, scanShiftSlow)
+    def set_scan_shift(self, scan_shift_fast, scan_shift_slow):
+        self.write_command('setScanAngleXY', scan_shift_fast, scan_shift_slow)
 
-    def setZSliceNum(self, z_slice_num):
-        self.writeCommand('setZSliceNum', z_slice_num)
+    def set_z_slice_num(self, z_slice_num):
+        self.write_command('setZSliceNum', z_slice_num)
 
-    def writeCommand(self, *args):
+    def write_command(self, *args):
         command = ",".join([str(x) for x in args])
         self.controller.print_status('\nWriting Command {0}\n'.format(command))
-        with open(self.filepath, "a") as f:
+        with open(self.file_path, "a") as f:
             f.write('\n' + command)
