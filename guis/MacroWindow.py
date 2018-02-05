@@ -60,21 +60,18 @@ class MacroWindow(tk.Tk):
         self.gui['button_load_macro_image'].grid(row=2, column=1, padx=10, pady=10, sticky='nw')
 
         # Define other settings
-        # self.image = controller.acq.get('imageStack',np.zeros(128))
         self.slice_index = 0
         self.data = dict()
+        self.image = None
 
     def change_image_size(self, event):
-        try:
-            self.image
-        except:
-            return
-        self.scrollingCanvas.set_image()
+        if self.image:
+            self.gui['scrollingCanvas'].set_image()
 
     def load_macro_image(self):
-        if self.get_app_param('simulation'):
+        if self.controller.get_app_param('simulation'):
             self.image = Image.open("../testing/macroImage.tif")
-            self.controller.centerXY = (0, 0)
+            self.controller.set_acq_var('center_xy', (0, 0))
         else:
             # set zoom
             macro_zoom = float(self.macroZoom.get())
@@ -85,32 +82,32 @@ class MacroWindow(tk.Tk):
             # grab stack
             self.controller.grab_stack()
             self.controller.load_acquired_image(updateFigure=False)
-            self.image = self.controller.acq['imageStack']
+            self.image = self.controller.get_acq_var('imageStack')
             # get the motor coordinates
             self.controller.get_current_position()
             x, y, z = self.currentCoordinates
-            self.controller.centerXY = (x, y)
+            self.controller.set_acq_var('center_xy', (x, y))
 
         self.multi_slice_viewer()
 
     def multi_slice_viewer(self):
 
-        self.scale_z.config(command=self.scale_callback, from_=0, to=self.image.n_frames - 1)
+        self.gui['scale_z'].config(command=self.scale_callback, from_=0, to=self.image.n_frames - 1)
         self.slice_index = self.image.n_frames // 2
-        self.scale_z.set(self.slice_index)
-        self.scrollingCanvas.set_image()
+        self.gui['scale_z'].set(self.slice_index)
+        self.gui['scrollingCanvas'].set_image()
 
     def scale_callback(self, event):
-        self.slice_index = self.scale_z.get()
-        self.scrollingCanvas.set_image()
+        self.slice_index = self.gui['scale_z'].get()
+        self.gui['scrollingCanvas'].set_image()
 
-    def add_position_on_imagee_click(self, x, y, z):
+    def add_position_on_image_click(self, x, y, z):
         # translate to normal coordinates
         fov_x, fov_y = self.controller.settings['fovXY']
         # xy currently originate from top left of image.
         # translate them to coordinate plane directionality.
         # also, make them originate from center
-        x_center, y_center = self.controller.centerXY
+        x_center, y_center = self.controller.get_acq_var('center_xy')
         xyz_clicked = {'x': x, 'y': y, 'z': z}
         x = x - .5
         y = -y + .5
@@ -121,7 +118,7 @@ class MacroWindow(tk.Tk):
         print('x, y, z = {0}, {1}, {2}'.format(x, y, z))
         xyz = {'x': x, 'y': y, 'z': z}
         self.get_ref_images_from_macro(xyz_clicked)
-        self.controller.add_position(self.controller.frames[PositionsPage], xyz=xyz, refImages=self.data['refImages'])
+        self.controller.add_position(self.controller.frames[PositionsPage], xyz=xyz, ref_images=self.data['refImages'])
 
     def get_ref_images_from_macro(self, xyz_clicked):
         macro_zoom = float(self.macroZoom.get())
@@ -201,27 +198,28 @@ class ScrolledCanvas(tk.Frame):
 
         self.gui['canvas'].grid(row=0, column=0, sticky='nsew')
         self.gui['popup'] = tk.Menu(self, tearoff=0)
+        self.image_show = None
 
     def canvas_right_click(self, event):
         # Create popup menu
         w, h = self.master.image.size
         canvas = event.widget
-        x = canvas.canvasx(event.x) / (w * self.master.scale_zoom.get())
-        y = canvas.canvasy(event.y) / (h * self.master.scale_zoom.get())
+        x = canvas.canvasx(event.x) / (w * self.master.gui['scale_zoom'].get())
+        y = canvas.canvasy(event.y) / (h * self.master.gui['scale_zoom'].get())
         if x > 1 or y > 1:
             return
-        z = self.master.sliceIndex
+        z = self.master.slice_index
         #            print('eventx, eventy = {0}, {1}'.format(event.x,event.y))
         #            print(canvas.find_closest(x,y))
         self.gui['popup'].add_command(label='Add Position',
-                                      command=lambda: self.master.add_position_on_imagee_click(x, y, z))
+                                      command=lambda: self.master.add_position_on_image_click(x, y, z))
         # display the popup menu
         self.gui['popup'].post(event.x_root, event.y_root)
 
     def set_image(self):
         im = self.master.image
-        frame = self.master.sliceIndex
-        zoom = self.master.scale_zoom.get()
+        frame = self.master.slice_index
+        zoom = self.master.gui['scale_zoom'].get()
         width, height = im.size
         width_r = round(width * zoom)
         height_r = round(height * zoom)
@@ -232,5 +230,5 @@ class ScrolledCanvas(tk.Frame):
         im = ImageMath.eval("convert(a/a_m * 255, 'L')", a=im, a_m=im_max)
         im_r = im.resize((width_r, height_r))
         self.gui['canvas'].config(scrollregion=(0, 0, width_r, height_r))
-        im2 = ImageTk.PhotoImage(master=self.gui['canvas'], image=im_r)
-        self.gui['imgtag'] = self.gui['canvas'].create_image(0, 0, anchor="nw", image=im2)
+        self.image_show = ImageTk.PhotoImage(master=self.gui['canvas'], image=im_r)
+        self.gui['imgtag'] = self.gui['canvas'].create_image(0, 0, anchor="nw", image=self.image_show)

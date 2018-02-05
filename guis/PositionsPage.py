@@ -120,7 +120,6 @@ class PositionsPage(ttk.Frame):
         self.gui['colorbar_axis'], kw = colorbar.make_axes_gridspec(self.gui['position_preview_axis'])
         self.preview_position_locations()
         self.draggable_circle = None
-        self.selectionArrow = None
 
     def create_positions_table(self, container):
         tree = self.gui['tree']
@@ -221,10 +220,10 @@ class PositionsPage(ttk.Frame):
         x = positions[pos_id]['x']
         y = positions[pos_id]['y']
         arrow_props = dict(facecolor='black')
+        for annotation in ax.texts:
+            if annotation.arrow_patch:
+                annotation.remove()
         arrow = ax.annotate("", xy=(x, y), xytext=(x - 10, y - 10), arrowprops=arrow_props)
-        if self.selectionArrow:
-            self.selectionArrow.remove()
-        self.selectionArrow = arrow
         self.gui['canvas_positions'].draw_idle()
 
     def redraw_position_table(self):
@@ -245,11 +244,11 @@ class PositionsPage(ttk.Frame):
             ax.clear()
             ax.axis('off')
             ax.imshow(r)
-        self.draw_roi(pos_id, self.controller.self.gui['ref_images_axes'][0])
+        self.draw_roi(pos_id, self.gui['ref_images_axes'][0])
         self.gui['canvas_preview_ref_images'].draw_idle()
 
     def draw_roi(self, pos_id, ax):
-        if self.controller.frames[SettingsPage].uncaging_roi_toggle:
+        if self.controller.frames[SettingsPage].uncaging_roi_toggle_var.get():
             ax_width = abs(np.diff(ax.get_xlim()).item())
             x, y = self.controller.positions[pos_id]['roi_position']
             circ = patches.Circle((x, y), radius=ax_width / 20, fill=False, linewidth=ax_width / 20, edgecolor='r')

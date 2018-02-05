@@ -46,7 +46,7 @@ class SpineTracker(tk.Tk):
         self.positions = {}
         self.app_params = dict(large_font=("Verdana", 12),
                                fig_dpi=100,
-                               simlulation=True,
+                               simulation=True,
                                verbose=True,
                                initDirectory="../iniFiles/")
         tk.Tk.iconbitmap(self, default="../images/crabIco.ico")  # icon doesn't work
@@ -84,7 +84,6 @@ class SpineTracker(tk.Tk):
         self.shared_figs['f_positions'].set_tight_layout(True)
         self.shared_figs['f_positions'].set_size_inches(4, 4)
 
-
         # initialize instructions listener
         path, filename = os.path.split(self.inputFile)
         with self.instructions_in_queue.mutex:
@@ -92,7 +91,7 @@ class SpineTracker(tk.Tk):
         self.ins_thread = InstructionThread(self, path, filename, self.getCommands.read_new_instructions)
         self.ins_thread.start()
 
-        self.centerXY = (0, 0)
+        self.acq['center_xy'] = (0, 0)
         initialize_init_directory(self.get_app_param('initDirectory'))
         # create/refresh log file
         self.log_file = open('log.txt', 'w')
@@ -114,22 +113,32 @@ class SpineTracker(tk.Tk):
             param = args[0]
         return param
 
-    def get_settings(self,k, *args):
+    def get_settings(self, k, *args):
         setting = self.settings.get(k, None)
         if setting is None and args:
             setting = args[0]
         return setting
+
+    def set_settings_var(self, k, v):
+        self.settings[k] = v
+        self.save_settings()
+
+    def get_acq_var(self, k, *args):
+        var = self.acq.get(k, None)
+        if var is None and args:
+            var = args[0]
+        return var
+
+    def set_acq_var(self, k, v):
+        self.acq[k] = v
 
     def show_macro_view_window(self):
         self.windows[MacroWindow] = MacroWindow(self)
 
     def on_exit(self):
         print('quitting')
-        try:
-            self.ins_thread.stop()
-            print('Instruction listener closed')
-        except:  # TODO: Make more specific except clause
-            pass
+        self.ins_thread.stop()
+        print('Instruction listener closed')
         self.log_file.close()
         self.destroy()
         print('goodbye')
@@ -141,22 +150,19 @@ class SpineTracker(tk.Tk):
     #     self.ins_thread = InstructionThread(self, path, filename, self.getCommands.readNewInstructions)
 
     def initialize_positions(self):
-        try:
-            self.positions = pickle.load(open(self.get_app_param('initDirectory') + 'positions.p', 'rb'))
-        except:
-            pass
+        file_name = self.get_app_param('initDirectory') + 'positions.p'
+        if os.path.isfile(file_name):
+            self.positions = pickle.load(open(file_name, 'rb'))
 
     def initialize_timeline_steps(self):
-        try:
-            self.timelineSteps = pickle.load(open(self.get_app_param('initDirectory') + 'timelineSteps.p', 'rb'))
-        except:
-            pass
+        file_name = self.get_app_param('initDirectory') + 'timelineSteps.p'
+        if os.path.isfile(file_name):
+            self.timelineSteps = pickle.load(open(file_name, 'rb'))
 
     def load_settings(self):
-        try:
-            self.settings = pickle.load(open(self.get_app_param('initDirectory') + 'user_settings.p', 'rb'))
-        except:
-            pass
+        file_name = self.get_app_param('initDirectory') + 'user_settings.p'
+        if os.path.isfile(file_name):
+            self.settings = pickle.load(open(file_name, 'rb'))
         self.check_settings()
 
     def check_settings(self):
@@ -167,7 +173,8 @@ class SpineTracker(tk.Tk):
                             'imagingZoom': 30,
                             'imagingSlices': 3,
                             'referenceZoom': 15,
-                            'referenceSlices': 10
+                            'referenceSlices': 10,
+                            'park_xy_motor': True
                             }
         flag = False
         for key in default_settings:
@@ -179,7 +186,7 @@ class SpineTracker(tk.Tk):
 
         # measure autofocus of image
 
-    def load_test_image(self):  # for testing purposes only
+    def load_test_image(self, event):  # for testing purposes only
         image = io.imread("../testing/test_image.tif")
         image = image[np.arange(0, len(image), 2)]
         self.acq['imageStack'] = image
@@ -196,7 +203,7 @@ class SpineTracker(tk.Tk):
         if update_figure:
             self.create_figure_for_af_images()
 
-    def load_test_ref_image(self):  # for testing purposes only
+    def load_test_ref_image(self, event):  # for testing purposes only
         imgref = io.imread("../testing/test_refimg.tif")
         #        self.acq['imgref'] = imgref
         self.acq['imgref_imaging'] = imgref
@@ -268,14 +275,11 @@ class SpineTracker(tk.Tk):
             return
         image = self.acq['imageStack']
         subplot_length = len(image)
-        f = self.frames[StartPage].fig_af_image
-        a = self.frames[StartPage].ax_af_image
+        f = self.frames[StartPage].gui['figure_af_images']
+        a = self.frames[StartPage].gui['axes_af_images']
         for ax in a.copy():
-            try:
-                a.remove(ax)
-                f.delaxes(ax)
-            except:
-                self.print_status('axes delete not working')
+            a.remove(ax)
+            f.delaxes(ax)
         for i in range(subplot_length):
             a.append(f.add_subplot(1, subplot_length, i + 1))
 
@@ -412,7 +416,7 @@ class SpineTracker(tk.Tk):
 
     def move_stage(self, x, y, z):
         if self.parkXYmotor:
-            x_motor, y_motor = self.centerXY
+            x_motor, y_motor = self.acq['center_xy']
             self.set_scan_shift(x, y)
         else:
             x_motor = x
@@ -452,7 +456,7 @@ class SpineTracker(tk.Tk):
         scan_angle_range_reference = np.array(self.scanAngleRangeReference)
         fov = np.array(self.settings['fovXY'])
         # convert x and y to relative pixel coordinates
-        x_center, y_center = self.centerXY
+        x_center, y_center = self.acq['center_xy']
         xc = x - x_center
         yc = y - y_center
         fs_coordinates = np.array([xc, yc])

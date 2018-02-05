@@ -3,15 +3,15 @@ from scipy import ndimage
 import numpy as np
 
 
-def round_math(n, ndigits=0):
-    part = n * 10 ** ndigits
+def round_math(n, n_digits=0):
+    part = n * 10 ** n_digits
     delta = part - int(part)
     # always round "away from 0"
     if delta >= 0.5 or -0.5 < delta <= 0:
         part = math.ceil(part)
     else:
         part = math.floor(part)
-    return part / (10 ** ndigits)
+    return part / (10 ** n_digits)
 
 
 def float_or_none(x):

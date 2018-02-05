@@ -56,7 +56,8 @@ class StartPage(ttk.Frame):
         self.gui['canvas_timeline'].get_tk_widget().config(borderwidth=1, background='gray', highlightcolor='gray',
                                                            highlightbackground='gray')
         self.gui['canvas_timeline'].get_tk_widget().grid(row=0, column=0, padx=10, pady=10, sticky='nsew')
-        self.gui['canvas_positions'] = FigureCanvasTkAgg(self.controller.shared_figs['f_positions'], self.gui['frame_for_canvases'])
+        self.gui['canvas_positions'] = FigureCanvasTkAgg(self.controller.shared_figs['f_positions'],
+                                                         self.gui['frame_for_canvases'])
         self.gui['canvas_positions'].show()
         self.gui['canvas_positions'].get_tk_widget().config(borderwidth=1, background='gray', highlightcolor='gray',
                                                             highlightbackground='gray')
