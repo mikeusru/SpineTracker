@@ -5,27 +5,28 @@ Created on Wed Oct 18 14:36:57 2017
 @author: smirnovm
 """
 
+import datetime as dt
+import inspect
+import os
+import pickle
 import tkinter as tk
+from queue import Queue
 from tkinter import ttk
+
 import matplotlib
 import numpy as np
-import datetime as dt
-import pickle
-import os
-import inspect
+from matplotlib import patches
+from matplotlib import style
 from matplotlib.figure import Figure
 from skimage import io, transform
-from matplotlib import style
-from matplotlib import patches
-from queue import Queue
 
+from app.inherited.InputOutputInterface import InputOutputInterface
+from app.inherited.PositionManagement import PositionManagement
 from guis.MacroWindow import MacroWindow
 from guis.PositionsPage import PositionsPage
 from guis.SettingsPage import SettingsPage
 from guis.StartPage import StartPage
 from guis.TimelinePage import TimelinePage
-from io_communication.GetCommands import GetCommands
-from io_communication.SendCommands import SendCommands
 from io_communication.file_listeners import InstructionThread
 from utilities.helper_functions import initialize_init_directory
 from utilities.math_helpers import focus_measure, compute_drift
@@ -34,43 +35,24 @@ matplotlib.use("TkAgg")
 style.use("ggplot")
 
 
-class SpineTracker(tk.Tk):
+class SpineTracker(InputOutputInterface):
 
     def __init__(self, *args, **kwargs):
+        super(SpineTracker, self).__init__(*args, **kwargs)
 
-        tk.Tk.__init__(self, *args, **kwargs)  # initialize regular Tk stuff
+        self.timelineSteps = []
 
         # set properties for main window
-        self.settings = {}
-        self.timelineSteps = []
-        self.positions = {}
-        self.app_params = dict(large_font=("Verdana", 12),
-                               fig_dpi=100,
-                               simulation=True,
-                               verbose=True,
-                               initDirectory="../iniFiles/")
-        tk.Tk.iconbitmap(self, default="../images/crabIco.ico")  # icon doesn't work
-        tk.Tk.wm_title(self, "SpineTracker")
-        tk.Tk.geometry(self, newGeometry='1000x600+200+200')
         self.protocol("WM_DELETE_WINDOW", self.on_exit)
         # define container for what's in the window
-        container = ttk.Notebook(self)
-        container.pack(side="top", fill="both", expand=True)
+
         self.initialize_timeline_steps()
         self.initialize_positions()
-        self.load_settings()
         self.frames = {}
         self.windows = {}
-        self.acq = {}
-        self.measure = {}
         self.stepRunning = False
-        self.instructions = []
         self.instructions_in_queue = Queue()
         self.timerStepsQueue = Queue()
-        self.outputFile = "../instructions_output.txt"
-        self.inputFile = "../instructions_input.txt"
-        self.sendCommands = SendCommands(self, self.outputFile)
-        self.getCommands = GetCommands(self, self.inputFile)
 
         # Shared Timeline Figure
         self.shared_figs = dict()
@@ -98,39 +80,11 @@ class SpineTracker(tk.Tk):
 
         # define frames (windows) available which will appear in main window
         for F in (StartPage, SettingsPage, PositionsPage, TimelinePage):
-            frame = F(container, self)
+            frame = F(self.container, self)
             self.frames[F] = frame
-            container.add(frame, text=F.name)
+            self.container.add(frame, text=F.name)
 
         self.currentPosID = 1
-
-    def set_app_param(self, k, v):
-        self.app_params[k] = v
-
-    def get_app_param(self, k, *args):
-        param = self.app_params.get(k, None)
-        if param is None and args:
-            param = args[0]
-        return param
-
-    def get_settings(self, k, *args):
-        setting = self.settings.get(k, None)
-        if setting is None and args:
-            setting = args[0]
-        return setting
-
-    def set_settings_var(self, k, v):
-        self.settings[k] = v
-        self.save_settings()
-
-    def get_acq_var(self, k, *args):
-        var = self.acq.get(k, None)
-        if var is None and args:
-            var = args[0]
-        return var
-
-    def set_acq_var(self, k, v):
-        self.acq[k] = v
 
     def show_macro_view_window(self):
         self.windows[MacroWindow] = MacroWindow(self)
@@ -143,56 +97,16 @@ class SpineTracker(tk.Tk):
         self.destroy()
         print('goodbye')
 
-    # def listen_to_instructions_file(self):
-    #     path, filename = os.path.split(self.inputFile)
-    #     with self.instructions_in_queue.mutex:
-    #         self.instructions_in_queue.queue.clear()
-    #     self.ins_thread = InstructionThread(self, path, filename, self.getCommands.readNewInstructions)
-
-    def initialize_positions(self):
-        file_name = self.get_app_param('initDirectory') + 'positions.p'
-        if os.path.isfile(file_name):
-            self.positions = pickle.load(open(file_name, 'rb'))
-
     def initialize_timeline_steps(self):
         file_name = self.get_app_param('initDirectory') + 'timelineSteps.p'
         if os.path.isfile(file_name):
             self.timelineSteps = pickle.load(open(file_name, 'rb'))
-
-    def load_settings(self):
-        file_name = self.get_app_param('initDirectory') + 'user_settings.p'
-        if os.path.isfile(file_name):
-            self.settings = pickle.load(open(file_name, 'rb'))
-        self.check_settings()
-
-    def check_settings(self):
-        default_settings = {'driftCorrectionChannel': 1,
-                            'fovXY': (250, 250),
-                            'stagger': 10,
-                            'totalChannels': 2,
-                            'imagingZoom': 30,
-                            'imagingSlices': 3,
-                            'referenceZoom': 15,
-                            'referenceSlices': 10,
-                            'park_xy_motor': True
-                            }
-        flag = False
-        for key in default_settings:
-            if key not in self.settings.keys():
-                self.settings[key] = default_settings[key]
-                flag = True
-        if flag:
-            self.save_settings()
-
-        # measure autofocus of image
 
     def load_test_image(self, event):  # for testing purposes only
         image = io.imread("../testing/test_image.tif")
         image = image[np.arange(0, len(image), 2)]
         self.acq['imageStack'] = image
         self.create_figure_for_af_images()
-
-    #        return(image)
 
     def load_acquired_image(self, update_figure=True):
         image = io.imread(self.imageFilePath)
@@ -208,8 +122,6 @@ class SpineTracker(tk.Tk):
         #        self.acq['imgref'] = imgref
         self.acq['imgref_imaging'] = imgref
         self.acq['imgref_ref'] = imgref
-
-    #        return(imgref)
 
     def run_xyz_drift_correction(self, pos_id=None):
         if 'imageStack' not in self.acq:
@@ -283,63 +195,6 @@ class SpineTracker(tk.Tk):
         for i in range(subplot_length):
             a.append(f.add_subplot(1, subplot_length, i + 1))
 
-    def get_current_position(self):
-        if self.get_app_param('simulation'):
-            # simulate position for now.
-            # eventually, pull position from other program here
-            x = np.random.randint(-100, 100)
-            y = np.random.randint(-100, 100)
-            z = np.random.randint(-100, 100)
-        else:
-            flag = 'currentPosition'
-            self.getCommands.receivedFlags[flag] = False
-            self.sendCommands.get_current_position()
-            self.getCommands.wait_for_received_flag(flag)
-            x, y, z = self.currentCoordinates
-        return {'x': x, 'y': y, 'z': z}
-
-    def create_new_pos(self, xyz, ref_images=None):
-        # just starting with an empty dict for now
-        if len(self.positions) == 0:
-            pos_id = 1
-        else:
-            pos_id = max(self.positions.keys()) + 1
-        self.positions[pos_id] = xyz
-        if ref_images is None:
-            # load sample ref images
-            self.load_test_ref_image()
-        else:
-            self.acq['imgref_imaging'] = ref_images['imaging']
-            self.acq['imgref_ref'] = ref_images['ref']
-        self.positions[pos_id]['refImg'] = self.acq['imgref_imaging']
-        self.positions[pos_id]['refImgZoomout'] = self.acq['imgref_ref']
-        self.positions[pos_id]['xyzShift'] = np.array([0, 0, 0])
-        roipos = np.array(self.positions[pos_id]['refImg'].shape) / 2
-        self.positions[pos_id]['roi_position'] = roipos
-
-    def add_position(self, cont, xyz=None, ref_images=None):
-        if xyz is None:
-            xyz = self.get_current_position()
-        # add position to table
-        self.create_new_pos(xyz, ref_images=ref_images)
-        cont.redraw_position_table()
-        self.backup_positions()
-
-    def clear_positions(self, cont):
-        self.positions = {}
-        cont.redraw_position_table()
-
-    def delete_positions(self, pos_id):
-        del self.positions[pos_id]
-        self.frames[PositionsPage].redraw_position_table()
-        self.backup_positions()
-
-    def update_position(self, pos_id):
-        xyz = self.get_current_position()
-        self.positions[pos_id].update(xyz)
-        self.frames[PositionsPage].redraw_position_table()
-        self.backup_positions()
-
     def add_timeline_step(self, step_dict, ind=None):
         print("step name: {0}, type: {1}, Period: {2}s, Duration: {3}min".format(
             step_dict['SN'], step_dict['IU'], step_dict['P'], step_dict['D']))
@@ -349,18 +204,6 @@ class SpineTracker(tk.Tk):
             self.timelineSteps.insert(ind, step_dict)
 
         self.frames[TimelinePage].draw_timeline_steps()
-
-    def backup_positions(self):
-        positions = self.positions
-        pickle.dump(positions, open(self.get_app_param('initDirectory') + 'positions.p', 'wb'))
-
-    def update_settings(self, key, source):
-        self.settings[key] = source.get()
-        self.save_settings()
-
-    def save_settings(self):
-        user_settings = self.settings
-        pickle.dump(user_settings, open(self.get_app_param('initDirectory') + 'user_settings.p', 'wb'))
 
     def add_step_to_queue(self, step, pos_id):
         step = step.copy()
@@ -413,75 +256,6 @@ class SpineTracker(tk.Tk):
         pos_id = step['pos_id']
         x, y, z = [self.positions[pos_id][xyz] for xyz in ['x', 'y', 'z']]
         return pos_id, x, y, z
-
-    def move_stage(self, x, y, z):
-        if self.parkXYmotor:
-            x_motor, y_motor = self.acq['center_xy']
-            self.set_scan_shift(x, y)
-        else:
-            x_motor = x
-            y_motor = y
-        flag = 'stageMoveDone'
-        self.getCommands.receivedFlags[flag] = False
-        self.sendCommands.move_stage(x_motor, y_motor, z)
-        self.getCommands.wait_for_received_flag(flag)
-
-    def grab_stack(self):
-        flag = 'grabOneStackDone'
-        self.getCommands.receivedFlags[flag] = False
-        self.sendCommands.grab_one_stack()
-        self.getCommands.wait_for_received_flag(flag)
-
-    def uncage(self, roi_x, roi_y):
-        flag = 'uncagingDone'
-        self.getCommands.receivedFlags[flag] = False
-        self.sendCommands.do_uncaging(roi_x, roi_y)
-        self.getCommands.wait_for_received_flag(flag)
-
-    def set_scan_shift(self, x, y):
-        scan_shift_fast, scan_shift_slow = self.xy_to_scan_angle(x, y)
-        flag = 'scanAngleXY'
-        self.getCommands.receivedFlags[flag] = False
-        self.sendCommands.set_scan_shift(scan_shift_fast, scan_shift_slow)
-        self.getCommands.wait_for_received_flag(flag)
-
-    def set_z_slice_num(self, z_slice_num):
-        flag = 'z_slice_num'
-        self.getCommands.receivedFlags[flag] = False
-        self.sendCommands.set_z_slice_num(z_slice_num)
-        self.getCommands.wait_for_received_flag(flag)
-
-    def xy_to_scan_angle(self, x, y):
-        scan_angle_multiplier = np.array(self.scanAngleMultiplier)
-        scan_angle_range_reference = np.array(self.scanAngleRangeReference)
-        fov = np.array(self.settings['fovXY'])
-        # convert x and y to relative pixel coordinates
-        x_center, y_center = self.acq['center_xy']
-        xc = x - x_center
-        yc = y - y_center
-        fs_coordinates = np.array([xc, yc])
-        scan_shift = np.array([0, 0])
-        fs_normalized = fs_coordinates / fov
-        fs_angular = scan_shift + fs_normalized * scan_angle_multiplier * scan_angle_range_reference
-        scan_shift_fast, scan_shift_slow = fs_angular
-        return scan_shift_fast, scan_shift_slow
-
-    def get_scan_props(self):
-        flag = 'scanAngleMultiplier'
-        self.getCommands.receivedFlags[flag] = False
-        self.sendCommands.get_scan_angle_multiplier()
-        self.getCommands.wait_for_received_flag(flag)
-
-        flag = 'scanAngleRangeReference'
-        self.getCommands.receivedFlags[flag] = False
-        self.sendCommands.get_scan_angle_range_reference()
-        self.getCommands.wait_for_received_flag(flag)
-
-    def set_zoom(self, zoom):
-        flag = 'zoom'
-        self.getCommands.receivedFlags[flag] = False
-        self.sendCommands.set_zoom(zoom)
-        self.getCommands.wait_for_received_flag(flag)
 
     def print_status(self, following_string):
         if self.app_params['verbose']:
