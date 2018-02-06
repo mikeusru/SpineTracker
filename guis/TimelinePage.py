@@ -18,6 +18,9 @@ class TimelinePage(ttk.Frame):
         ttk.Frame.__init__(self, parent)
         self.bind("<Visibility>", self.on_visibility)
         self.controller = controller
+
+        self.selected_item_number = None
+
         self.gui = dict()
         self.gui['tFrame'] = TimelineStepsFrame(self, controller)
         self.gui['tFrame'].grid(row=0, column=0, columnspan=1)
@@ -33,6 +36,8 @@ class TimelinePage(ttk.Frame):
         self.gui['timelineTableFrame'].grid(row=0, column=1, padx=10, pady=10)
         self.gui['timelineTree'] = ttk.Treeview(self.gui['timelineTableFrame'])
         self.gui['popup'] = tk.Menu(self, tearoff=0)
+        self.gui['popup'].add_command(label="Insert Step", command=lambda: self.insert_timeline_step(self.selected_item_number))
+        self.gui['popup'].add_command(label="Delete Step", command=lambda: self.delete_timeline_step(self.selected_item_number))
         self.create_timeline_table()
         self.draw_timeline_steps()
 
@@ -201,8 +206,7 @@ class TimelinePage(ttk.Frame):
             print(item_number)
         if len(tree.selection()) == 0:
             return
-        self.gui['popup'].add_command(label="Insert Step", command=lambda: self.insert_timeline_step(item_number))
-        self.gui['popup'].add_command(label="Delete Step", command=lambda: self.delete_timeline_step(item_number))
+        self.selected_item_number = item_number
         self.gui['popup'].post(event.x_root, event.y_root)
 
     def insert_timeline_step(self, ind):

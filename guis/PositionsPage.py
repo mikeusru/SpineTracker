@@ -23,6 +23,9 @@ class PositionsPage(ttk.Frame):
         self.bind("<Visibility>", self.on_visibility)
         self.controller = controller
 
+        self.selected_pos_id = None
+        self.draggable_circle = None
+
         # StringVars
         self.imagingZoom = tk.StringVar(self)
         self.imagingZoom.set(self.controller.settings['imagingZoom'])
@@ -47,6 +50,10 @@ class PositionsPage(ttk.Frame):
                                     name='referenceSlices': self.controller.update_settings(name, source, a, b, c))
         # GUIs
         self.gui['popup'] = tk.Menu(self, tearoff=0)
+        self.gui['popup'].add_command(label="Update XYZ",
+                                      command=lambda: self.controller.update_position(self.selected_pos_id))
+        self.gui['popup'].add_command(label="Delete",
+                                      command=lambda: self.controller.delete_positions(self.selected_pos_id))
         self.gui['frame_for_buttons'] = ttk.Frame(self)
         self.gui['frame_for_buttons'].grid(column=0, row=0, sticky='nw')
         self.gui['frame_for_zoom'] = ttk.Frame(self)
@@ -118,8 +125,8 @@ class PositionsPage(ttk.Frame):
         self.gui['canvas_positions'].get_tk_widget().grid(row=0, column=2, rowspan=2, padx=10, pady=10, sticky='nsew')
         self.gui['position_preview_axis'] = self.gui['f_positions'].add_subplot(1, 1, 1)
         self.gui['colorbar_axis'], kw = colorbar.make_axes_gridspec(self.gui['position_preview_axis'])
+
         self.preview_position_locations()
-        self.draggable_circle = None
 
     def create_positions_table(self, container):
         tree = self.gui['tree']
@@ -202,8 +209,7 @@ class PositionsPage(ttk.Frame):
         for item in self.gui['tree'].selection():
             item_text = self.gui['tree'].item(item, "text")
         pos_id = int(item_text.split()[1])
-        self.gui['popup'].add_command(label="Update XYZ", command=lambda: self.controller.update_position(pos_id))
-        self.gui['popup'].add_command(label="Delete", command=lambda: self.controller.delete_positions(pos_id))
+        self.selected_pos_id = pos_id
         self.gui['popup'].post(event.x_root, event.y_root)
 
     def on_tree_select(self, event):
@@ -223,7 +229,7 @@ class PositionsPage(ttk.Frame):
         for annotation in ax.texts:
             if annotation.arrow_patch:
                 annotation.remove()
-        arrow = ax.annotate("", xy=(x, y), xytext=(x - 10, y - 10), arrowprops=arrow_props)
+        ax.annotate("", xy=(x, y), xytext=(x - 10, y - 10), arrowprops=arrow_props)
         self.gui['canvas_positions'].draw_idle()
 
     def redraw_position_table(self):
