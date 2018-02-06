@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 
+
 class SpineTrackerContainer(tk.Tk):
 
     def __init__(self, *args, **kwargs):
@@ -10,4 +11,3 @@ class SpineTrackerContainer(tk.Tk):
         tk.Tk.geometry(self, newGeometry='1000x600+200+200')
         self.container = ttk.Notebook(self)
         self.container.pack(side="top", fill="both", expand=True)
-

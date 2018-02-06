@@ -30,24 +30,24 @@ class PositionsPage(ttk.Frame):
         self.imagingZoom = tk.StringVar(self)
         self.imagingZoom.set(self.controller.settings['imagingZoom'])
         self.imagingZoom.trace('w', lambda a, b, c, source=self.imagingZoom,
-                                           name='imagingZoom': self.controller.update_settings(name, source, a, b, c))
+                                           name='imagingZoom': self.controller.update_settings_from_source(name, source, a, b, c))
         self.refZoom = tk.StringVar(self)
         self.refZoom.set(self.controller.settings['referenceZoom'])
         self.refZoom.trace('w', lambda a, b, c, source=self.refZoom,
-                                       name='referenceZoom': self.controller.update_settings(name, source, a, b, c))
+                                       name='referenceZoom': self.controller.update_settings_from_source(name, source, a, b, c))
         self.imagingSlices = tk.StringVar(self)
         self.imagingSlices.set(self.controller.settings['imagingSlices'])
         self.imagingSlices.trace('w',
                                  lambda a, b, c,
                                         source=self.imagingSlices,
                                         name='imagingSlices':
-                                 self.controller.update_settings(name, source, a, b, c))
+                                 self.controller.update_settings_from_source(name, source, a, b, c))
         self.refSlices = tk.StringVar(self)
         self.refSlices.set(self.controller.settings['referenceSlices'])
         self.refSlices.trace('w',
                              lambda a, b, c,
                                     source=self.refSlices,
-                                    name='referenceSlices': self.controller.update_settings(name, source, a, b, c))
+                                    name='referenceSlices': self.controller.update_settings_from_source(name, source, a, b, c))
         # GUIs
         self.gui['popup'] = tk.Menu(self, tearoff=0)
         self.gui['popup'].add_command(label="Update XYZ",

@@ -49,6 +49,6 @@ class SettingsPage(ttk.Frame):
         mode = self.xy_mode_var.get()
         self.controller.print_status(mode)
         if mode == 'Galvo':
-            self.controller.set_settings_var('park_xy_motor', True)
+            self.controller.set_settings('park_xy_motor', True)
         else:
-            self.controller.set_settings_var('park_xy_motor', False)
+            self.controller.set_settings('park_xy_motor', False)

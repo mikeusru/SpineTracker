@@ -31,21 +31,8 @@ class SpineTrackerSettings(SpineTrackerContainer):
             setting = args[0]
         return setting
 
-    def set_settings_var(self, k, v):
+    def set_settings(self, k, v):
         self.settings[k] = v
-        self.save_settings()
-
-    def get_acq_var(self, k, *args):
-        var = self.acq.get(k, None)
-        if var is None and args:
-            var = args[0]
-        return var
-
-    def set_acq_var(self, k, v):
-        self.acq[k] = v
-
-    def update_settings(self, key, source):
-        self.settings[key] = source.get()
         self.save_settings()
 
     def save_settings(self):
@@ -56,9 +43,9 @@ class SpineTrackerSettings(SpineTrackerContainer):
         file_name = self.get_app_param('initDirectory') + 'user_settings.p'
         if os.path.isfile(file_name):
             self.settings = pickle.load(open(file_name, 'rb'))
-        self.check_settings()
+        self.add_default_settings()
 
-    def check_settings(self):
+    def add_default_settings(self):
         default_settings = {'driftCorrectionChannel': 1,
                             'fovXY': (250, 250),
                             'stagger': 10,
@@ -76,3 +63,15 @@ class SpineTrackerSettings(SpineTrackerContainer):
                 flag = True
         if flag:
             self.save_settings()
+
+    def get_acq_var(self, k, *args):
+        var = self.acq.get(k, None)
+        if var is None and args:
+            var = args[0]
+        return var
+
+    def set_acq_var(self, k, v):
+        self.acq[k] = v
+
+    def update_settings_from_source(self, key, source):
+        self.set_settings(key, source.get())
