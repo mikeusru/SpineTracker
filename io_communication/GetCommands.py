@@ -81,7 +81,7 @@ class GetCommands(object):
         elif command == 'fovXY_um':
             check_num_args(args, 2, 2)
             xx, yy = [float(args[XY]) for XY in [0, 1]]
-            self.controller.settings['fovXY'] = [xx, yy]
+            self.controller.settings['fov_x_y'] = [xx, yy]
             self.receivedFlags['fovXY'] = True
         elif command == 'zoom':
             check_num_args(args, 1, 1)

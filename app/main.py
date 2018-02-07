@@ -98,8 +98,8 @@ class SpineTracker(InputOutputInterface):
 
     def load_acquired_image(self, update_figure=True):
         image = io.imread(self.imageFilePath)
-        total_chan = int(self.frames[SettingsPage].totalChannelsVar.get())
-        drift_chan = int(self.frames[SettingsPage].driftCorrectionChannelVar.get())
+        total_chan = int(self.frames[SettingsPage].total_channelsVar.get())
+        drift_chan = int(self.frames[SettingsPage].drift_correction_channelVar.get())
         image = image[np.arange(drift_chan - 1, len(image), total_chan)]
         self.acq['imageStack'] = image
         if update_figure:
@@ -161,7 +161,7 @@ class SpineTracker(InputOutputInterface):
 
     def calc_drift(self):
         image = np.max(self.acq['imageStack'], 0)
-        if self.acq['currentZoom'] == float(self.frames[PositionsPage].imagingZoom.get()):
+        if self.acq['currentZoom'] == float(self.frames[PositionsPage].imaging_zoom_string_var.get()):
             imgref = self.acq['imgref_imaging']
         else:
             imgref = self.acq['imgref_ref']

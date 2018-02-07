@@ -76,7 +76,7 @@ class StartPage(ttk.Frame):
         # get scan angle conversion properties
         self.controller.get_scan_props()
         # this probably needs to move somewhere else later
-        self.controller.set_zoom(float(self.controller.frames[PositionsPage].imagingZoom.get()))
+        self.controller.set_zoom(float(self.controller.frames[PositionsPage].imaging_zoom_string_var.get()))
         # set up timers
         self.posTimers = {}
         with self.controller.timerStepsQueue.mutex:

@@ -27,27 +27,27 @@ class PositionsPage(ttk.Frame):
         self.draggable_circle = None
 
         # StringVars
-        self.imagingZoom = tk.StringVar(self)
-        self.imagingZoom.set(self.controller.settings['imagingZoom'])
-        self.imagingZoom.trace('w', lambda a, b, c, source=self.imagingZoom,
-                                           name='imagingZoom': self.controller.update_settings_from_source(name, source, a, b, c))
-        self.refZoom = tk.StringVar(self)
-        self.refZoom.set(self.controller.settings['referenceZoom'])
-        self.refZoom.trace('w', lambda a, b, c, source=self.refZoom,
-                                       name='referenceZoom': self.controller.update_settings_from_source(name, source, a, b, c))
-        self.imagingSlices = tk.StringVar(self)
-        self.imagingSlices.set(self.controller.settings['imagingSlices'])
-        self.imagingSlices.trace('w',
-                                 lambda a, b, c,
-                                        source=self.imagingSlices,
-                                        name='imagingSlices':
-                                 self.controller.update_settings_from_source(name, source, a, b, c))
-        self.refSlices = tk.StringVar(self)
-        self.refSlices.set(self.controller.settings['referenceSlices'])
-        self.refSlices.trace('w',
-                             lambda a, b, c,
-                                    source=self.refSlices,
-                                    name='referenceSlices': self.controller.update_settings_from_source(name, source, a, b, c))
+        # self.imaging_zoom = tk.StringVar(self)
+        # self.imaging_zoom.set(self.controller.settings['imaging_zoom'])
+        # self.imaging_zoom.trace('w', lambda a, b, c, source=self.imaging_zoom,
+        #                                    name='imaging_zoom': self.controller.update_settings_from_source(name, source, a, b, c))
+        # self.ref_zoom_string_var = tk.StringVar(self)
+        # self.ref_zoom_string_var.set(self.controller.settings['reference_zoom'])
+        # self.ref_zoom_string_var.trace('w', lambda a, b, c, source=self.ref_zoom_string_var,
+        #                                name='reference_zoom': self.controller.update_settings_from_source(name, source, a, b, c))
+        # self.imaging_slices_string_var = tk.StringVar(self)
+        # self.imaging_slices_string_var.set(self.controller.settings['imaging_slices'])
+        # self.imaging_slices_string_var.trace('w',
+        #                          lambda a, b, c,
+        #                                 source=self.imaging_slices_string_var,
+        #                                 name='imaging_slices':
+        #                          self.controller.update_settings_from_source(name, source, a, b, c))
+        # self.ref_slices_string_var = tk.StringVar(self)
+        # self.ref_slices_string_var.set(self.controller.settings['reference_slices'])
+        # self.ref_slices_string_var.trace('w',
+        #                      lambda a, b, c,
+        #                             source=self.ref_slices_string_var,
+        #                             name='reference_slices': self.controller.update_settings_from_source(name, source, a, b, c))
         # GUIs
         self.gui['popup'] = tk.Menu(self, tearoff=0)
         self.gui['popup'].add_command(label="Update XYZ",
@@ -75,26 +75,26 @@ class PositionsPage(ttk.Frame):
         self.gui['label_imaging_zoom'] = tk.Label(self.gui['frame_for_zoom'], text="Imaging Zoom",
                                                   font=self.controller.get_app_param('large_font'))
         self.gui['label_imaging_zoom'].grid(row=0, column=0, sticky='nw', padx=10, pady=10)
-        self.gui['entry_imaging_zoom'] = ttk.Entry(self.gui['frame_for_zoom'], textvariable=self.imagingZoom)
+        self.gui['entry_imaging_zoom'] = ttk.Entry(self.gui['frame_for_zoom'], textvariable=self.imaging_zoom_string_var)
         self.gui['entry_imaging_zoom'].grid(row=0, column=1, padx=10, pady=10, sticky='nw')
         self.gui['label_ref_zoom'] = tk.Label(self.gui['frame_for_zoom'], text="Reference Zoom",
                                               font=self.controller.get_app_param('large_font'))
         self.gui['label_ref_zoom'].grid(row=0, column=2, sticky='nw', padx=10, pady=10)
 
-        self.gui['entry_ref_zoom'] = ttk.Entry(self.gui['frame_for_zoom'], textvariable=self.refZoom)
+        self.gui['entry_ref_zoom'] = ttk.Entry(self.gui['frame_for_zoom'], textvariable=self.ref_zoom_string_var)
         self.gui['entry_ref_zoom'].grid(row=0, column=3, padx=10, pady=10, sticky='nw')
 
         self.gui['label_imaging_slices'] = tk.Label(self.gui['frame_for_zoom'], text="Imaging Slices",
                                                     font=self.controller.get_app_param('large_font'))
         self.gui['label_imaging_slices'].grid(row=1, column=0, sticky='nw', padx=10, pady=10)
 
-        self.gui['entry_imaging_slices'] = ttk.Entry(self.gui['frame_for_zoom'], textvariable=self.imagingSlices)
+        self.gui['entry_imaging_slices'] = ttk.Entry(self.gui['frame_for_zoom'], textvariable=self.imaging_slices_string_var)
         self.gui['entry_imaging_slices'].grid(row=1, column=1, padx=10, pady=10, sticky='nw')
         self.gui['label_ref_slices'] = tk.Label(self.gui['frame_for_zoom'], text="Reference Slices",
                                                 font=self.controller.get_app_param('large_font'))
         self.gui['label_ref_slices'].grid(row=1, column=2, sticky='nw', padx=10, pady=10)
 
-        self.gui['entry_ref_slices'] = ttk.Entry(self.gui['frame_for_zoom'], textvariable=self.refSlices)
+        self.gui['entry_ref_slices'] = ttk.Entry(self.gui['frame_for_zoom'], textvariable=self.ref_slices_string_var)
         self.gui['entry_ref_slices'].grid(row=1, column=3, padx=10, pady=10, sticky='nw')
 
         # Treeview example given at http://knowpapa.com/ttk-treeview/
@@ -254,7 +254,7 @@ class PositionsPage(ttk.Frame):
         self.gui['canvas_preview_ref_images'].draw_idle()
 
     def draw_roi(self, pos_id, ax):
-        if self.controller.frames[SettingsPage].uncaging_roi_toggle_var.get():
+        if self.controller.frames[SettingsPage].uncaging_roi_toggle_string_var.get():
             ax_width = abs(np.diff(ax.get_xlim()).item())
             x, y = self.controller.positions[pos_id]['roi_position']
             circ = patches.Circle((x, y), radius=ax_width / 20, fill=False, linewidth=ax_width / 20, edgecolor='r')

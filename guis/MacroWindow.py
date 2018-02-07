@@ -21,10 +21,10 @@ class MacroWindow(tk.Tk):
         tk.Tk.geometry(self, newGeometry='700x800+200+200')
 
         # Set String Variables
-        self.macroZoom = tk.StringVar(self)
-        self.macroZoom.set(1)
-        self.num_z_slices = tk.StringVar(self)
-        self.num_z_slices.set(10)
+        # self.macro_zoom_string_var = tk.StringVar(self)
+        # self.macro_zoom_string_var.set(1)
+        # self.num_z_slices_string_var = tk.StringVar(self)
+        # self.num_z_slices_string_var.set(10)
 
         # Define GUI Elements
         self.gui = dict(frame_canvas=ttk.Frame(self))
@@ -35,11 +35,11 @@ class MacroWindow(tk.Tk):
                                                               command=lambda: self.load_macro_image())
         self.gui['label_macro_zoom'] = tk.Label(self.gui['frame_buttons'], text="Macro Zoom",
                                                 font=controller.get_app_param('large_font'))
-        self.gui['entry_macro_zoom'] = ttk.Entry(self.gui['frame_buttons'], textvariable=self.macroZoom, width=3)
+        self.gui['entry_macro_zoom'] = ttk.Entry(self.gui['frame_buttons'], textvariable=self.macro_zoom_string_var, width=3)
         self.gui['scale_zoom'] = tk.Scale(self, orient=tk.HORIZONTAL)
         self.gui['label_z_slices'] = tk.Label(self.gui['frame_buttons'], text="Number of Z Slices",
                                               font=controller.get_app_param('large_font'))
-        self.gui['entry_z_slices'] = ttk.Entry(self.gui['frame_buttons'], textvariable=self.num_z_slices, width=4)
+        self.gui['entry_z_slices'] = ttk.Entry(self.gui['frame_buttons'], textvariable=self.num_z_slices_string_var, width=4)
         self.gui['button_load_macro_image'] = ttk.Button(self.gui['frame_buttons'], text="Grab Macro Image",
                                                          command=lambda: self.load_macro_image())
 
@@ -74,10 +74,10 @@ class MacroWindow(tk.Tk):
             self.controller.set_acq_var('center_xy', (0, 0))
         else:
             # set zoom
-            macro_zoom = float(self.macroZoom.get())
+            macro_zoom = float(self.macro_zoom_string_var.get())
             self.controller.set_zoom(macro_zoom)
             # set Z slice number
-            z_slice_num = float(self.num_z_slices.get())
+            z_slice_num = float(self.num_z_slices_string_var.get())
             self.controller.set_z_slice_num(z_slice_num)
             # grab stack
             self.controller.grab_stack()
@@ -103,7 +103,7 @@ class MacroWindow(tk.Tk):
 
     def add_position_on_image_click(self, x, y, z):
         # translate to normal coordinates
-        fov_x, fov_y = self.controller.settings['fovXY']
+        fov_x, fov_y = self.controller.settings['fov_x_y']
         # xy currently originate from top left of image.
         # translate them to coordinate plane directionality.
         # also, make them originate from center
@@ -121,11 +121,11 @@ class MacroWindow(tk.Tk):
         self.controller.add_position(self.controller.frames[PositionsPage], xyz=xyz, ref_images=self.data['refImages'])
 
     def get_ref_images_from_macro(self, xyz_clicked):
-        macro_zoom = float(self.macroZoom.get())
-        imaging_zoom = float(self.controller.frames[PositionsPage].imagingZoom.get())
-        ref_zoom = float(self.controller.frames[PositionsPage].refZoom.get())
-        imaging_slices = int(self.controller.frames[PositionsPage].imagingSlices.get())
-        ref_slices = int(self.controller.frames[PositionsPage].refSlices.get())
+        macro_zoom = float(self.macro_zoom_string_var.get())
+        imaging_zoom = float(self.controller.frames[PositionsPage].imaging_zoom_string_var.get())
+        ref_zoom = float(self.controller.frames[PositionsPage].ref_zoom_string_var.get())
+        imaging_slices = int(self.controller.frames[PositionsPage].imaging_slices_string_var.get())
+        ref_slices = int(self.controller.frames[PositionsPage].ref_slices_string_var.get())
 
         frame = self.slice_index
         imaging_slices_ind = range(int(round_math(frame - imaging_slices / 2)),

@@ -81,7 +81,7 @@ class TimelinePage(ttk.Frame):
     def create_timeline_chart(self, *args):
         timeline_steps = self.controller.timeline_steps
         positions = self.controller.positions
-        stagger = float_or_zero(self.gui['tFrame'].staggerEntryVar.get())
+        stagger = float_or_zero(self.gui['tFrame'].stagger_string_var.get())
 
         if len(timeline_steps) == 0:
             return
@@ -259,20 +259,20 @@ class TimelineStepsFrame(ttk.Frame):
         ttk.Frame.__init__(self, parent)
         self.controller = controller
 
-        # StringVars
-        stagger_setting = self.controller.get_settings('stagger')
-        if stagger_setting is None:
-            stagger_setting = 5
-        self.staggerEntryVar = tk.StringVar(self)
-        self.staggerEntryVar.set(stagger_setting)
-        self.staggerEntryVar.trace('w', parent.create_timeline_chart)
-        self.image_uncage = tk.StringVar(self)
-        self.image_uncage.set("Image")
-        self.image_uncage.trace('w', self.image_in_from_frame)
-        self.exclusiveVar = tk.BooleanVar(self)
-        self.durationEntryVar = tk.StringVar(self)
-        self.periodEntryVar = tk.StringVar(self)
-        self.stepName = tk.StringVar(self)
+        # # StringVars
+        # stagger_setting = self.controller.get_settings('stagger')
+        # if stagger_setting is None:
+        #     stagger_setting = 5
+        # self.stagger_string_var = tk.StringVar(self)
+        # self.stagger_string_var.set(stagger_setting)
+        # self.stagger_string_var.trace('w', parent.create_timeline_chart)
+        # self.image_or_uncage_string_var = tk.StringVar(self)
+        # self.image_or_uncage_string_var.set("Image")
+        # self.image_or_uncage_string_var.trace('w', self.image_in_from_frame)
+        # self.exclusive_bool_var = tk.BooleanVar(self)
+        # self.duration_string_var = tk.StringVar(self)
+        # self.period_string_var = tk.StringVar(self)
+        # self.step_name_string_var = tk.StringVar(self)
 
         # Gui Elements
         self.gui = self.define_gui_elements()
@@ -281,20 +281,20 @@ class TimelineStepsFrame(ttk.Frame):
         gui = dict()
         gui['label1'] = ttk.Label(self, text='Step Name:', font=self.controller.get_app_param('large_font'))
         gui['label1'].grid(row=0, column=0, sticky='nw', padx=10, pady=10)
-        gui['step_name_entry'] = ttk.Entry(self, width=30, textvariable=self.stepName)
+        gui['step_name_entry'] = ttk.Entry(self, width=30, textvariable=self.step_name_string_var)
         gui['step_name_entry'].grid(row=0, column=1, sticky='nw', padx=10, pady=10)
         gui['place_holder_frame'] = ttk.Frame(self)
         gui['place_holder_frame'].grid(row=1, column=1, columnspan=1, sticky='nw', pady=10)
         gui['place_holder_frame'] = ttk.Frame(gui['place_holder_frame'])
         gui['place_holder_frame'].pack(side='left', anchor='w')
-        gui['radio_button1'] = ttk.Radiobutton(self, text='Image', variable=self.image_uncage,
+        gui['radio_button1'] = ttk.Radiobutton(self, text='Image', variable=self.image_or_uncage_string_var,
                                                value='Image')
         gui['radio_button1'].grid(row=1, column=0, sticky='nw', pady=10, padx=10)
         gui['period_label1'] = ttk.Label(gui['place_holder_frame'], text='  Period: ',
                                          font=self.controller.get_app_param('large_font'))
         gui['period_label1'].pack(anchor='w', side='left')
         gui['period_entry'] = ttk.Entry(gui['place_holder_frame'], width=4,
-                                        textvariable=self.periodEntryVar)
+                                        textvariable=self.period_string_var)
         gui['period_entry'].pack(anchor='w', side='left')
         gui['period_label2'] = ttk.Label(gui['place_holder_frame'], text='sec, ',
                                          font=self.controller.get_app_param('large_font'))
@@ -303,15 +303,15 @@ class TimelineStepsFrame(ttk.Frame):
                                            font=self.controller.get_app_param('large_font'))
         gui['duration_label1'].pack(anchor='w', side='left')
         gui['duration_entry'] = ttk.Entry(gui['place_holder_frame'], width=4,
-                                          textvariable=self.durationEntryVar)
+                                          textvariable=self.duration_string_var)
         gui['duration_entry'].pack(anchor='w', side='left')
         gui['duration_label2'] = ttk.Label(gui['place_holder_frame'], text='min',
                                            font=self.controller.get_app_param('large_font'))
         gui['duration_label2'].pack(anchor='w', side='left')
-        gui['radio_button2'] = ttk.Radiobutton(self, text='Uncage', variable=self.image_uncage,
+        gui['radio_button2'] = ttk.Radiobutton(self, text='Uncage', variable=self.image_or_uncage_string_var,
                                                value='Uncage')
         gui['radio_button2'].grid(row=2, column=0, sticky='nw', padx=10, pady=3)
-        gui['exclusive_checkbutton'] = ttk.Checkbutton(self, text='Exclusive', variable=self.exclusiveVar)
+        gui['exclusive_checkbutton'] = ttk.Checkbutton(self, text='Exclusive', variable=self.exclusive_bool_var)
         gui['exclusive_checkbutton'].grid(row=2, column=1, sticky='nw', padx=10, pady=3)
         gui['stagger_frame'] = ttk.Frame(self)
         gui['stagger_frame'].grid(row=4, column=0, sticky='nw', columnspan=2)
@@ -319,7 +319,7 @@ class TimelineStepsFrame(ttk.Frame):
                                           font=self.controller.get_app_param('large_font'))
         gui['stagger_label1'].grid(row=0, column=0, sticky='nw', padx=10, pady=10)
 
-        gui['stagger_entry'] = ttk.Entry(gui['stagger_frame'], width=4, textvariable=self.staggerEntryVar)
+        gui['stagger_entry'] = ttk.Entry(gui['stagger_frame'], width=4, textvariable=self.stagger_string_var)
         gui['stagger_entry'].grid(row=0, column=1, sticky='nw', padx=0, pady=10)
         gui['stagger_label2'] = ttk.Label(gui['stagger_frame'], text='min',
                                           font=self.controller.get_app_param('large_font'))
@@ -333,25 +333,25 @@ class TimelineStepsFrame(ttk.Frame):
 
     def add_step_callback(self, cont, ind=None):
         # get values
-        step_name = self.stepName.get()
-        period = float_or_none(self.periodEntryVar.get())
-        duration = float_or_none(self.durationEntryVar.get())
-        imaging_or_uncaging = self.image_uncage.get()
-        exclusive = self.exclusiveVar.get()
+        step_name = self.step_name_string_var.get()
+        period = float_or_none(self.period_string_var.get())
+        duration = float_or_none(self.duration_string_var.get())
+        imaging_or_uncaging = self.image_or_uncage_string_var.get()
+        exclusive = self.exclusive_bool_var.get()
         timeline_step = TimelineStep(step_name=step_name, imaging_or_uncaging=imaging_or_uncaging,
                                      exclusive=exclusive, period=period, duration=duration, index=ind)
         cont.add_timeline_step(timeline_step)
         # reset values
-        self.stepName.set('')
-        self.periodEntryVar.set('')
-        self.durationEntryVar.set('')
+        self.step_name_string_var.set('')
+        self.period_string_var.set('')
+        self.duration_string_var.set('')
         cont.frames[TimelinePage].backup_timeline()
 
     def image_in_from_frame(self, *args):
-        var = self.image_uncage.get()
+        var = self.image_or_uncage_string_var.get()
         if var == "Image":
             self.gui['place_holder_frame'].pack(side='left', anchor='w')
-            self.exclusiveVar.set(False)
+            self.exclusive_bool_var.set(False)
         else:
             self.gui['place_holder_frame'].pack_forget()
-            self.exclusiveVar.set(True)
+            self.exclusive_bool_var.set(True)

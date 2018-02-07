@@ -55,7 +55,7 @@ class InputOutputInterface(PositionManagement):
     def xy_to_scan_angle(self, x, y):
         scan_angle_multiplier = np.array(self.scanAngleMultiplier)
         scan_angle_range_reference = np.array(self.scanAngleRangeReference)
-        fov = np.array(self.settings['fovXY'])
+        fov = np.array(self.settings['fov_x_y'])
         # convert x and y to relative pixel coordinates
         x_center, y_center = self.acq['center_xy']
         xc = x - x_center
