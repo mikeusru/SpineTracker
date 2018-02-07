@@ -103,6 +103,10 @@ class GetCommands(object):
             check_num_args(args, 1, 1)
             self.controller.acq['z_slice_num'] = float(args[0])
             self.receivedFlags['z_slice_num'] = True
+        elif command == 'x_y_resolution':
+            check_num_args(args,2,2)
+            self.controller.acq['x_y_resolution'] = (float(args[0]), float(args[1]))
+            self.receivedFlags['x_y_resolution'] = True
         else:
             print("COMMAND NOT UNDERSTOOD")
 

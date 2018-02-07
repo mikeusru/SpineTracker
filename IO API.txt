@@ -56,6 +56,11 @@ command = ZSliceNum
 arguments = number of slices
 example: ZSliceNum,10
 
+--sent when X,Y Imaging Resolution is requested
+command = x_y_resolution
+arguments = x,y
+example: x_y_resolution,512,512
+
 
 Output commands are written line by line to instructions_output.txt
 
@@ -124,3 +129,15 @@ command = setZSliceNum
 arguments: zSliceNum
 example: setZSliceNum,10
 expected return command: ZSliceNum
+
+--Set X,Y Imaging Resolution
+command = setXYResolution
+arguments: x,y
+example: setXYResolution,128,128
+expected return command: x_y_resolution
+
+--Get X,Y Imaging Resolution
+command = getXYResolution
+arguments: None
+example: getXYResolution
+expected return command: x_y_resolution
