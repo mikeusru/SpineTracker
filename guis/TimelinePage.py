@@ -2,6 +2,8 @@ import tkinter as tk
 from tkinter import ttk
 import matplotlib
 import numpy as np
+
+from flow.TimelineStep import TimelineStep
 from utilities.helper_functions import fit_fig_to_canvas
 from utilities.math_helpers import float_or_zero, float_or_none
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -70,7 +72,7 @@ class TimelinePage(ttk.Frame):
         self.create_timeline_chart()
 
     def create_timeline_chart(self, *args):
-        timeline_steps = self.controller.timelineSteps
+        timeline_steps = self.controller.timeline_steps
         positions = self.controller.positions
         stagger = float_or_zero(self.gui['tFrame'].staggerEntryVar.get())
 
@@ -188,7 +190,7 @@ class TimelinePage(ttk.Frame):
         legend_patch_blue = patches.Patch(color='blue', label='Imaging')
         legend_patch_green = patches.Patch(color='green', label='Exclusive Imaging')
         self.gui['a_timeline'].legend(handles=[legend_patch_red, legend_patch_blue, legend_patch_green])
-        self.controller.individualTimelineSteps = individual_steps
+        self.controller.individual_timeline_steps = individual_steps
         self.gui['canvas_timeline'].draw_idle()
 
     #        app.frames[TimelinePage].canvas.draw_idle()
@@ -215,7 +217,7 @@ class TimelinePage(ttk.Frame):
         self.backup_timeline()
 
     def delete_timeline_step(self, ind):
-        del self.controller.timelineSteps[ind]
+        del self.controller.timeline_steps[ind]
         self.draw_timeline_steps()
         self.backup_timeline()
 
@@ -224,7 +226,7 @@ class TimelinePage(ttk.Frame):
 
     def draw_timeline_steps(self):
         tree = self.gui['timelineTree']
-        timeline_steps = self.controller.timelineSteps
+        timeline_steps = self.controller.timeline_steps
         # clear table first
         for i in tree.get_children():
             tree.delete(i)
@@ -242,8 +244,8 @@ class TimelinePage(ttk.Frame):
         self.create_timeline_chart()
 
     def backup_timeline(self):
-        timeline_steps = self.controller.timelineSteps
-        pickle.dump(timeline_steps, open(self.controller.get_app_param('initDirectory') + 'timelineSteps.p', 'wb'))
+        timeline_steps = self.controller.timeline_steps
+        pickle.dump(timeline_steps, open(self.controller.get_app_param('initDirectory') + 'timeline_steps.p', 'wb'))
 
 
 class TimelineStepsFrame(ttk.Frame):
@@ -327,6 +329,7 @@ class TimelineStepsFrame(ttk.Frame):
         duration = float_or_none(self.durationEntryVar.get())
         imaging_or_uncaging = self.image_uncage.get()
         exclusive = self.exclusiveVar.get()
+        timeline_step = TimelineStep()
         cont.add_timeline_step({'SN': step_name,
                                 'IU': imaging_or_uncaging,
                                 'EX': exclusive,

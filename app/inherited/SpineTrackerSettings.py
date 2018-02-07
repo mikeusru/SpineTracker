@@ -1,5 +1,6 @@
 import os
 import pickle
+
 from app.inherited.SpineTrackerContainer import SpineTrackerContainer
 
 
@@ -75,3 +76,6 @@ class SpineTrackerSettings(SpineTrackerContainer):
 
     def update_settings_from_source(self, key, source):
         self.set_settings(key, source.get())
+
+    def load_test_ref_image(self):  # for testing purposes only
+        pass

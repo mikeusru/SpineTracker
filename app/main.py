@@ -9,9 +9,7 @@ import datetime as dt
 import inspect
 import os
 import pickle
-import tkinter as tk
 from queue import Queue
-from tkinter import ttk
 
 import matplotlib
 import numpy as np
@@ -21,7 +19,6 @@ from matplotlib.figure import Figure
 from skimage import io, transform
 
 from app.inherited.InputOutputInterface import InputOutputInterface
-from app.inherited.PositionManagement import PositionManagement
 from guis.MacroWindow import MacroWindow
 from guis.PositionsPage import PositionsPage
 from guis.SettingsPage import SettingsPage
@@ -40,7 +37,7 @@ class SpineTracker(InputOutputInterface):
     def __init__(self, *args, **kwargs):
         super(SpineTracker, self).__init__(*args, **kwargs)
 
-        self.timelineSteps = []
+        self.timeline_steps = []
 
         # set properties for main window
         self.protocol("WM_DELETE_WINDOW", self.on_exit)
@@ -54,17 +51,8 @@ class SpineTracker(InputOutputInterface):
         self.instructions_in_queue = Queue()
         self.timerStepsQueue = Queue()
 
-        # Shared Timeline Figure
-        self.shared_figs = dict()
-        self.shared_figs['f_timeline'] = Figure(figsize=(5, 2), dpi=self.get_app_param('fig_dpi'))
-        self.shared_figs['f_timeline'].set_tight_layout(True)
-        self.shared_figs['a_timeline'] = self.shared_figs['f_timeline'].add_subplot(111)
-
-        # Shared Positions Figure
-        self.shared_figs['f_positions'] = Figure(figsize=(3, 3), dpi=self.get_app_param('fig_dpi'))
-        self.shared_figs['f_positions'].subplots_adjust(left=0, right=1, bottom=0, top=1)
-        self.shared_figs['f_positions'].set_tight_layout(True)
-        self.shared_figs['f_positions'].set_size_inches(4, 4)
+        # Shared Figures
+        self.shared_figs = SharedFigs(self.get_app_param('fig_dpi'))
 
         # initialize instructions listener
         path, filename = os.path.split(self.inputFile)
@@ -84,7 +72,7 @@ class SpineTracker(InputOutputInterface):
             self.frames[F] = frame
             self.container.add(frame, text=F.name)
 
-        self.currentPosID = 1
+        self.current_pos_id = 1
 
     def show_macro_view_window(self):
         self.windows[MacroWindow] = MacroWindow(self)
@@ -98,9 +86,9 @@ class SpineTracker(InputOutputInterface):
         print('goodbye')
 
     def initialize_timeline_steps(self):
-        file_name = self.get_app_param('initDirectory') + 'timelineSteps.p'
+        file_name = self.get_app_param('initDirectory') + 'timeline_steps.p'
         if os.path.isfile(file_name):
-            self.timelineSteps = pickle.load(open(file_name, 'rb'))
+            self.timeline_steps = pickle.load(open(file_name, 'rb'))
 
     def load_test_image(self, event):  # for testing purposes only
         image = io.imread("../testing/test_image.tif")
@@ -117,7 +105,7 @@ class SpineTracker(InputOutputInterface):
         if update_figure:
             self.create_figure_for_af_images()
 
-    def load_test_ref_image(self, event):  # for testing purposes only
+    def load_test_ref_image(self):  # for testing purposes only
         imgref = io.imread("../testing/test_refimg.tif")
         #        self.acq['imgref'] = imgref
         self.acq['imgref_imaging'] = imgref
@@ -127,7 +115,7 @@ class SpineTracker(InputOutputInterface):
         if 'imageStack' not in self.acq:
             return
         if pos_id is None:
-            pos_id = self.currentPosID
+            pos_id = self.current_pos_id
         shape = self.acq['imageStack'][0].shape
         self.acq['imgref_imaging'] = transform.resize(self.positions[pos_id]['refImg'], shape)
         self.acq['imgref_ref'] = transform.resize(self.positions[pos_id]['refImgZoomout'], shape)
@@ -195,20 +183,19 @@ class SpineTracker(InputOutputInterface):
         for i in range(subplot_length):
             a.append(f.add_subplot(1, subplot_length, i + 1))
 
-    def add_timeline_step(self, step_dict, ind=None):
-        print("step name: {0}, type: {1}, Period: {2}s, Duration: {3}min".format(
-            step_dict['SN'], step_dict['IU'], step_dict['P'], step_dict['D']))
-        if ind is None:
-            self.timelineSteps.append(step_dict)
+    def add_timeline_step(self, timeline_step):
+        index = timeline_step.get('index')
+        if index is None:
+            self.timeline_steps.append(timeline_step)
         else:
-            self.timelineSteps.insert(ind, step_dict)
+            self.timeline_steps.insert(index, timeline_step)
 
         self.frames[TimelinePage].draw_timeline_steps()
 
     def add_step_to_queue(self, step, pos_id):
-        step = step.copy()
-        step.update(dict(posID=pos_id))
-        self.timerStepsQueue.put(step)
+        single_step = step.copy()
+        single_step['pos_id'] = pos_id
+        self.timerStepsQueue.put(single_step)
 
     def run_step_from_queue(self):
         while self.imagingActive:
@@ -217,45 +204,42 @@ class SpineTracker(InputOutputInterface):
             if self.stepRunning:  # make sure something isn't already running
                 continue
             if not self.timerStepsQueue.empty():
-                step = self.timerStepsQueue.get()
+                single_step = self.timerStepsQueue.get()
             else:
                 continue
             self.stepRunning = True
-            pos_id = step['pos_id']
-            if step['EX']:
+            pos_id = single_step.get('pos_id')
+            if single_step.get('exclusive'):
                 ex = 'Exclusive'
             else:
                 ex = 'Non-Exclusive'
-            print('{0} {1} Timer {2} running at {3}s '.format(ex, step['IU'], pos_id, dt.datetime.now().second))
+            print('{0} {1} Timer {2} running at {3}s '.format(ex, single_step['IU'], pos_id, dt.datetime.now().second))
 
             # this should actually be set once data from position is received, because drift/af calculation will be
             # done after that
-            self.currentPosID = pos_id
+            self.current_pos_id = pos_id
             # we're already in a thread so maybe don't need another one here
-            if step['IU'] == 'Image':
-                self.image_new_position(step)
-            elif step['IU'] == 'Uncage':
-                self.uncage_new_position(step)
+            if single_step['IU'] == 'Image':
+                self.step_image_new_position(single_step)
+            elif single_step['IU'] == 'Uncage':
+                self.step_uncage_new_position(single_step)
 
-    def image_new_position(self, step):
-        pos_id, x, y, z = self.parse_step(step)
+    def step_image_new_position(self, single_step):
+        pos_id = single_step.get('pos_id')
+        x, y, z = single_step.get_coordinates(self.positions)
         self.move_stage(x, y, z)
         self.grab_stack()
         self.stepRunning = False
         self.load_acquired_image()
         self.run_xyz_drift_correction(pos_id)
 
-    def uncage_new_position(self, step):
-        pos_id, x, y, z = self.parse_step(step)
+    def step_uncage_new_position(self, step):
+        pos_id = step.get('pos_id')
+        x, y, z = step.get_coordinates(self.positions)
         roi_x, roi_y = self.positions[pos_id]['roi_position']
         self.move_stage(x, y, z)
         self.uncage(roi_x, roi_y)
         self.stepRunning = False
-
-    def parse_step(self, step):
-        pos_id = step['pos_id']
-        x, y, z = [self.positions[pos_id][xyz] for xyz in ['x', 'y', 'z']]
-        return pos_id, x, y, z
 
     def print_status(self, following_string):
         if self.app_params['verbose']:
@@ -263,6 +247,23 @@ class SpineTracker(InputOutputInterface):
             string = '\nFunction {0} {1}\n'.format(inspect.stack()[1][3], following_string)
             print(string)
             self.log_file.write(string)
+
+
+class SharedFigs(dict):
+
+    def __init__(self, fig_dpi, *args, **kwargs):
+        super(SharedFigs, self).__init__()
+
+        # Shared Timeline Figure
+        self['f_timeline'] = Figure(figsize=(5, 2), dpi=fig_dpi)
+        self['f_timeline'].set_tight_layout(True)
+        self['a_timeline'] = self['f_timeline'].add_subplot(111)
+
+        # Shared Positions Figure
+        self['f_positions'] = Figure(figsize=(3, 3), dpi=fig_dpi)
+        self['f_positions'].subplots_adjust(left=0, right=1, bottom=0, top=1)
+        self['f_positions'].set_tight_layout(True)
+        self['f_positions'].set_size_inches(4, 4)
 
 
 ###################
