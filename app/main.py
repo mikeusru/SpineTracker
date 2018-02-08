@@ -248,6 +248,13 @@ class SpineTracker(InputOutputInterface):
             print(string)
             self.log_file.write(string)
 
+    def stagger_string_var_callback(self):
+        # Callback to the StringVar
+        self.frames[TimelinePage].create_timeline_chart()
+
+    def image_or_uncage_string_var_callback(self):
+        # Callback to the StringVar
+        self.frames[TimelinePage].image_in_from_frame()
 
 class SharedFigs(dict):
 

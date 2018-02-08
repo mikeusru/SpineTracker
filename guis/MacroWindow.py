@@ -20,12 +20,6 @@ class MacroWindow(tk.Tk):
         tk.Tk.wm_title(self, "Macro View")
         tk.Tk.geometry(self, newGeometry='700x800+200+200')
 
-        # Set String Variables
-        # self.macro_zoom_string_var = tk.StringVar(self)
-        # self.macro_zoom_string_var.set(1)
-        # self.num_z_slices_string_var = tk.StringVar(self)
-        # self.num_z_slices_string_var.set(10)
-
         # Define GUI Elements
         self.gui = dict(frame_canvas=ttk.Frame(self))
         self.gui['scrollingCanvas'] = ScrolledCanvas(self.gui['frame_canvas'], self, self.controller)
@@ -35,11 +29,13 @@ class MacroWindow(tk.Tk):
                                                               command=lambda: self.load_macro_image())
         self.gui['label_macro_zoom'] = tk.Label(self.gui['frame_buttons'], text="Macro Zoom",
                                                 font=controller.get_app_param('large_font'))
-        self.gui['entry_macro_zoom'] = ttk.Entry(self.gui['frame_buttons'], textvariable=self.macro_zoom_string_var, width=3)
+        self.gui['entry_macro_zoom'] = ttk.Entry(self.gui['frame_buttons'], textvariable=self.macro_zoom_string_var,
+                                                 width=3)
         self.gui['scale_zoom'] = tk.Scale(self, orient=tk.HORIZONTAL)
         self.gui['label_z_slices'] = tk.Label(self.gui['frame_buttons'], text="Number of Z Slices",
                                               font=controller.get_app_param('large_font'))
-        self.gui['entry_z_slices'] = ttk.Entry(self.gui['frame_buttons'], textvariable=self.num_z_slices_string_var, width=4)
+        self.gui['entry_z_slices'] = ttk.Entry(self.gui['frame_buttons'], textvariable=self.num_z_slices_string_var,
+                                               width=4)
         self.gui['button_load_macro_image'] = ttk.Button(self.gui['frame_buttons'], text="Grab Macro Image",
                                                          command=lambda: self.load_macro_image())
 
@@ -123,9 +119,9 @@ class MacroWindow(tk.Tk):
     def get_ref_images_from_macro(self, xyz_clicked):
         macro_zoom = float(self.macro_zoom_string_var.get())
         imaging_zoom = float(self.controller.frames[PositionsPage].imaging_zoom_string_var.get())
-        ref_zoom = float(self.controller.frames[PositionsPage].ref_zoom_string_var.get())
+        ref_zoom = float(self.controller.frames[PositionsPage].reference_zoom_string_var.get())
         imaging_slices = int(self.controller.frames[PositionsPage].imaging_slices_string_var.get())
-        ref_slices = int(self.controller.frames[PositionsPage].ref_slices_string_var.get())
+        ref_slices = int(self.controller.frames[PositionsPage].reference_slices_string_var.get())
 
         frame = self.slice_index
         imaging_slices_ind = range(int(round_math(frame - imaging_slices / 2)),

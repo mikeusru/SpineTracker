@@ -1,6 +1,6 @@
 import numpy as np
 
-from app.inherited.PositionManagement import PositionManagement
+from app.inherited.inherited.PositionManagement import PositionManagement
 from io_communication.GetCommands import GetCommands
 from io_communication.SendCommands import SendCommands
 

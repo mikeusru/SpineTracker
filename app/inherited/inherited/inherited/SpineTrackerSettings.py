@@ -2,7 +2,7 @@ import os
 import pickle
 import tkinter as tk
 
-from app.inherited.SpineTrackerContainer import SpineTrackerContainer
+from app.inherited.inherited.inherited.inherited.SpineTrackerContainer import SpineTrackerContainer
 
 
 class SpineTrackerSettings(SpineTrackerContainer):
@@ -28,16 +28,16 @@ class SpineTrackerSettings(SpineTrackerContainer):
             num_z_slices_string_var=tk.StringVar(self),
             total_channels_string_var=tk.StringVar(self),
             drift_correction_channel_string_var=tk.StringVar(self),
-            xy_mode_string_var=tk.StringVar(self),
-            uncaging_roi_toggle_string_var=tk.StringVar(self),
+            park_xy_motor_bool_var=tk.BooleanVar(self),
+            uncaging_roi_toggle_bool_var=tk.BooleanVar(self),
             macro_resolution_x_string_var=tk.StringVar(self),
             macro_resolution_y_string_var=tk.StringVar(self),
             normal_resolution_x_string_var=tk.StringVar(self),
             normal_resolution_y_string_var=tk.StringVar(self),
             imaging_zoom_string_var=tk.StringVar(self),
-            ref_zoom_string_var=tk.StringVar(self),
+            reference_zoom_string_var=tk.StringVar(self),
             imaging_slices_string_var=tk.StringVar(self),
-            ref_slices_string_var=tk.StringVar(self))
+            reference_slices_string_var=tk.StringVar(self))
 
         # Translate corresponding settings to their GUI variables
         self.settings_to_gui_vars = dict(
@@ -48,31 +48,40 @@ class SpineTrackerSettings(SpineTrackerContainer):
             imaging_slices='imaging_slices_string_var',
             reference_zoom='reference_zoom_string_var',
             reference_slices='reference_slices_string_var',
-            park_xy_motor='xy_mode_string_var',
+            park_xy_motor='park_xy_motor_bool_var',
             macro_resolution_x='macro_resolution_x_string_var',
             macro_resolution_y='macro_resolution_y_string_var',
-            normal_resolution_x='macro_resolution_x_string_var',
-            normal_resolution_y='macro_resolution_y_string_var',
-            macro_zoom = 'macro_zoom_string_var',
-            num_z_slices = 'num_z_slices_string_var')
+            normal_resolution_x='normal_resolution_x_string_var',
+            normal_resolution_y='normal_resolution_y_string_var',
+            macro_zoom='macro_zoom_string_var',
+            num_z_slices='num_z_slices_string_var',
+            uncaging_roi_toggle='uncaging_roi_toggle_bool_var')
 
         # Load Settings
         self.load_settings()
 
         # Set Values
         self.gui_vars['image_or_uncage_string_var'].set("Image")
-        self.update_gui_settings()
+        self.update_gui_from_settings()
 
         # Set add trace functions
-        self.gui_vars['imaging_zoom_string_var'].trace_add('write', self.update_settings_from_gui)
-        self.gui_vars['ref_zoom_string_var'].trace_add('write', self.update_settings_from_gui)
-        self.gui_vars['imaging_slices_string_var'].trace_add('write', self.update_settings_from_gui)
-        self.gui_vars['ref_slices_string_var'].trace_add('write', self.update_settings_from_gui)
-        self.gui_vars['xy_mode_string_var'].trace('w', self.toggle_xy_mode)
-        self.gui_vars['total_channels_string_var'].trace_add('write', self.update_settings_from_gui)
-        self.gui_vars['image_or_uncage_string_var'].trace('w', self.image_in_from_frame)
-        self.gui_vars['stagger_string_var'].set(self['stagger'])
-        self.gui_vars['stagger_string_var'].trace('w', parent.create_timeline_chart)
+        # Special Callbacks
+        self.gui_vars['image_or_uncage_string_var'].trace_add('write', self.image_or_uncage_string_var_callback)
+        self.gui_vars['stagger_string_var'].trace_add('write', self.stagger_string_var_callback)
+        # Generic Callbacks
+        gui_keys = ['imaging_zoom_string_var',
+                    'uncaging_roi_toggle_bool_var',
+                    'reference_zoom_string_var',
+                    'imaging_slices_string_var',
+                    'reference_slices_string_var',
+                    'park_xy_motor_bool_var',
+                    'total_channels_string_var',
+                    'macro_resolution_x_string_var',
+                    'macro_resolution_y_string_var',
+                    'normal_resolution_x_string_var',
+                    'normal_resolution_y_string_var']
+        for key in gui_keys:
+            self.gui_vars[key].trace_add('write', self.update_settings_from_gui)
 
     def load_settings(self):
         file_name = self.get_app_param('initDirectory') + 'user_settings.p'
@@ -94,8 +103,9 @@ class SpineTrackerSettings(SpineTrackerContainer):
                             'macro_resolution_y': 512,
                             'normal_resolution_x': 128,
                             'normal_resolution_y': 128,
-                            'num_z_slices' : 10,
-                            'macro_zoom' : 1,
+                            'num_z_slices': 10,
+                            'macro_zoom': 1,
+                            'uncaging_roi_toggle': True
                             }
         flag = False
         for key in default_settings:
@@ -110,25 +120,26 @@ class SpineTrackerSettings(SpineTrackerContainer):
         pickle.dump(user_settings, open(self.get_app_param('initDirectory') + 'user_settings.p', 'wb'))
 
     def update_settings_from_gui(self, a=None, b=None, c=None, settings_key=None):
-        update_settings = False
+        save_settings_flag = False
         if a:
             # TODO: Identify gui_var_key based on a
             pass
         if not settings_key:
-            for settings_key, gui_var_key in self.settings_to_gui_vars:
+            for settings_key, gui_var_key in self.settings_to_gui_vars.items():
                 val = self.gui_vars[gui_var_key].get()
                 if self.settings[settings_key] != val:
                     self.settings[settings_key] = val
-                    update_settings = True
+                    save_settings_flag = True
         else:
             self.settings[settings_key] = self.gui_vars[self.settings_to_gui_vars[settings_key]].get()
-            update_settings = True
-        self.save_settings()
+            save_settings_flag = True
+        if save_settings_flag:
+            self.save_settings()
 
-    def update_gui_settings(self, settings_key=None):
+    def update_gui_from_settings(self, settings_key=None):
         # TODO: Going to have to deal with all these string/int/double/boolean conversions somehow
         if not settings_key:
-            for settings_key, gui_var_key in self.settings_to_gui_vars:
+            for settings_key, gui_var_key in self.settings_to_gui_vars.items():
                 self.gui_vars[gui_var_key].set(self.settings[settings_key])
         else:
             gui_var_key = self.settings_to_gui_vars[settings_key]
