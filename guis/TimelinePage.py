@@ -259,21 +259,6 @@ class TimelineStepsFrame(ttk.Frame):
         ttk.Frame.__init__(self, parent)
         self.controller = controller
 
-        # # StringVars
-        # stagger_setting = self.controller.get_settings('stagger')
-        # if stagger_setting is None:
-        #     stagger_setting = 5
-        # self.stagger_string_var = tk.StringVar(self)
-        # self.stagger_string_var.set(stagger_setting)
-        # self.stagger_string_var.trace('w', parent.create_timeline_chart)
-        # self.image_or_uncage_string_var = tk.StringVar(self)
-        # self.image_or_uncage_string_var.set("Image")
-        # self.image_or_uncage_string_var.trace('w', self.image_in_from_frame)
-        # self.exclusive_bool_var = tk.BooleanVar(self)
-        # self.duration_string_var = tk.StringVar(self)
-        # self.period_string_var = tk.StringVar(self)
-        # self.step_name_string_var = tk.StringVar(self)
-
         # Gui Elements
         self.gui = self.define_gui_elements()
 

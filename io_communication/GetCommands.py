@@ -85,7 +85,7 @@ class GetCommands(object):
             self.receivedFlags['fovXY'] = True
         elif command == 'zoom':
             check_num_args(args, 1, 1)
-            self.controller.acq['currentZoom'] = float(args[0])
+            self.controller.acq['current_zoom'] = float(args[0])
             self.receivedFlags['zoom'] = True
         elif command == 'scananglexy':
             check_num_args(args, 2, 2)

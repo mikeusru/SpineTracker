@@ -11,6 +11,7 @@ import os
 import pickle
 from queue import Queue
 
+import tkinter as tk
 import matplotlib
 import numpy as np
 from matplotlib import patches
@@ -161,7 +162,7 @@ class SpineTracker(InputOutputInterface):
 
     def calc_drift(self):
         image = np.max(self.acq['imageStack'], 0)
-        if self.acq['currentZoom'] == float(self.frames[PositionsPage].imaging_zoom_string_var.get()):
+        if self.acq['current_zoom'] == float(self.get_settings('imaging_zoom')):
             imgref = self.acq['imgref_imaging']
         else:
             imgref = self.acq['imgref_ref']
@@ -248,13 +249,14 @@ class SpineTracker(InputOutputInterface):
             print(string)
             self.log_file.write(string)
 
-    def stagger_string_var_callback(self):
+    def stagger_string_var_callback(self, *args):
         # Callback to the StringVar
         self.frames[TimelinePage].create_timeline_chart()
 
-    def image_or_uncage_string_var_callback(self):
+    def image_or_uncage_string_var_callback(self, *args):
         # Callback to the StringVar
         self.frames[TimelinePage].image_in_from_frame()
+
 
 class SharedFigs(dict):
 

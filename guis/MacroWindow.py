@@ -10,9 +10,9 @@ from utilities.math_helpers import round_math
 matplotlib.use("TkAgg")
 
 
-class MacroWindow(tk.Tk):
+class MacroWindow(tk.Toplevel):
     def __init__(self, controller, *args, **kwargs):
-        tk.Tk.__init__(self, *args, **kwargs)  # initialize regular Tk stuff
+        tk.Toplevel.__init__(self, *args, **kwargs)  # initialize regular Tk stuff
 
         self.controller = controller
 
@@ -29,12 +29,14 @@ class MacroWindow(tk.Tk):
                                                               command=lambda: self.load_macro_image())
         self.gui['label_macro_zoom'] = tk.Label(self.gui['frame_buttons'], text="Macro Zoom",
                                                 font=controller.get_app_param('large_font'))
-        self.gui['entry_macro_zoom'] = ttk.Entry(self.gui['frame_buttons'], textvariable=self.macro_zoom_string_var,
+        self.gui['entry_macro_zoom'] = ttk.Entry(self.gui['frame_buttons'],
+                                                 textvariable=self.controller.gui_vars['macro_zoom_string_var'],
                                                  width=3)
         self.gui['scale_zoom'] = tk.Scale(self, orient=tk.HORIZONTAL)
         self.gui['label_z_slices'] = tk.Label(self.gui['frame_buttons'], text="Number of Z Slices",
                                               font=controller.get_app_param('large_font'))
-        self.gui['entry_z_slices'] = ttk.Entry(self.gui['frame_buttons'], textvariable=self.num_z_slices_string_var,
+        self.gui['entry_z_slices'] = ttk.Entry(self.gui['frame_buttons'],
+                                               textvariable=self.controller.gui_vars['num_z_slices_string_var'],
                                                width=4)
         self.gui['button_load_macro_image'] = ttk.Button(self.gui['frame_buttons'], text="Grab Macro Image",
                                                          command=lambda: self.load_macro_image())
@@ -70,10 +72,10 @@ class MacroWindow(tk.Tk):
             self.controller.set_acq_var('center_xy', (0, 0))
         else:
             # set zoom
-            macro_zoom = float(self.macro_zoom_string_var.get())
+            macro_zoom = float(self.controller.get_settings('macro_zoom'))
             self.controller.set_zoom(macro_zoom)
             # set Z slice number
-            z_slice_num = float(self.num_z_slices_string_var.get())
+            z_slice_num = float(self.controller.get_settings('num_z_slices'))
             self.controller.set_z_slice_num(z_slice_num)
             # grab stack
             self.controller.grab_stack()
@@ -117,11 +119,11 @@ class MacroWindow(tk.Tk):
         self.controller.add_position(self.controller.frames[PositionsPage], xyz=xyz, ref_images=self.data['refImages'])
 
     def get_ref_images_from_macro(self, xyz_clicked):
-        macro_zoom = float(self.macro_zoom_string_var.get())
-        imaging_zoom = float(self.controller.frames[PositionsPage].imaging_zoom_string_var.get())
-        ref_zoom = float(self.controller.frames[PositionsPage].reference_zoom_string_var.get())
-        imaging_slices = int(self.controller.frames[PositionsPage].imaging_slices_string_var.get())
-        ref_slices = int(self.controller.frames[PositionsPage].reference_slices_string_var.get())
+        macro_zoom = float(self.controller.get_settings('macro_zoom'))
+        imaging_zoom = float(self.controller.get_settings('imaging_zoom'))
+        ref_zoom = float(self.controller.get_settings('reference_zoom'))
+        imaging_slices = int(self.controller.get_settings('imaging_slices'))
+        ref_slices = int(self.controller.get_settings('reference_slices'))
 
         frame = self.slice_index
         imaging_slices_ind = range(int(round_math(frame - imaging_slices / 2)),

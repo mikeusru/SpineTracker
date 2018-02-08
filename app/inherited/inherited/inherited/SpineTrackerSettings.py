@@ -79,7 +79,12 @@ class SpineTrackerSettings(SpineTrackerContainer):
                     'macro_resolution_x_string_var',
                     'macro_resolution_y_string_var',
                     'normal_resolution_x_string_var',
-                    'normal_resolution_y_string_var']
+                    'normal_resolution_y_string_var',
+                    'stagger_string_var',
+                    'macro_zoom_string_var',
+                    'num_z_slices_string_var',
+                    'uncaging_roi_toggle_bool_var']
+
         for key in gui_keys:
             self.gui_vars[key].trace_add('write', self.update_settings_from_gui)
 
