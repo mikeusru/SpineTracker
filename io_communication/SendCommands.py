@@ -43,8 +43,8 @@ class SendCommands(object):
     def set_z_slice_num(self, z_slice_num):
         self.write_command('setZSliceNum', z_slice_num)
 
-    def set_x_y_resolution(self, x_y_resolution):
-        self.write_command('setXYResolution', x_y_resolution)
+    def set_x_y_resolution(self, x_resolution, y_resolution):
+        self.write_command('setXYResolution', x_resolution, y_resolution)
 
     def get_x_y_resolution(self):
         self.write_command('getXYResolution')

@@ -84,11 +84,22 @@ class InputOutputInterface(PositionManagement):
         self.sendCommands.set_zoom(zoom)
         self.getCommands.wait_for_received_flag(flag)
 
+    def set_resolution(self, x_resolution, y_resolution):
+        flag = 'x_y_resolution'
+        self.getCommands.receivedFlags[flag] = False
+        self.sendCommands.set_x_y_resolution(x_resolution, y_resolution)
+        self.getCommands.wait_for_received_flag(flag)
+
     def set_macro_imaging_conditions(self):
-        # TODO: set conditions to do macro imaging other than just the zoom. this should include the x/y pixels at least
-        pass
+        zoom = self.get_settings('macro_zoom')
+        x_resolution = self.get_settings('macro_resolution_x')
+        y_resolution = self.get_settings('macro_resolution_y')
+        self.set_zoom(zoom)
+        self.set_resolution(x_resolution, y_resolution)
 
     def set_micro_imaging_conditions(self):
-        # TODO: set conditions to do regular imaging other than just the zoom. this should include the x/y pixels at
-        # least
-        pass
+        zoom = self.get_settings('imaging_zoom')
+        x_resolution = self.get_settings('normal_resolution_x')
+        y_resolution = self.get_settings('normal_resolution_y')
+        self.set_zoom(zoom)
+        self.set_resolution(x_resolution, y_resolution)

@@ -11,7 +11,6 @@ import os
 import pickle
 from queue import Queue
 
-import tkinter as tk
 import matplotlib
 import numpy as np
 from matplotlib import patches

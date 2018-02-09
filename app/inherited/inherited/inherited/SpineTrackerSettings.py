@@ -126,9 +126,6 @@ class SpineTrackerSettings(SpineTrackerContainer):
 
     def update_settings_from_gui(self, a=None, b=None, c=None, settings_key=None):
         save_settings_flag = False
-        if a:
-            # TODO: Identify gui_var_key based on a
-            pass
         if not settings_key:
             for settings_key, gui_var_key in self.settings_to_gui_vars.items():
                 val = self.gui_vars[gui_var_key].get()
@@ -142,7 +139,6 @@ class SpineTrackerSettings(SpineTrackerContainer):
             self.save_settings()
 
     def update_gui_from_settings(self, settings_key=None):
-        # TODO: Going to have to deal with all these string/int/double/boolean conversions somehow
         if not settings_key:
             for settings_key, gui_var_key in self.settings_to_gui_vars.items():
                 self.gui_vars[gui_var_key].set(self.settings[settings_key])
