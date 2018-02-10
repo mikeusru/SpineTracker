@@ -1,12 +1,13 @@
+import threading
 import tkinter as tk
 from tkinter import ttk
+
 import matplotlib
-from flow.PositionTimer import PositionTimer
-from guis.PositionsPage import PositionsPage
-from utilities.helper_functions import fit_fig_to_canvas
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
-import threading
+
+from flow.PositionTimer import PositionTimer
+from utilities.helper_functions import fit_fig_to_canvas
 
 matplotlib.use("TkAgg")
 
@@ -76,7 +77,7 @@ class StartPage(ttk.Frame):
         # get scan angle conversion properties
         self.controller.get_scan_props()
         # this probably needs to move somewhere else later
-        self.controller.set_zoom(float(self.controller.get_settings('imaging_zoom')))
+        self.controller.set_micro_imaging_conditions()
         # set up timers
         self.posTimers = {}
         with self.controller.timerStepsQueue.mutex:

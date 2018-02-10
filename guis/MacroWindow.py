@@ -17,8 +17,8 @@ class MacroWindow(tk.Toplevel):
         self.controller = controller
 
         # set properties for main window
-        tk.Tk.wm_title(self, "Macro View")
-        tk.Tk.geometry(self, newGeometry='700x800+200+200')
+        self.title("Macro View")
+        self.geometry(newGeometry='700x800+200+200')
 
         # Define GUI Elements
         self.gui = dict(frame_canvas=ttk.Frame(self))
@@ -71,9 +71,8 @@ class MacroWindow(tk.Toplevel):
             self.image = Image.open("../testing/macroImage.tif")
             self.controller.set_acq_var('center_xy', (0, 0))
         else:
-            # set zoom
-            macro_zoom = float(self.controller.get_settings('macro_zoom'))
-            self.controller.set_zoom(macro_zoom)
+            # set macro zoom and resolution
+            self.controller.set_macro_imaging_conditions()
             # set Z slice number
             z_slice_num = float(self.controller.get_settings('num_z_slices'))
             self.controller.set_z_slice_num(z_slice_num)
@@ -83,7 +82,7 @@ class MacroWindow(tk.Toplevel):
             self.image = self.controller.get_acq_var('imageStack')
             # get the motor coordinates
             self.controller.get_current_position()
-            x, y, z = self.currentCoordinates
+            x, y, z = self.controller.get_acq_var('current_coordinates')
             self.controller.set_acq_var('center_xy', (x, y))
 
         self.multi_slice_viewer()
@@ -207,8 +206,6 @@ class ScrolledCanvas(tk.Frame):
         if x > 1 or y > 1:
             return
         z = self.master.slice_index
-        #            print('eventx, eventy = {0}, {1}'.format(event.x,event.y))
-        #            print(canvas.find_closest(x,y))
         self.gui['popup'].add_command(label='Add Position',
                                       command=lambda: self.master.add_position_on_image_click(x, y, z))
         # display the popup menu

@@ -73,7 +73,7 @@ class GetCommands(object):
         elif command == 'currentposition':
             check_num_args(args, 3, 3)
             x, y, z = [float(args[xyz]) for xyz in [0, 1, 2]]
-            self.controller.currentCoordinates = [x, y, z]
+            self.controller.set_acq_var('current_coordinates', [x, y, z])
             self.receivedFlags['currentPosition'] = True
         elif command == 'uncagingdone':
             check_num_args(args, 0, 0)
@@ -104,7 +104,7 @@ class GetCommands(object):
             self.controller.acq['z_slice_num'] = float(args[0])
             self.receivedFlags['z_slice_num'] = True
         elif command == 'x_y_resolution':
-            check_num_args(args,2,2)
+            check_num_args(args, 2, 2)
             self.controller.acq['x_y_resolution'] = (float(args[0]), float(args[1]))
             self.receivedFlags['x_y_resolution'] = True
         else:

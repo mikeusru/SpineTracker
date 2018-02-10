@@ -31,7 +31,7 @@ class PositionManagement(SpineTrackerSettings):
             self.getCommands.receivedFlags[flag] = False
             self.sendCommands.get_current_position()
             self.getCommands.wait_for_received_flag(flag)
-            x, y, z = self.currentCoordinates
+            x, y, z = self.get_acq_var('current_coordinates')
         return {'x': x, 'y': y, 'z': z}
 
     def create_new_pos(self, xyz, ref_images=None):
