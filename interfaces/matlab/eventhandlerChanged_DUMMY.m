@@ -210,3 +210,17 @@ function setZSliceNum(z_slice_num)
 % respond with ZSliceNum
 write_to_SpineTracker('ZSliceNum',z_slice_num);
 end
+
+function setXYresolution(x,y)
+global state gh
+% set pixel resolution to image
+% respond with x_y_resolution
+write_to_SpineTracker('x_y_resolution',x,y);
+end
+
+function getXYresolution()
+global state gh
+% read pixel resolution to image
+% respond with x_y_resolution
+write_to_SpineTracker('x_y_resolution',128,128);
+end
