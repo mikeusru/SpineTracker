@@ -1,3 +1,4 @@
+import getopt
 import os
 import pickle
 import tkinter as tk
@@ -8,15 +9,15 @@ from app.inherited.inherited.inherited.inherited.SpineTrackerContainer import Sp
 class SpineTrackerSettings(SpineTrackerContainer):
 
     def __init__(self, *args, **kwargs):
-        super(SpineTrackerSettings, self).__init__(*args, **kwargs)
+        super(SpineTrackerSettings, self).__init__()
         self.settings = dict()
         self.acq = dict()
         self.app_params = dict(large_font=("Verdana", 12),
                                fig_dpi=100,
-                               simulation=True,
-                               verbose=True,
+                               simulation=False,
+                               verbose=False,
                                initDirectory="../iniFiles/")
-
+        self.interpret_command_line_arguments(args)
         self.gui_vars = dict(
             stagger_string_var=tk.StringVar(self),
             image_or_uncage_string_var=tk.StringVar(self),
@@ -87,6 +88,13 @@ class SpineTrackerSettings(SpineTrackerContainer):
 
         for key in gui_keys:
             self.gui_vars[key].trace_add('write', self.update_settings_from_gui)
+
+    def interpret_command_line_arguments(self,args):
+        for arg in args:
+            print(arg)
+        opts,args = getopt.getopt(args,"hs:v:")
+        print(opts)
+        print(args)
 
     def load_settings(self):
         file_name = self.get_app_param('initDirectory') + 'user_settings.p'

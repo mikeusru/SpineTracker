@@ -13,6 +13,7 @@ from queue import Queue
 
 import matplotlib
 import numpy as np
+import sys
 from matplotlib import patches
 from matplotlib import style
 from matplotlib.figure import Figure
@@ -278,7 +279,7 @@ class SharedFigs(dict):
 
 
 if __name__ == "__main__":
-    app = SpineTracker()
+    app = SpineTracker(sys.argv[1:])
     try:
         app.mainloop()
     except(KeyboardInterrupt, SystemExit):
