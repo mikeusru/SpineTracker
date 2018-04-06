@@ -12,7 +12,7 @@ class GetCommands(object):
         if not os.path.isfile(self.file_path):
             open(self.file_path, 'a').close()
 
-    def read_new_instructions(self):
+    def read_new_instructions(self, *args):
         inst_len = len(self.instructions)
         """read every line, see if there's new stuff to be had"""
         with open(self.file_path) as f:

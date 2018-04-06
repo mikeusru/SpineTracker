@@ -43,7 +43,11 @@ class PositionManagement(SpineTrackerSettings):
         self.positions[pos_id] = xyz
         if ref_images is None:
             # load sample ref images
-            self.load_test_ref_image()
+            if self.get_app_param('simulation'):
+                self.load_test_ref_image()
+            else:
+                self.grab_stack()
+                self.load_acquired_image()
         else:
             self.acq['imgref_imaging'] = ref_images['imaging']
             self.acq['imgref_ref'] = ref_images['ref']

@@ -281,7 +281,8 @@ end
 
 function getXYresolution()
 global state gh
+
 % read pixel resolution to image
 % respond with x_y_resolution
-write_to_SpineTracker('x_y_resolution',x,y);
+write_to_SpineTracker('x_y_resolution',state.acq.pixelsPerLine,state.acq.linesPerFrame);
 end

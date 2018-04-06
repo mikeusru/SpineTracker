@@ -35,7 +35,7 @@ class SendCommands(object):
         self.write_command('getScanAngleRangeReference')
 
     def get_current_position(self):
-        self.write_command('getCurrentPosition', 'xyz')
+        self.write_command('getCurrentPosition')
 
     def set_scan_shift(self, scan_shift_fast, scan_shift_slow):
         self.write_command('setScanAngleXY', scan_shift_fast, scan_shift_slow)
