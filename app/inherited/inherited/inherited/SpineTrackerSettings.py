@@ -108,13 +108,11 @@ class SpineTrackerSettings(SpineTrackerContainer):
                     print('verbose mode on')
                     self.set_app_param('verbose', True)
 
-
     def load_settings(self):
         file_name = self.get_app_param('initDirectory') + 'user_settings.p'
         if os.path.isfile(file_name):
             self.settings = pickle.load(open(file_name, 'rb'))
         self.add_missing_settings()
-
 
     def add_missing_settings(self):
         default_settings = {'drift_correction_channel': 1,
@@ -142,11 +140,9 @@ class SpineTrackerSettings(SpineTrackerContainer):
         if flag:
             self.save_settings()
 
-
     def save_settings(self):
         user_settings = self.settings
         pickle.dump(user_settings, open(self.get_app_param('initDirectory') + 'user_settings.p', 'wb'))
-
 
     def update_settings_from_gui(self, a=None, b=None, c=None, settings_key=None):
         save_settings_flag = False
@@ -162,7 +158,6 @@ class SpineTrackerSettings(SpineTrackerContainer):
         if save_settings_flag:
             self.save_settings()
 
-
     def update_gui_from_settings(self, settings_key=None):
         if not settings_key:
             for settings_key, gui_var_key in self.settings_to_gui_vars.items():
@@ -171,13 +166,11 @@ class SpineTrackerSettings(SpineTrackerContainer):
             gui_var_key = self.settings_to_gui_vars[settings_key]
             self.gui_vars[gui_var_key].set(self.settings[settings_key])
 
-
     def get_app_param(self, k, *args):
         param = self.app_params.get(k, None)
         if param is None and args:
             param = args[0]
         return param
-
 
     def get_settings(self, k, *args):
         setting = self.settings.get(k, None)
@@ -185,19 +178,15 @@ class SpineTrackerSettings(SpineTrackerContainer):
             setting = args[0]
         return setting
 
-
     def set_settings(self, k, v):
         self.settings[k] = v
         self.save_settings()
 
-
     def set_app_param(self, k, v):
         self.app_params[k] = v
 
-
     def update_settings_from_source(self, key, source):
         self.set_settings(key, source.get())
-
 
     def get_acq_var(self, k, *args):
         var = self.acq.get(k, None)
@@ -205,10 +194,8 @@ class SpineTrackerSettings(SpineTrackerContainer):
             var = args[0]
         return var
 
-
     def set_acq_var(self, k, v):
         self.acq[k] = v
-
 
     def load_test_ref_image(self):  # for testing purposes only
         pass

@@ -34,14 +34,20 @@ end
 
 spineTracker.allCommands = {}; %initialize cell list of commands
 spineTracker.commandQueue = {}; %initialize cell list of commands in queue
-myfile = 'instructions_output.txt';
-[parentdir,~,~] = fileparts(pwd);
+outfile = 'instructions_output.txt';
+infile = 'instructions_input.txt';
+[parentdir,~,~] = fileparts(mfilename('fullpath'));
 [parentdir,~,~] = fileparts(parentdir);
-fid = fopen(fullfile(parentdir,myfile),'w');
+[parentdir,~,~] = fileparts(parentdir);
+commands_from_spine_tracker = fullfile(parentdir,outfile);
+commands_to_spine_tracker = fullfile(parentdir,infile);
+fid = fopen(commands_from_spine_tracker,'w');
 fclose(fid);
+spineTracker.commands_from_spine_tracker = commands_from_spine_tracker;
+spineTracker.commands_to_spine_tracker = commands_to_spine_tracker;
 
 %Set up file watcher object, start listening for changes in file
 spineTracker.fileWatcherObject = System.IO.FileSystemWatcher(parentdir);
-spineTracker.fileWatcherObject.Filter = myfile;
+spineTracker.fileWatcherObject.Filter = outfile;
 spineTracker.fileWatcherObject.EnableRaisingEvents = true;
 spineTracker.lh = addlistener(spineTracker.fileWatcherObject,'Changed',reader_function);

@@ -107,14 +107,29 @@ while ~isempty(spineTracker.commandQueue)
             end
             getScanAngleRangeReference();
         case 'setzslicenum'
-            disp('getScanAngleRangeReference')
+            disp('setZSliceNum')
             if checkArgCount([1,1],argCount)
                 continue
             end
             z_slice_num = str2double(command(2));
             setZSliceNum(z_slice_num);
+        case 'setxyresolution'
+            disp('setXYResolution')
+            if checkArgCount([2,2],argCount)
+                continue
+            end
+            x_res = str2double(command(2));
+            y_res = str2double(command(3));
+            setXYresolution(x_res,y_res);
+        case 'getxyresolution'
+            disp('getXYResolution')
+            if checkArgCount([0,0],argCount)
+                continue
+            end
+            getXYresolution();
         otherwise
-            disp('COMMAND NOT UNDERSTOOD')
+            fprintf('COMMAND NOT UNDERSTOOD:\n%s',...
+                lower(command{1}))
     end
 end
 end
@@ -147,6 +162,7 @@ end
 function grabOneStack()
 % Grab an image stack
 global gh state
+save_path = [state.files.fullFileName '.tif'];
 mainControls('grabOneButton_Callback',gh.mainControls.grabOneButton);
 try
     %wait until grab is complete
@@ -158,7 +174,7 @@ end
 % respond with GrabOneStackDone
 % should make sure that this filename is taken at the correct time. might
 % need to be done before taking the image
-write_to_SpineTracker('GrabOneStackDone',state.files.fullFileName);
+write_to_SpineTracker('GrabOneStackDone',save_path);
 end
 
 function setZoom(zoom)
@@ -276,7 +292,22 @@ end
 function setXYresolution(x,y)
 global state gh
 % set pixel resolution to image
+pixelsPerLine = x;
+linesPerFrame = y;
+valref = strfind(get(gh.configurationControls.pixelsPerLine,'String'),num2str(pixelsPerLine));
+val = find(~cellfun(@isempty,valref));
+set(gh.configurationControls.pixelsPerLine, 'Value', val);
+% state.acq.pixelsPerLine = pixelsPerLine;
+configurationControls('pixelsPerLine_Callback',gh.configurationControls.pixelsPerLine);
+drawnow();
+% genericCallback(gh.configurationControls.pixelsPerLine);
+% state.acq.linesPerFrame = linesPerFrame;
+set(gh.configurationControls.linesPerFrame, 'String', num2str(linesPerFrame));
+configurationControls('linesPerFrame_Callback',gh.configurationControls.linesPerFrame);
+configurationControls('pbApplyConfig_Callback');
+% genericCallback(gh.configurationControls.linesPerFrame);
 % respond with x_y_resolution
+write_to_SpineTracker('x_y_resolution',state.acq.pixelsPerLine,state.acq.linesPerFrame);
 end
 
 function getXYresolution()
@@ -286,3 +317,4 @@ global state gh
 % respond with x_y_resolution
 write_to_SpineTracker('x_y_resolution',state.acq.pixelsPerLine,state.acq.linesPerFrame);
 end
+

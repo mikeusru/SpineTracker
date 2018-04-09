@@ -78,7 +78,7 @@ class MacroWindow(tk.Toplevel):
             self.controller.set_z_slice_num(z_slice_num)
             # grab stack
             self.controller.grab_stack()
-            self.controller.load_acquired_image(updateFigure=False)
+            self.controller.load_acquired_image(update_figure=False)
             self.image = self.controller.get_acq_var('imageStack')
             # get the motor coordinates
             self.controller.get_current_position()

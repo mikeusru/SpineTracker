@@ -132,6 +132,7 @@ class TimelinePage(ttk.Frame):
                 _start = max(start_end[0], min_time[pos_ind])
                 _end = _start + start_end[1] - start_end[0]
                 exclusive = timeline_steps[timeline_index[pos]]['exclusive']
+
                 if _start < start_time or (
                         _start == start_time and exclusive):  # figure out if this is the earliest step, or exclusive
                     #  step that starts the same time as others
@@ -140,12 +141,11 @@ class TimelinePage(ttk.Frame):
                     first_pos = pos  # save which position runs first
             pos_ind = list(pos_ids).index(first_pos)
             exclusive = timeline_steps[timeline_index[first_pos]]['exclusive']
-
-            individual_steps[first_pos].append({'start_time': start_time,
-                                                'endTime': end_time,
-                                                'exclusive': exclusive,
-                                                'imaging_or_uncaging': timeline_steps[timeline_index[first_pos]][
-                                                    'imaging_or_uncaging']})
+            step_name = timeline_steps[timeline_index[first_pos]]['step_name']
+            imaging_or_uncaging = timeline_steps[timeline_index[first_pos]]['imaging_or_uncaging']
+            temp_step_to_append = TimelineStep(step_name,imaging_or_uncaging,exclusive,
+                                               start_time=start_time, end_time=end_time)
+            individual_steps[first_pos].append(temp_step_to_append)
             # delete added position
             pos_timeline[first_pos][0] = np.array([np.delete(pos_timeline[first_pos][0][0], 0, 1)])
             if exclusive:
@@ -176,7 +176,7 @@ class TimelinePage(ttk.Frame):
             c = []
             y_ind += 1
             for step in individual_steps[key]:
-                xranges.append((step['start_time'], step['endTime'] - step['start_time']))
+                xranges.append((step['start_time'], step['end_time'] - step['start_time']))
                 if not step['exclusive']:
                     c.append('blue')  # regular imaging
                 elif step['exclusive'] and step['imaging_or_uncaging'] == 'Image':

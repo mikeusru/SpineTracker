@@ -48,6 +48,9 @@ class PositionManagement(SpineTrackerSettings):
             else:
                 self.grab_stack()
                 self.load_acquired_image()
+                # TODO: Set to acquire zoomed out image first
+                self.acq['imgref_imaging'] = np.max(self.acq['imageStack'].copy(),axis = 0)
+                self.acq['imgref_ref'] = np.max(self.acq['imageStack'].copy(),axis = 0)
         else:
             self.acq['imgref_imaging'] = ref_images['imaging']
             self.acq['imgref_ref'] = ref_images['ref']

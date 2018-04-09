@@ -4,7 +4,7 @@ Created on Wed Oct 18 14:36:57 2017
 
 @author: smirnovm
 """
-
+import copy
 import datetime as dt
 import inspect
 import os
@@ -20,6 +20,7 @@ from matplotlib.figure import Figure
 from skimage import io, transform
 
 from app.inherited.InputOutputInterface import InputOutputInterface
+from flow.TimelineStep import TimelineStep
 from guis.MacroWindow import MacroWindow
 from guis.PositionsPage import PositionsPage
 from guis.SettingsPage import SettingsPage
@@ -99,8 +100,8 @@ class SpineTracker(InputOutputInterface):
 
     def load_acquired_image(self, update_figure=True):
         image = io.imread(self.imageFilePath)
-        total_chan = int(self.frames[SettingsPage].total_channelsVar.get())
-        drift_chan = int(self.frames[SettingsPage].drift_correction_channelVar.get())
+        total_chan = int(self.gui_vars['total_channels_string_var'].get())
+        drift_chan = int(self.gui_vars['drift_correction_channel_string_var'].get())
         image = image[np.arange(drift_chan - 1, len(image), total_chan)]
         self.acq['imageStack'] = image
         if update_figure:
@@ -123,20 +124,20 @@ class SpineTracker(InputOutputInterface):
         self.calc_focus()
         self.calc_drift()
         x, y, z = [self.positions[pos_id][key] for key in ['x', 'y', 'z']]
-        shiftx, shifty = self.measure['shiftxy']
-        shiftz = self.measure['shiftz']
+        shiftx, shifty = self.acq['shiftxy']
+        shiftz = self.acq['shiftz']
         self.positions[pos_id]['x'] = x + shiftx
         self.positions[pos_id]['y'] = y + shifty
         self.positions[pos_id]['z'] = z + shiftz
         self.positions[pos_id]['xyzShift'] = self.positions[pos_id]['xyzShift'] + np.array([shiftx, shifty, shiftz])
-        self.frames[StartPage].driftLabel.configure(
+        self.frames[StartPage].gui['drift_label'].configure(
             text='Detected drift of {0}px in x and {1}px in y'.format(shiftx.item(), shifty.item()))
         self.show_new_images()
 
     def show_new_images(self):
         image = self.acq['imageStack']
         i = 0
-        a = self.AFImageAx
+        a = self.frames[StartPage].gui['axes_af_images']
         # show images
         for im in image:
             a[i].clear()
@@ -145,20 +146,20 @@ class SpineTracker(InputOutputInterface):
             a[i].axis('off')
             i += 1
         # show best focused image
-        max_ind = self.measure['FMlist'].argmax().item()
+        max_ind = self.acq['FMlist'].argmax().item()
         siz = image[0].shape
         rect = patches.Rectangle((0, 0), siz[0], siz[1], fill=False, linewidth=5, edgecolor='r')
         a[max_ind].add_patch(rect)
-        self.frames[StartPage].canvas['canvas_af'].draw_idle()
+        self.frames[StartPage].gui['canvas_af'].draw_idle()
 
     def calc_focus(self):
         image = self.acq['imageStack']
         fm = np.array([])
         for im in image:
             fm = np.append(fm, (focus_measure(im)))
-        self.measure['shiftz'] = fm.argmax().item() - np.floor(
+        self.acq['shiftz'] = fm.argmax().item() - np.floor(
             len(image) / 2)  # this needs to be checked obviously, depending on how Z info is dealt with
-        self.measure['FMlist'] = fm
+        self.acq['FMlist'] = fm
 
     def calc_drift(self):
         image = np.max(self.acq['imageStack'], 0)
@@ -169,7 +170,7 @@ class SpineTracker(InputOutputInterface):
         shift = compute_drift(imgref, image)
         shiftx = shift['shiftx']
         shifty = shift['shifty']
-        self.measure['shiftxy'] = (shiftx, shifty)
+        self.acq['shiftxy'] = (shiftx, shifty)
 
     def create_figure_for_af_images(self):
         if 'imageStack' not in self.acq:
@@ -194,7 +195,7 @@ class SpineTracker(InputOutputInterface):
         self.frames[TimelinePage].draw_timeline_steps()
 
     def add_step_to_queue(self, step, pos_id):
-        single_step = step.copy()
+        single_step = copy.copy(step) # .copy() returns dict, not TimelineStep object
         single_step['pos_id'] = pos_id
         self.timerStepsQueue.put(single_step)
 
@@ -214,15 +215,15 @@ class SpineTracker(InputOutputInterface):
                 ex = 'Exclusive'
             else:
                 ex = 'Non-Exclusive'
-            print('{0} {1} Timer {2} running at {3}s '.format(ex, single_step['IU'], pos_id, dt.datetime.now().second))
+            print('{0} {1} Timer {2} running at {3}s '.format(ex, single_step['imaging_or_uncaging'], pos_id, dt.datetime.now().second))
 
             # this should actually be set once data from position is received, because drift/af calculation will be
             # done after that
             self.current_pos_id = pos_id
             # we're already in a thread so maybe don't need another one here
-            if single_step['IU'] == 'Image':
+            if single_step['imaging_or_uncaging'] == 'Image':
                 self.step_image_new_position(single_step)
-            elif single_step['IU'] == 'Uncage':
+            elif single_step['imaging_or_uncaging'] == 'Uncage':
                 self.step_uncage_new_position(single_step)
 
     def step_image_new_position(self, single_step):
@@ -255,7 +256,7 @@ class SpineTracker(InputOutputInterface):
 
     def image_or_uncage_string_var_callback(self, *args):
         # Callback to the StringVar
-        self.frames[TimelinePage].image_in_from_frame()
+        self.frames[TimelinePage].gui['tFrame'].image_in_from_frame()
 
 
 class SharedFigs(dict):

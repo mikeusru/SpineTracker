@@ -19,7 +19,7 @@ def hello(step,posID):
     else:
         ex = 'Non-Exclusive'
     
-    print('{0} {1} Timer {2} running at {3}s '.format(ex, step['IU'], posID, datetime.datetime.now().second))
+    print('{0} {1} Timer {2} running at {3}s '.format(ex, step['imaging_or_uncaging'], posID, datetime.datetime.now().second))
     time.sleep(.2)
 #    print(name + ' has aquired the lock')
 #    print('oh herro')
@@ -53,7 +53,7 @@ class PositionTimer(object):
         
         self.runTimes = []
         for step in self.steps:
-            self.runTimes.append(step['startTime'])
+            self.runTimes.append(step['start_time'])
 
         self.start()
         

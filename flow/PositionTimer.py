@@ -14,7 +14,7 @@ class PositionTimer(object):
 
         self.runTimes = []
         for step in self.steps:
-            self.runTimes.append(step['startTime'])
+            self.runTimes.append(step['start_time'])
 
         self.start()
 

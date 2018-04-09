@@ -230,6 +230,7 @@ class PositionsPage(ttk.Frame):
         for ax, r in zip(self.gui['ref_images_axes'], refs):
             ax.clear()
             ax.axis('off')
+            print(r.shape)
             ax.imshow(r)
         self.draw_roi(pos_id, self.gui['ref_images_axes'][0])
         self.gui['canvas_preview_ref_images'].draw_idle()
