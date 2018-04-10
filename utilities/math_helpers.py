@@ -1,7 +1,7 @@
 import math
 from scipy import ndimage
 import numpy as np
-
+from skimage import exposure
 
 def round_math(n, n_digits=0):
     part = n * 10 ** n_digits
@@ -70,3 +70,12 @@ def compute_drift(img_ref, img):
         shift_x = shift_x - np.sign(shift_x) * w
 
     return {'shiftx': shift_x[0], 'shifty': shift_y[0]}
+
+
+def histogram_equalize(img):
+    img_cdf, bin_centers = exposure.cumulative_distribution(img)
+    return np.interp(img, bin_centers, img_cdf)
+
+def contrast_stretch(img):
+    p2, p98 = np.percentile(img, (2, 98))
+    return exposure.rescale_intensity(img, in_range=(p2, p98))

@@ -98,12 +98,14 @@ class SpineTracker(InputOutputInterface):
         self.acq['imageStack'] = image
         self.create_figure_for_af_images()
 
-    def load_acquired_image(self, update_figure=True):
+    def load_acquired_image(self, update_figure=True, get_macro = False):
         image = io.imread(self.imageFilePath)
         total_chan = int(self.gui_vars['total_channels_string_var'].get())
         drift_chan = int(self.gui_vars['drift_correction_channel_string_var'].get())
         image = image[np.arange(drift_chan - 1, len(image), total_chan)]
         self.acq['imageStack'] = image
+        if get_macro:
+            self.acq['macro_image'] = image
         if update_figure:
             self.create_figure_for_af_images()
 

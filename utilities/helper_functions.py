@@ -21,3 +21,4 @@ def initialize_init_directory(init_directory):
     directory = os.path.dirname(init_directory)
     if not os.path.exists(directory):
         os.mkdir(directory)
+

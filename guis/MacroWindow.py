@@ -2,10 +2,10 @@ import tkinter as tk
 from tkinter import ttk
 import matplotlib
 import numpy as np
-from PIL import Image, ImageTk, ImageMath
+from PIL import Image, ImageTk, ImageMath, ImageOps
 
 from guis.PositionsPage import PositionsPage
-from utilities.math_helpers import round_math
+from utilities.math_helpers import round_math, histogram_equalize, contrast_stretch
 
 matplotlib.use("TkAgg")
 
@@ -78,8 +78,18 @@ class MacroWindow(tk.Toplevel):
             self.controller.set_z_slice_num(z_slice_num)
             # grab stack
             self.controller.grab_stack()
-            self.controller.load_acquired_image(update_figure=False)
-            self.image = self.controller.get_acq_var('imageStack')
+            self.controller.load_acquired_image(update_figure=False, get_macro=True)
+            # make sure image is in correct range
+            image_stack = np.array([contrast_stretch(img) for img in self.controller.get_acq_var('macro_image')])
+            image_stack = image_stack / np.max(image_stack) * 255
+            # since PIL doesn't support creating multiframe images, save the image and load it as a workaround for now.
+            imlist = []
+            for im in image_stack:
+                imlist.append(Image.fromarray(im.astype(np.uint8)))
+            imlist[0].save("../temp/macroImage.tif", compression="tiff_deflate", save_all=True,
+                           append_images=imlist[1:])
+            self.image = Image.open("../temp/macroImage.tif")
+            # TODO: open this image automatically when macro window is launched
             # get the motor coordinates
             self.controller.get_current_position()
             x, y, z = self.controller.get_acq_var('current_coordinates')
@@ -125,9 +135,10 @@ class MacroWindow(tk.Toplevel):
         ref_slices = int(self.controller.get_settings('reference_slices'))
 
         frame = self.slice_index
-        imaging_slices_ind = range(int(round_math(frame - imaging_slices / 2)),
-                                   int(round_math(frame + imaging_slices / 2)))
-        ref_slices_ind = range(int(round_math(frame - ref_slices / 2)), int(round_math(frame + ref_slices / 2)))
+        imaging_slices_ind = range(int(max(round_math(frame - imaging_slices / 2),0)),
+                                   int(min(round_math(frame + imaging_slices / 2),self.image.n_frames-1)))
+        ref_slices_ind = range(int(max(round_math(frame - ref_slices / 2),0)),
+                               int(min(round_math(frame + ref_slices / 2),self.image.n_frames-1)))
 
         height, width = self.image.size
         box_x_imaging = width / imaging_zoom * macro_zoom
@@ -149,6 +160,8 @@ class MacroWindow(tk.Toplevel):
 
         #        image = np.array(self.image.size)
         # get maximum projection of image
+        # image = np.array(self.image)
+        image = self.controller.get_acq_var('macro_image') # use original image
         image = np.array(self.image)
         image_imaging_max = image[y_index_imaging, x_index_imaging]
         image_ref_max = image[y_index_ref, x_index_ref]
@@ -194,7 +207,7 @@ class ScrolledCanvas(tk.Frame):
         self.gui['scrollbar_h'].grid(row=1, column=0, sticky='ew')
 
         self.gui['canvas'].grid(row=0, column=0, sticky='nsew')
-        self.gui['popup'] = tk.Menu(self, tearoff=0)
+        self.gui['popup'] = None #otherwise values are added every time
         self.image_show = None
 
     def canvas_right_click(self, event):
@@ -206,6 +219,7 @@ class ScrolledCanvas(tk.Frame):
         if x > 1 or y > 1:
             return
         z = self.master.slice_index
+        self.gui['popup'] = tk.Menu(self, tearoff=0)
         self.gui['popup'].add_command(label='Add Position',
                                       command=lambda: self.master.add_position_on_image_click(x, y, z))
         # display the popup menu
