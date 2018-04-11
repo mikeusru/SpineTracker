@@ -1,5 +1,5 @@
 import os
-
+import numpy as np
 
 class GetCommands(object):
     def __init__(self, controller, file_path, *args, **kwargs):
@@ -80,8 +80,8 @@ class GetCommands(object):
             self.receivedFlags['uncagingDone'] = True
         elif command == 'fovXY_um':
             check_num_args(args, 2, 2)
-            xx, yy = [float(args[XY]) for XY in [0, 1]]
-            self.controller.settings['fov_x_y'] = [xx, yy]
+            fov_x_y = np.array([float(args[XY]) for XY in [0, 1]])
+            self.controller.settings['fov_x_y'] = fov_x_y
             self.receivedFlags['fovXY'] = True
         elif command == 'zoom':
             check_num_args(args, 1, 1)
@@ -93,11 +93,11 @@ class GetCommands(object):
             self.receivedFlags['scanAngleXY'] = True
         elif command == 'scananglemultiplier':
             check_num_args(args, 2, 2)
-            self.controller.scanAngleMultiplier = (float(args[0]), float(args[1]))
+            self.controller.set_acq_var('scan_angle_multiplier',(float(args[0]), float(args[1])))
             self.receivedFlags['scanAngleMultiplier'] = True
         elif command == 'scananglerangereference':
             check_num_args(args, 2, 2)
-            self.controller.scanAngleRangeReference = (float(args[0]), float(args[1]))
+            self.controller.set_acq_var('scan_angle_range_reference',(float(args[0]), float(args[1])))
             self.receivedFlags['scanAngleRangeReference'] = True
         elif command == 'zslicenum':
             check_num_args(args, 1, 1)

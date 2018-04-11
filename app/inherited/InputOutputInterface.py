@@ -19,7 +19,7 @@ class InputOutputInterface(PositionManagement):
         if pos_id is not None:
             x, y, z = [self.positions[pos_id][key] for key in ['x', 'y', 'z']]
         if self.get_settings('park_xy_motor'):
-            x_motor, y_motor = self.acq['center_xy']
+            x_motor, y_motor, _ = self.acq['center_xyz']
             self.set_scan_shift(x, y)
         else:
             x_motor = x
@@ -55,19 +55,17 @@ class InputOutputInterface(PositionManagement):
         self.getCommands.wait_for_received_flag(flag)
 
     def xy_to_scan_angle(self, x, y):
-        scan_angle_multiplier = np.array(self.scanAngleMultiplier)
-        scan_angle_range_reference = np.array(self.scanAngleRangeReference)
+        scan_angle_multiplier = np.array(self.get_acq_var('scan_angle_multiplier'))
+        scan_angle_range_reference = np.array(self.get_acq_var('scan_angle_range_reference'))
         fov = np.array(self.settings['fov_x_y'])
         # convert x and y to relative pixel coordinates
-        x_center, y_center = self.acq['center_xy']
-        xc = x - x_center
-        yc = y - y_center
-        fs_coordinates = np.array([xc, yc])
-        scan_shift = np.array([0, 0])
+        x_center, y_center, _ = self.acq['center_xyz']
+        fs_coordinates = np.array([x - x_center, y - y_center])
         fs_normalized = fs_coordinates / fov
-        fs_angular = scan_shift + fs_normalized * scan_angle_multiplier * scan_angle_range_reference
+        fs_angular = fs_normalized * scan_angle_multiplier * scan_angle_range_reference
         scan_shift_fast, scan_shift_slow = fs_angular
-        return scan_shift_fast, scan_shift_slow
+        # TODO: Add setting to invert scan shift. Or just tune it automatically.
+        return scan_shift_fast, -scan_shift_slow
 
     def get_scan_props(self):
         flag = 'scanAngleMultiplier'
@@ -85,6 +83,7 @@ class InputOutputInterface(PositionManagement):
         self.getCommands.receivedFlags[flag] = False
         self.sendCommands.set_zoom(zoom)
         self.getCommands.wait_for_received_flag(flag)
+        self.set_acq_var('current_zoom', zoom)
 
     def set_resolution(self, x_resolution, y_resolution):
         flag = 'x_y_resolution'
@@ -109,7 +108,6 @@ class InputOutputInterface(PositionManagement):
         self.set_zoom(zoom)
         self.set_resolution(x_resolution, y_resolution)
         self.set_z_slice_num(z_slice_num)
-
 
     def set_reference_imaging_conditions(self):
         zoom = self.get_settings('reference_zoom')

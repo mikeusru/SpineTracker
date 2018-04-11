@@ -58,7 +58,7 @@ while ~isempty(spineTracker.commandQueue)
             if checkArgCount([1,1],argCount)
                 continue
             end
-            zoom = command(2);
+            zoom = str2double(command(2));
             setZoom(zoom);
         case 'rununcaging'
             disp('rununcaging')
@@ -152,7 +152,7 @@ end
 function moveXYZ(x,y,z)
 % move to new XYZ position
 global state
-motorSetPositionAbsolute([str2double(x),str2double(y),str2double(z)],'verify');
+motorSetPositionAbsolute([x,y,z],'verify');
 % verify command makes it wait to read the position it moved to
 % respond with StageMoveDone
 [xyz] = state.motor.lastPositionSet;
@@ -180,7 +180,7 @@ end
 function setZoom(zoom)
 global state
 % set zoom to new value
-setZoomValue(str2double(zoom))
+setZoomValue(zoom)
 % respond with Zoom
 write_to_SpineTracker('Zoom',state.acq.zoomFactor);
 end

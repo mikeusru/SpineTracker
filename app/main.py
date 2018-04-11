@@ -33,6 +33,8 @@ from utilities.math_helpers import focus_measure, compute_drift
 matplotlib.use("TkAgg")
 style.use("ggplot")
 
+#TODO: make acq settings save so can easily restart after program is closed
+
 
 class SpineTracker(InputOutputInterface):
 
@@ -63,7 +65,7 @@ class SpineTracker(InputOutputInterface):
         self.ins_thread = InstructionThread(self, path, filename, self.getCommands.read_new_instructions)
         self.ins_thread.start()
 
-        self.acq['center_xy'] = (0, 0)
+        self.acq['center_xyz'] = np.array((0, 0, 0))
         initialize_init_directory(self.get_app_param('initDirectory'))
         # create/refresh log file
         self.log_file = open('log.txt', 'w')
@@ -128,8 +130,9 @@ class SpineTracker(InputOutputInterface):
         x, y, z = [self.positions[pos_id][key] for key in ['x', 'y', 'z']]
         shiftx, shifty = self.acq['shiftxy']
         shiftz = self.acq['shiftz']
-        self.positions[pos_id]['x'] = x + shiftx
-        self.positions[pos_id]['y'] = y + shifty
+        # TODO: Figure out directionality of shifting
+        self.positions[pos_id]['x'] = x - shiftx
+        self.positions[pos_id]['y'] = y - shifty
         self.positions[pos_id]['z'] = z + shiftz
         self.positions[pos_id]['xyzShift'] = self.positions[pos_id]['xyzShift'] + np.array([shiftx, shifty, shiftz])
         self.frames[StartPage].gui['drift_label'].configure(
@@ -165,6 +168,8 @@ class SpineTracker(InputOutputInterface):
 
     def calc_drift(self, ref_zoom=None):
         image = np.max(self.acq['imageStack'], 0)
+        zoom = np.float(self.get_acq_var('current_zoom'))
+        fov_x_y = self.settings['fov_x_y']
         if ref_zoom is None:
             ref_zoom = (self.acq['current_zoom'] != float(self.get_settings('imaging_zoom')))
         if ref_zoom:
@@ -172,8 +177,7 @@ class SpineTracker(InputOutputInterface):
         else:
             imgref = self.acq['imgref_ref']
         shift = compute_drift(imgref, image)
-        shiftx = shift['shiftx']
-        shifty = shift['shifty']
+        shiftx, shifty = np.array([shift['shiftx'], shift['shifty']]) * fov_x_y / zoom
         self.acq['shiftxy'] = (shiftx, shifty)
 
     def create_figure_for_af_images(self):

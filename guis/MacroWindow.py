@@ -69,7 +69,7 @@ class MacroWindow(tk.Toplevel):
     def load_macro_image(self):
         if self.controller.get_app_param('simulation'):
             self.image = Image.open("../testing/macroImage.tif")
-            self.controller.set_acq_var('center_xy', (0, 0))
+            self.controller.set_acq_var('center_xyz', np.array((0, 0, 0)))
         else:
             # set macro zoom and resolution
             self.controller.set_macro_imaging_conditions()
@@ -90,7 +90,7 @@ class MacroWindow(tk.Toplevel):
             # get the motor coordinates
             self.controller.get_current_position()
             x, y, z = self.controller.get_acq_var('current_coordinates')
-            self.controller.set_acq_var('center_xy', (x, y))
+            self.controller.set_acq_var('center_xyz', np.array((x, y, z), dtype=np.float))
 
         self.multi_slice_viewer()
 
@@ -107,17 +107,19 @@ class MacroWindow(tk.Toplevel):
 
     def add_position_on_image_click(self, x, y, z):
         # translate to normal coordinates
-        fov_x, fov_y = self.controller.settings['fov_x_y']
+        fov_x, fov_y = np.array(self.controller.settings['fov_x_y']) / float(self.controller.get_settings('macro_zoom'))
         # xy currently originate from top left of image.
         # translate them to coordinate plane directionality.
         # also, make them originate from center
-        x_center, y_center = self.controller.get_acq_var('center_xy')
+        x_center, y_center, z_center = self.controller.get_acq_var('center_xyz')
         xyz_clicked = {'x': x, 'y': y, 'z': z}
         x = x - .5
         y = -y + .5
         # translate coordinates to µm
         x = x * fov_x + x_center
         y = y * fov_y + y_center
+        z = z + z_center - self.image.n_frames / 2
+        # TODO: make sure z is always aligned in correct direction
         # add coordinates to position table
         print('x, y, z = {0}, {1}, {2}'.format(x, y, z))
         xyz = {'x': x, 'y': y, 'z': z}
@@ -132,10 +134,10 @@ class MacroWindow(tk.Toplevel):
         ref_slices = int(self.controller.get_settings('reference_slices'))
 
         frame = self.slice_index
-        imaging_slices_ind = range(int(max(round_math(frame - imaging_slices / 2),0)),
-                                   int(min(round_math(frame + imaging_slices / 2),self.image.n_frames-1)))
-        ref_slices_ind = range(int(max(round_math(frame - ref_slices / 2),0)),
-                               int(min(round_math(frame + ref_slices / 2),self.image.n_frames-1)))
+        imaging_slices_ind = range(int(max(round_math(frame - imaging_slices / 2), 0)),
+                                   int(min(round_math(frame + imaging_slices / 2), self.image.n_frames - 1)))
+        ref_slices_ind = range(int(max(round_math(frame - ref_slices / 2), 0)),
+                               int(min(round_math(frame + ref_slices / 2), self.image.n_frames - 1)))
 
         height, width = self.image.size
         box_x_imaging = width / imaging_zoom * macro_zoom
@@ -144,21 +146,21 @@ class MacroWindow(tk.Toplevel):
         box_y_ref = height / ref_zoom * macro_zoom
         x_clicked_pixel = width * xyz_clicked['x']
         y_clicked_pixel = height * xyz_clicked['y']
-        x_index_imaging = np.s_[int(max(round_math(x_clicked_pixel - box_x_imaging / 2),0)): int(
+        x_index_imaging = np.s_[int(max(round_math(x_clicked_pixel - box_x_imaging / 2), 0)): int(
             round_math(x_clicked_pixel + box_x_imaging / 2))]
-        y_index_imaging = np.s_[int(max(round_math(y_clicked_pixel - box_y_imaging / 2),0)): int(
+        y_index_imaging = np.s_[int(max(round_math(y_clicked_pixel - box_y_imaging / 2), 0)): int(
             round_math(y_clicked_pixel + box_y_imaging / 2))]
         x_index_ref = np.s_[
-                      int(max(round_math(x_clicked_pixel - box_x_ref / 2),0)): int(
+                      int(max(round_math(x_clicked_pixel - box_x_ref / 2), 0)): int(
                           round_math(x_clicked_pixel + box_x_ref / 2))]
         y_index_ref = np.s_[
-                      int(max(round_math(y_clicked_pixel - box_y_ref / 2),0)): int(
+                      int(max(round_math(y_clicked_pixel - box_y_ref / 2), 0)): int(
                           round_math(y_clicked_pixel + box_y_ref / 2))]
 
         #        image = np.array(self.image.size)
         # get maximum projection of image
         # image = np.array(self.image)
-        image = self.controller.get_acq_var('macro_image') # use original image
+        image = self.controller.get_acq_var('macro_image')  # use original image
         image = np.array(self.image)
         image_imaging_max = image[y_index_imaging, x_index_imaging]
         image_ref_max = image[y_index_ref, x_index_ref]
@@ -204,7 +206,7 @@ class ScrolledCanvas(tk.Frame):
         self.gui['scrollbar_h'].grid(row=1, column=0, sticky='ew')
 
         self.gui['canvas'].grid(row=0, column=0, sticky='nsew')
-        self.gui['popup'] = None #otherwise values are added every time
+        self.gui['popup'] = None  # otherwise values are added every time
         self.image_show = None
 
     def canvas_right_click(self, event):
