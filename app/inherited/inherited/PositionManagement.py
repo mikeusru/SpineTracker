@@ -54,10 +54,10 @@ class PositionManagement(SpineTrackerSettings):
         else:
             self.acq['imgref_imaging'] = ref_images['imaging']
             self.acq['imgref_ref'] = ref_images['ref']
-        self.positions[pos_id]['refImg'] = self.acq['imgref_imaging']
-        self.positions[pos_id]['refImgZoomout'] = self.acq['imgref_ref']
+        self.positions[pos_id]['ref_img'] = self.acq['imgref_imaging']
+        self.positions[pos_id]['ref_img_zoomout'] = self.acq['imgref_ref']
         self.positions[pos_id]['xyzShift'] = np.array([0, 0, 0])
-        roi_pos = np.array(self.positions[pos_id]['refImg'].shape) / 2
+        roi_pos = np.array(self.positions[pos_id]['ref_img'].shape) / 2
         self.positions[pos_id]['roi_position'] = roi_pos
 
     def add_position(self, cont, xyz=None, ref_images=None):

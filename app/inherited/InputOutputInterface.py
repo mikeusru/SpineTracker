@@ -15,7 +15,9 @@ class InputOutputInterface(PositionManagement):
         self.sendCommands = SendCommands(self, self.outputFile)
         self.getCommands = GetCommands(self, self.inputFile)
 
-    def move_stage(self, x, y, z):
+    def move_stage(self, x=None, y=None, z=None, pos_id=None):
+        if pos_id is not None:
+            x, y, z = [self.positions[pos_id][key] for key in ['x', 'y', 'z']]
         if self.get_settings('park_xy_motor'):
             x_motor, y_motor = self.acq['center_xy']
             self.set_scan_shift(x, y)
@@ -94,12 +96,26 @@ class InputOutputInterface(PositionManagement):
         zoom = self.get_settings('macro_zoom')
         x_resolution = self.get_settings('macro_resolution_x')
         y_resolution = self.get_settings('macro_resolution_y')
+        z_slice_num = self.get_settings('macro_z_slices')
         self.set_zoom(zoom)
         self.set_resolution(x_resolution, y_resolution)
+        self.set_z_slice_num(z_slice_num)
 
-    def set_micro_imaging_conditions(self):
+    def set_normal_imaging_conditions(self):
         zoom = self.get_settings('imaging_zoom')
         x_resolution = self.get_settings('normal_resolution_x')
         y_resolution = self.get_settings('normal_resolution_y')
+        z_slice_num = self.get_settings('imaging_slices')
         self.set_zoom(zoom)
         self.set_resolution(x_resolution, y_resolution)
+        self.set_z_slice_num(z_slice_num)
+
+
+    def set_reference_imaging_conditions(self):
+        zoom = self.get_settings('reference_zoom')
+        x_resolution = self.get_settings('normal_resolution_x')
+        y_resolution = self.get_settings('normal_resolution_y')
+        z_slice_num = self.get_settings('reference_slices')
+        self.set_zoom(zoom)
+        self.set_resolution(x_resolution, y_resolution)
+        self.set_z_slice_num(z_slice_num)

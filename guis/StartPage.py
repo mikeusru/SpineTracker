@@ -30,7 +30,8 @@ class StartPage(ttk.Frame):
         self.gui['button_load_test_ref_image'].grid(row=1, column=0, padx=10, pady=10, sticky='nw')
         self.gui['button_run_drift_correction'] = ttk.Button(self.gui['frame_left_buttons'],
                                                              text="Run Drift Correction",
-                                                             command=lambda: controller.run_xyz_drift_correction(1))
+                                                             command=lambda: controller.run_xyz_drift_correction(
+                                                                 pos_id=1))
         self.gui['button_run_drift_correction'].grid(row=2, column=0, padx=10, pady=10, sticky='nw')
         self.gui['button_start'] = ttk.Button(self.gui['frame_left_buttons'], text="Start Imaging",
                                               command=lambda: self.start_imaging())
@@ -77,7 +78,7 @@ class StartPage(ttk.Frame):
         # get scan angle conversion properties
         self.controller.get_scan_props()
         # this probably needs to move somewhere else later
-        self.controller.set_micro_imaging_conditions()
+        self.controller.set_normal_imaging_conditions()
         # set up timers
         self.posTimers = {}
         with self.controller.timerStepsQueue.mutex:

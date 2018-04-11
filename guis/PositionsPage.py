@@ -29,8 +29,11 @@ class PositionsPage(ttk.Frame):
         self.gui['popup'] = tk.Menu(self, tearoff=0)
         self.gui['popup'].add_command(label="Update XYZ",
                                       command=lambda: self.controller.update_position(self.selected_pos_id))
+        self.gui['popup'].add_command(label="Move To Position",
+                                      command=lambda: self.controller.move_stage(pos_id=self.selected_pos_id))
         self.gui['popup'].add_command(label="Delete",
                                       command=lambda: self.controller.delete_positions(self.selected_pos_id))
+
         self.gui['frame_for_buttons'] = ttk.Frame(self)
         self.gui['frame_for_buttons'].grid(column=0, row=0, sticky='nw')
         self.gui['frame_for_zoom'] = ttk.Frame(self)
@@ -44,10 +47,14 @@ class PositionsPage(ttk.Frame):
                                                         command=lambda: controller.clear_positions(self))
         self.gui['button_clear_positions'].grid(row=1, column=0, padx=10,
                                                 pady=10, sticky='wn')
-        self.gui['button_cell_view'] = ttk.Button(self.gui['frame_for_buttons'], text="Macro View",
-                                                  command=lambda: controller.show_macro_view_window())
-        self.gui['button_cell_view'].grid(row=2, column=0, padx=10,
-                                          pady=10, sticky='wn')
+        self.gui['button_macro_view'] = ttk.Button(self.gui['frame_for_buttons'], text="Macro View",
+                                                   command=lambda: controller.show_macro_view_window())
+        self.gui['button_macro_view'].grid(row=2, column=0, padx=10,
+                                           pady=10, sticky='wn')
+        self.gui['button_align_positions'] = ttk.Button(self.gui['frame_for_buttons'], text="Align All To Reference",
+                                                        command=lambda: controller.align_all_positions_to_refs())
+        self.gui['button_align_positions'].grid(row=3, column=0, padx=10,
+                                                pady=10, sticky='wn')
 
         self.gui['label_imaging_zoom'] = tk.Label(self.gui['frame_for_zoom'], text="Imaging Zoom",
                                                   font=self.controller.get_app_param('large_font'))
@@ -106,7 +113,6 @@ class PositionsPage(ttk.Frame):
         self.gui['canvas_positions'].get_tk_widget().grid(row=0, column=2, rowspan=2, padx=10, pady=10, sticky='nsew')
         self.gui['position_preview_axis'] = self.gui['f_positions'].add_subplot(1, 1, 1)
         self.gui['colorbar_axis'], kw = colorbar.make_axes_gridspec(self.gui['position_preview_axis'])
-        # TODO: add popup button to navigate to individual positions
         # TODO: add button to auto-align all positions
         self.preview_position_locations()
 
@@ -227,7 +233,8 @@ class PositionsPage(ttk.Frame):
         self.gui['canvas_preview_ref_images'].draw_idle()
 
     def draw_ref_images(self, pos_id):
-        refs = [self.controller.positions[pos_id]['refImg'], self.controller.positions[pos_id]['refImgZoomout']]
+        refs = [self.controller.positions[pos_id].get('ref_img', np.zeros((128, 128), dtype=np.uint8)),
+                self.controller.positions[pos_id].get('ref_img_zoomout', np.zeros((128, 128), dtype=np.uint8))]
         for ax, r in zip(self.gui['ref_images_axes'], refs):
             ax.clear()
             ax.axis('off')

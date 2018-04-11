@@ -28,7 +28,7 @@ class SpineTrackerSettings(SpineTrackerContainer):
             period_string_var=tk.StringVar(self),
             step_name_string_var=tk.StringVar(self),
             macro_zoom_string_var=tk.StringVar(self),
-            num_z_slices_string_var=tk.StringVar(self),
+            macro_z_slices_string_var=tk.StringVar(self),
             total_channels_string_var=tk.StringVar(self),
             drift_correction_channel_string_var=tk.StringVar(self),
             park_xy_motor_bool_var=tk.BooleanVar(self),
@@ -57,7 +57,7 @@ class SpineTrackerSettings(SpineTrackerContainer):
             normal_resolution_x='normal_resolution_x_string_var',
             normal_resolution_y='normal_resolution_y_string_var',
             macro_zoom='macro_zoom_string_var',
-            num_z_slices='num_z_slices_string_var',
+            macro_z_slices='macro_z_slices_string_var',
             uncaging_roi_toggle='uncaging_roi_toggle_bool_var')
 
         # Load Settings
@@ -85,7 +85,7 @@ class SpineTrackerSettings(SpineTrackerContainer):
                     'normal_resolution_y_string_var',
                     'stagger_string_var',
                     'macro_zoom_string_var',
-                    'num_z_slices_string_var',
+                    'macro_z_slices_string_var',
                     'uncaging_roi_toggle_bool_var']
 
         for key in gui_keys:
@@ -128,7 +128,7 @@ class SpineTrackerSettings(SpineTrackerContainer):
                             'macro_resolution_y': 512,
                             'normal_resolution_x': 128,
                             'normal_resolution_y': 128,
-                            'num_z_slices': 10,
+                            'macro_z_slices': 10,
                             'macro_zoom': 1,
                             'uncaging_roi_toggle': True
                             }

@@ -98,7 +98,7 @@ class SpineTracker(InputOutputInterface):
         self.acq['imageStack'] = image
         self.create_figure_for_af_images()
 
-    def load_acquired_image(self, update_figure=True, get_macro = False):
+    def load_acquired_image(self, update_figure=True, get_macro=False):
         image = io.imread(self.imageFilePath)
         total_chan = int(self.gui_vars['total_channels_string_var'].get())
         drift_chan = int(self.gui_vars['drift_correction_channel_string_var'].get())
@@ -115,16 +115,16 @@ class SpineTracker(InputOutputInterface):
         self.acq['imgref_imaging'] = imgref
         self.acq['imgref_ref'] = imgref
 
-    def run_xyz_drift_correction(self, pos_id=None):
+    def run_xyz_drift_correction(self, pos_id=None, ref_zoom=None):
         if 'imageStack' not in self.acq:
             return
         if pos_id is None:
             pos_id = self.current_pos_id
         shape = self.acq['imageStack'][0].shape
-        self.acq['imgref_imaging'] = transform.resize(self.positions[pos_id]['refImg'], shape)
-        self.acq['imgref_ref'] = transform.resize(self.positions[pos_id]['refImgZoomout'], shape)
+        self.acq['imgref_imaging'] = transform.resize(self.positions[pos_id]['ref_img'], shape)
+        self.acq['imgref_ref'] = transform.resize(self.positions[pos_id]['ref_img_zoomout'], shape)
         self.calc_focus()
-        self.calc_drift()
+        self.calc_drift(ref_zoom)
         x, y, z = [self.positions[pos_id][key] for key in ['x', 'y', 'z']]
         shiftx, shifty = self.acq['shiftxy']
         shiftz = self.acq['shiftz']
@@ -163,9 +163,11 @@ class SpineTracker(InputOutputInterface):
             len(image) / 2)  # this needs to be checked obviously, depending on how Z info is dealt with
         self.acq['FMlist'] = fm
 
-    def calc_drift(self):
+    def calc_drift(self, ref_zoom=None):
         image = np.max(self.acq['imageStack'], 0)
-        if self.acq['current_zoom'] == float(self.get_settings('imaging_zoom')):
+        if ref_zoom is None:
+            ref_zoom = (self.acq['current_zoom'] != float(self.get_settings('imaging_zoom')))
+        if ref_zoom:
             imgref = self.acq['imgref_imaging']
         else:
             imgref = self.acq['imgref_ref']
@@ -197,7 +199,7 @@ class SpineTracker(InputOutputInterface):
         self.frames[TimelinePage].draw_timeline_steps()
 
     def add_step_to_queue(self, step, pos_id):
-        single_step = copy.copy(step) # .copy() returns dict, not TimelineStep object
+        single_step = copy.copy(step)  # .copy() returns dict, not TimelineStep object
         single_step['pos_id'] = pos_id
         self.timerStepsQueue.put(single_step)
 
@@ -217,33 +219,38 @@ class SpineTracker(InputOutputInterface):
                 ex = 'Exclusive'
             else:
                 ex = 'Non-Exclusive'
-            print('{0} {1} Timer {2} running at {3}s '.format(ex, single_step['imaging_or_uncaging'], pos_id, dt.datetime.now().second))
+            print('{0} {1} Timer {2} running at {3}s '.format(ex, single_step['imaging_or_uncaging'], pos_id,
+                                                              dt.datetime.now().second))
 
             # this should actually be set once data from position is received, because drift/af calculation will be
             # done after that
             self.current_pos_id = pos_id
             # we're already in a thread so maybe don't need another one here
             if single_step['imaging_or_uncaging'] == 'Image':
-                self.step_image_new_position(single_step)
+                self.image_new_position(single_step)
             elif single_step['imaging_or_uncaging'] == 'Uncage':
-                self.step_uncage_new_position(single_step)
+                self.uncage_new_position(single_step)
 
-    def step_image_new_position(self, single_step):
-        pos_id = single_step.get('pos_id')
-        x, y, z = single_step.get_coordinates(self.positions)
+    def image_new_position(self, single_step=None, pos_id=None, ref_zoom=None):
+        if pos_id is None:
+            pos_id = single_step.get('pos_id')
+        x, y, z = [self.positions[pos_id][key] for key in ['x', 'y', 'z']]
         self.move_stage(x, y, z)
         self.grab_stack()
-        self.stepRunning = False
+        if single_step is not None:
+            self.stepRunning = False
         self.load_acquired_image()
-        self.run_xyz_drift_correction(pos_id)
+        self.run_xyz_drift_correction(pos_id, ref_zoom=ref_zoom)
 
-    def step_uncage_new_position(self, step):
-        pos_id = step.get('pos_id')
-        x, y, z = step.get_coordinates(self.positions)
+    def uncage_new_position(self, step=None, pos_id=None):
+        if pos_id is None:
+            pos_id = step.get('pos_id')
+        x, y, z = [self.positions[pos_id][key] for key in ['x', 'y', 'z']]
         roi_x, roi_y = self.positions[pos_id]['roi_position']
         self.move_stage(x, y, z)
         self.uncage(roi_x, roi_y)
-        self.stepRunning = False
+        if step is not None:
+            self.stepRunning = False
 
     def print_status(self, following_string):
         if self.app_params['verbose']:
@@ -259,6 +266,15 @@ class SpineTracker(InputOutputInterface):
     def image_or_uncage_string_var_callback(self, *args):
         # Callback to the StringVar
         self.frames[TimelinePage].gui['tFrame'].image_in_from_frame()
+
+    def align_all_positions_to_refs(self):
+        # image and align all images. First zoomed out, then zoomed it
+        # set imaging options to reference type
+        for pos_id in self.positions.keys():
+            self.set_reference_imaging_conditions()
+            self.image_new_position(pos_id=pos_id, ref_zoom=True)
+            self.set_normal_imaging_conditions()
+            self.image_new_position(pos_id=pos_id, ref_zoom=False)
 
 
 class SharedFigs(dict):

@@ -36,7 +36,7 @@ class MacroWindow(tk.Toplevel):
         self.gui['label_z_slices'] = tk.Label(self.gui['frame_buttons'], text="Number of Z Slices",
                                               font=controller.get_app_param('large_font'))
         self.gui['entry_z_slices'] = ttk.Entry(self.gui['frame_buttons'],
-                                               textvariable=self.controller.gui_vars['num_z_slices_string_var'],
+                                               textvariable=self.controller.gui_vars['macro_z_slices_string_var'],
                                                width=4)
         self.gui['button_load_macro_image'] = ttk.Button(self.gui['frame_buttons'], text="Grab Macro Image",
                                                          command=lambda: self.load_macro_image())
@@ -73,9 +73,6 @@ class MacroWindow(tk.Toplevel):
         else:
             # set macro zoom and resolution
             self.controller.set_macro_imaging_conditions()
-            # set Z slice number
-            z_slice_num = float(self.controller.get_settings('num_z_slices'))
-            self.controller.set_z_slice_num(z_slice_num)
             # grab stack
             self.controller.grab_stack()
             self.controller.load_acquired_image(update_figure=False, get_macro=True)
@@ -147,15 +144,15 @@ class MacroWindow(tk.Toplevel):
         box_y_ref = height / ref_zoom * macro_zoom
         x_clicked_pixel = width * xyz_clicked['x']
         y_clicked_pixel = height * xyz_clicked['y']
-        x_index_imaging = np.s_[int(round_math(x_clicked_pixel - box_x_imaging / 2)): int(
+        x_index_imaging = np.s_[int(max(round_math(x_clicked_pixel - box_x_imaging / 2),0)): int(
             round_math(x_clicked_pixel + box_x_imaging / 2))]
-        y_index_imaging = np.s_[int(round_math(y_clicked_pixel - box_y_imaging / 2)): int(
+        y_index_imaging = np.s_[int(max(round_math(y_clicked_pixel - box_y_imaging / 2),0)): int(
             round_math(y_clicked_pixel + box_y_imaging / 2))]
         x_index_ref = np.s_[
-                      int(round_math(x_clicked_pixel - box_x_ref / 2)): int(
+                      int(max(round_math(x_clicked_pixel - box_x_ref / 2),0)): int(
                           round_math(x_clicked_pixel + box_x_ref / 2))]
         y_index_ref = np.s_[
-                      int(round_math(y_clicked_pixel - box_y_ref / 2)): int(
+                      int(max(round_math(y_clicked_pixel - box_y_ref / 2),0)): int(
                           round_math(y_clicked_pixel + box_y_ref / 2))]
 
         #        image = np.array(self.image.size)
