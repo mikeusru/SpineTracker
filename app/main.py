@@ -33,7 +33,8 @@ from utilities.math_helpers import focus_measure, compute_drift
 matplotlib.use("TkAgg")
 style.use("ggplot")
 
-#TODO: make acq settings save so can easily restart after program is closed
+
+# TODO: make acq settings save so can easily restart after program is closed
 
 
 class SpineTracker(InputOutputInterface):
@@ -89,6 +90,15 @@ class SpineTracker(InputOutputInterface):
         self.destroy()
         print('goodbye')
 
+    def start_expt_log(self):
+        file_path = self.get_settings('experiment_log_file')
+        open(file_path, 'a').close()
+
+    def write_to_log(self, line):
+        file_path = self.get_settings('experiment_log_file')
+        with open(file_path, "a") as f:
+            f.write(line + '\n')
+
     def initialize_timeline_steps(self):
         file_name = self.get_app_param('initDirectory') + 'timeline_steps.p'
         if os.path.isfile(file_name):
@@ -101,7 +111,7 @@ class SpineTracker(InputOutputInterface):
         self.create_figure_for_af_images()
 
     def load_acquired_image(self, update_figure=True, get_macro=False):
-        image = io.imread(self.imageFilePath)
+        image = io.imread(self.image_file_path)
         total_chan = int(self.gui_vars['total_channels_string_var'].get())
         drift_chan = int(self.gui_vars['drift_correction_channel_string_var'].get())
         image = image[np.arange(drift_chan - 1, len(image), total_chan)]
@@ -127,19 +137,18 @@ class SpineTracker(InputOutputInterface):
         self.acq['imgref_ref'] = transform.resize(self.positions[pos_id]['ref_img_zoomout'], shape)
         self.calc_focus()
         self.calc_drift(ref_zoom)
-        x, y, z = [self.positions[pos_id][key] for key in ['x', 'y', 'z']]
+        # x, y, z = [self.positions[pos_id][key] for key in ['x', 'y', 'z']]
         shiftx, shifty = self.acq['shiftxy']
         shiftz = self.acq['shiftz']
-        # TODO: Figure out directionality of shifting
-        self.positions[pos_id]['x'] = x - shiftx
-        self.positions[pos_id]['y'] = y - shifty
-        self.positions[pos_id]['z'] = z + shiftz
+        self.positions[pos_id]['x'] -= shiftx
+        self.positions[pos_id]['y'] += shifty
+        self.positions[pos_id]['z'] += shiftz
         self.positions[pos_id]['xyzShift'] = self.positions[pos_id]['xyzShift'] + np.array([shiftx, shifty, shiftz])
         self.frames[StartPage].gui['drift_label'].configure(
-            text='Detected drift of {0}px in x and {1}px in y'.format(shiftx.item(), shifty.item()))
-        self.show_new_images()
+            text='Detected drift of {0:.1f}µm in x and {1:.1f}µm in y'.format(shiftx.item(), shifty.item()))
+        self.show_new_images(pos_id=pos_id)
 
-    def show_new_images(self):
+    def show_new_images(self, pos_id=None):
         image = self.acq['imageStack']
         i = 0
         a = self.frames[StartPage].gui['axes_af_images']
@@ -155,6 +164,14 @@ class SpineTracker(InputOutputInterface):
         siz = image[0].shape
         rect = patches.Rectangle((0, 0), siz[0], siz[1], fill=False, linewidth=5, edgecolor='r')
         a[max_ind].add_patch(rect)
+        # add arrow to show shift in x,y
+        center = np.array([siz[0] / 2, siz[1] / 2])
+        shiftx, shifty = self.acq['shiftxy_pixels']['shiftx'], self.acq['shiftxy_pixels']['shifty']
+        arrow = patches.Arrow(center[1] - shiftx, center[0] - shifty, shiftx, shifty, width=10, color='r')
+        a[max_ind].add_patch(arrow)
+        if pos_id is not None:
+            self.frames[PositionsPage].select_position_in_graph(pos_id)
+        self.frames[StartPage].gui['canvas_positions'].draw_idle()
         self.frames[StartPage].gui['canvas_af'].draw_idle()
 
     def calc_focus(self):
@@ -163,7 +180,7 @@ class SpineTracker(InputOutputInterface):
         for im in image:
             fm = np.append(fm, (focus_measure(im)))
         self.acq['shiftz'] = fm.argmax().item() - np.floor(
-            len(image) / 2)  # this needs to be checked obviously, depending on how Z info is dealt with
+            len(image) / 2)  # TODO: this needs to be checked obviously, depending on how Z info is dealt with
         self.acq['FMlist'] = fm
 
     def calc_drift(self, ref_zoom=None):
@@ -171,13 +188,14 @@ class SpineTracker(InputOutputInterface):
         zoom = np.float(self.get_acq_var('current_zoom'))
         fov_x_y = self.settings['fov_x_y']
         if ref_zoom is None:
-            ref_zoom = (self.acq['current_zoom'] != float(self.get_settings('imaging_zoom')))
+            ref_zoom = (self.acq['current_zoom'] == float(self.get_settings('reference_zoom')))
         if ref_zoom:
-            imgref = self.acq['imgref_imaging']
-        else:
             imgref = self.acq['imgref_ref']
-        shift = compute_drift(imgref, image)
-        shiftx, shifty = np.array([shift['shiftx'], shift['shifty']]) * fov_x_y / zoom
+        else:
+            imgref = self.acq['imgref_imaging']
+        self.acq['shiftxy_pixels'] = compute_drift(imgref, image)
+        shiftx, shifty = np.array(
+            [self.acq['shiftxy_pixels']['shiftx'], self.acq['shiftxy_pixels']['shifty']]) / image.shape * fov_x_y / zoom
         self.acq['shiftxy'] = (shiftx, shifty)
 
     def create_figure_for_af_images(self):
@@ -203,6 +221,7 @@ class SpineTracker(InputOutputInterface):
         self.frames[TimelinePage].draw_timeline_steps()
 
     def add_step_to_queue(self, step, pos_id):
+        # TODO: Make steps add in the same order every time so they are equally spaced from each other
         single_step = copy.copy(step)  # .copy() returns dict, not TimelineStep object
         single_step['pos_id'] = pos_id
         self.timerStepsQueue.put(single_step)
@@ -223,7 +242,8 @@ class SpineTracker(InputOutputInterface):
                 ex = 'Exclusive'
             else:
                 ex = 'Non-Exclusive'
-            print('{0} {1} Timer {2} running at {3}s '.format(ex, single_step['imaging_or_uncaging'], pos_id,
+            print('{0} {1} Timer {2} running at {3}:{4}:{5} '.format(ex, single_step['imaging_or_uncaging'], pos_id,
+                                                              dt.datetime.now().hour, dt.datetime.now().minute,
                                                               dt.datetime.now().second))
 
             # this should actually be set once data from position is received, because drift/af calculation will be
@@ -236,17 +256,20 @@ class SpineTracker(InputOutputInterface):
                 self.uncage_new_position(single_step)
 
     def image_new_position(self, single_step=None, pos_id=None, ref_zoom=None):
+        # TODO: Keep a log of which positions are imaged and when. export to text or csv after imaging.
         if pos_id is None:
             pos_id = single_step.get('pos_id')
         x, y, z = [self.positions[pos_id][key] for key in ['x', 'y', 'z']]
         self.move_stage(x, y, z)
         self.grab_stack()
+        self.write_to_log('Position {}: {}'.format(pos_id,  self.image_file_path))
         if single_step is not None:
             self.stepRunning = False
         self.load_acquired_image()
         self.run_xyz_drift_correction(pos_id, ref_zoom=ref_zoom)
 
     def uncage_new_position(self, step=None, pos_id=None):
+        # TODO: Add log entry for uncaging
         if pos_id is None:
             pos_id = step.get('pos_id')
         x, y, z = [self.positions[pos_id][key] for key in ['x', 'y', 'z']]

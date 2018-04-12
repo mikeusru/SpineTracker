@@ -3,6 +3,7 @@ from tkinter import ttk
 import matplotlib
 import numpy as np
 from PIL import Image, ImageTk, ImageMath, ImageOps
+from skimage import transform
 
 from guis.PositionsPage import PositionsPage
 from utilities.math_helpers import round_math, histogram_equalize, contrast_stretch
@@ -132,12 +133,15 @@ class MacroWindow(tk.Toplevel):
         ref_zoom = float(self.controller.get_settings('reference_zoom'))
         imaging_slices = int(self.controller.get_settings('imaging_slices'))
         ref_slices = int(self.controller.get_settings('reference_slices'))
+        resolution_x = float(self.controller.get_settings('normal_resolution_x'))
+        resolution_y = float(self.controller.get_settings('normal_resolution_y'))
+
 
         frame = self.slice_index
-        imaging_slices_ind = range(int(max(round_math(frame - imaging_slices / 2), 0)),
-                                   int(min(round_math(frame + imaging_slices / 2), self.image.n_frames - 1)))
-        ref_slices_ind = range(int(max(round_math(frame - ref_slices / 2), 0)),
-                               int(min(round_math(frame + ref_slices / 2), self.image.n_frames - 1)))
+        imaging_slices_ind = np.array(range(int(max(round_math(frame - imaging_slices / 2), 0)),
+                                            int(min(round_math(frame + imaging_slices / 2), self.image.n_frames - 1))))
+        ref_slices_ind = np.array(range(int(max(round_math(frame - ref_slices / 2), 0)),
+                                        int(min(round_math(frame + ref_slices / 2), self.image.n_frames - 1))))
 
         height, width = self.image.size
         box_x_imaging = width / imaging_zoom * macro_zoom
@@ -161,18 +165,20 @@ class MacroWindow(tk.Toplevel):
         # get maximum projection of image
         # image = np.array(self.image)
         image = self.controller.get_acq_var('macro_image')  # use original image
-        image = np.array(self.image)
-        image_imaging_max = image[y_index_imaging, x_index_imaging]
-        image_ref_max = image[y_index_ref, x_index_ref]
-        for i in imaging_slices_ind:
-            self.image.seek(i)
-            image = np.array(self.image)
-            image_imaging_max = np.max(np.dstack([image[y_index_imaging, x_index_imaging], image_imaging_max]), axis=2)
-        for i in ref_slices_ind:
-            self.image.seek(i)
-            image = np.array(self.image)
-            image_ref_max = np.max(np.dstack([image[y_index_ref, x_index_ref], image_ref_max]), axis=2)
-
+        print('image shape: {}'.format(image.shape))
+        # image = np.array(self.image)
+        image_imaging_max = np.max(image[imaging_slices_ind, y_index_imaging, x_index_imaging],axis = 0)
+        image_ref_max = np.max(image[ref_slices_ind, y_index_ref, x_index_ref],axis = 0)
+        # for i in imaging_slices_ind:
+        #     self.image.seek(i)
+        #     image = np.array(self.image)
+        #     image_imaging_max = np.max(np.dstack([image[y_index_imaging, x_index_imaging], image_imaging_max]), axis=2)
+        # for i in ref_slices_ind:
+        #     self.image.seek(i)
+        #     image = np.array(self.image)
+        #     image_ref_max = np.max(np.dstack([image[y_index_ref, x_index_ref], image_ref_max]), axis=2)
+        image_imaging_max = transform.resize(image_imaging_max, (resolution_x,resolution_y))
+        image_ref_max = transform.resize(image_ref_max, (resolution_x,resolution_y))
         #        image_ref = image[yIndex_ref,xIndex_ref]
 
         #        image_imaging = image[yIndex_imaging,xIndex_imaging]

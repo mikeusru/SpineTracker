@@ -2,7 +2,7 @@ import getopt
 import os
 import pickle
 import tkinter as tk
-
+import numpy as np
 import sys
 
 from app.inherited.inherited.inherited.inherited.SpineTrackerContainer import SpineTrackerContainer
@@ -116,7 +116,10 @@ class SpineTrackerSettings(SpineTrackerContainer):
 
     def add_missing_settings(self):
         default_settings = {'drift_correction_channel': 1,
-                            'fov_x_y': (250, 250),
+                            'fov_x_y': np.array([250, 250]),
+                            'experiment_log_file': '../temp/experiment_log.txt',
+                            'scan_angle_multiplier': np.array([1, 1]),
+                            'scan_angle_range_reference': np.array([15, 15]),
                             'stagger': 10,
                             'total_channels': 2,
                             'imaging_zoom': 30,

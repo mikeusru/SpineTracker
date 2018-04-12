@@ -55,8 +55,8 @@ class InputOutputInterface(PositionManagement):
         self.getCommands.wait_for_received_flag(flag)
 
     def xy_to_scan_angle(self, x, y):
-        scan_angle_multiplier = np.array(self.get_acq_var('scan_angle_multiplier'))
-        scan_angle_range_reference = np.array(self.get_acq_var('scan_angle_range_reference'))
+        scan_angle_multiplier = np.array(self.get_settings('scan_angle_multiplier'))
+        scan_angle_range_reference = np.array(self.get_settings('scan_angle_range_reference'))
         fov = np.array(self.settings['fov_x_y'])
         # convert x and y to relative pixel coordinates
         x_center, y_center, _ = self.acq['center_xyz']
@@ -66,6 +66,18 @@ class InputOutputInterface(PositionManagement):
         scan_shift_fast, scan_shift_slow = fs_angular
         # TODO: Add setting to invert scan shift. Or just tune it automatically.
         return scan_shift_fast, -scan_shift_slow
+
+    def scan_angle_to_xy(self, scan_angle_x_y, x_center=None, y_center=None):
+        scan_angle_multiplier = np.array(self.get_settings('scan_angle_multiplier'))
+        scan_angle_range_reference = np.array(self.get_settings('scan_angle_range_reference'))
+        fov = np.array(self.settings['fov_x_y'])
+        fs_angular = np.array([scan_angle_x_y[0], -scan_angle_x_y[1]])
+        if x_center is None:
+            x_center, y_center, _ = self.acq['center_xyz']
+        fs_normalized = fs_angular / (scan_angle_multiplier * scan_angle_range_reference)
+        fs_coordinates = fs_normalized * fov
+        x, y = fs_coordinates + np.array([x_center, y_center])
+        return x, y
 
     def get_scan_props(self):
         flag = 'scanAngleMultiplier'

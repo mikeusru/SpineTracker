@@ -68,7 +68,7 @@ class GetCommands(object):
         elif command == 'grabonestackdone':
             # commands need to be separated by commas, not spaces, otherwise file paths will cause problems
             check_num_args(args, 1, 1)
-            self.controller.imageFilePath = args[0]
+            self.controller.image_file_path = args[0]
             self.receivedFlags['grabOneStackDone'] = True
         elif command == 'currentposition':
             check_num_args(args, 3, 3)
@@ -89,15 +89,15 @@ class GetCommands(object):
             self.receivedFlags['zoom'] = True
         elif command == 'scananglexy':
             check_num_args(args, 2, 2)
-            self.controller.currentScanAngleXY = (float(args[0]), float(args[1]))
+            self.controller.set_acq_var('current_scan_angle_x_y', np.array([float(args[0]), float(args[1])]))
             self.receivedFlags['scanAngleXY'] = True
         elif command == 'scananglemultiplier':
             check_num_args(args, 2, 2)
-            self.controller.set_acq_var('scan_angle_multiplier',(float(args[0]), float(args[1])))
+            self.controller.set_settings('scan_angle_multiplier',np.array([float(args[0]), float(args[1])]))
             self.receivedFlags['scanAngleMultiplier'] = True
         elif command == 'scananglerangereference':
             check_num_args(args, 2, 2)
-            self.controller.set_acq_var('scan_angle_range_reference',(float(args[0]), float(args[1])))
+            self.controller.set_settings('scan_angle_range_reference',np.array([float(args[0]), float(args[1])]))
             self.receivedFlags['scanAngleRangeReference'] = True
         elif command == 'zslicenum':
             check_num_args(args, 1, 1)
@@ -105,7 +105,7 @@ class GetCommands(object):
             self.receivedFlags['z_slice_num'] = True
         elif command == 'x_y_resolution':
             check_num_args(args, 2, 2)
-            self.controller.acq['x_y_resolution'] = (float(args[0]), float(args[1]))
+            self.controller.acq['x_y_resolution'] = np.array([float(args[0]), float(args[1])])
             self.receivedFlags['x_y_resolution'] = True
         else:
             print("COMMAND NOT UNDERSTOOD")

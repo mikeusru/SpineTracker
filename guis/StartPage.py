@@ -81,6 +81,8 @@ class StartPage(ttk.Frame):
         self.controller.set_normal_imaging_conditions()
         # set up timers
         self.posTimers = {}
+        # create experiment log
+        self.controller.start_expt_log()
         with self.controller.timerStepsQueue.mutex:
             self.controller.timerStepsQueue.queue.clear()
         individual_steps = self.controller.individual_timeline_steps

@@ -23,8 +23,8 @@ class PositionManagement(SpineTrackerSettings):
         if self.get_app_param('simulation'):
             # simulate position for now.
             # eventually, pull position from other program here
-            x = np.random.randint(-100, 100)
-            y = np.random.randint(-100, 100)
+            x_with_scan_shift = np.random.randint(-100, 100)
+            y_with_scan_shift = np.random.randint(-100, 100)
             z = np.random.randint(-100, 100)
         else:
             flag = 'currentPosition'
@@ -32,7 +32,13 @@ class PositionManagement(SpineTrackerSettings):
             self.sendCommands.get_current_position()
             self.getCommands.wait_for_received_flag(flag)
             x, y, z = self.get_acq_var('current_coordinates')
-        return {'x': x, 'y': y, 'z': z}
+            flag = 'scanAngleXY'
+            self.getCommands.receivedFlags[flag] = False
+            self.sendCommands.get_scan_angle_xy()
+            self.getCommands.wait_for_received_flag(flag)
+            current_scan_angle_x_y = self.get_acq_var('current_scan_angle_x_y')
+            x_with_scan_shift, y_with_scan_shift = self.scan_angle_to_xy(current_scan_angle_x_y, x_center=x, y_center=y)
+        return {'x': x_with_scan_shift, 'y': y_with_scan_shift, 'z': z}
 
     def create_new_pos(self, xyz, ref_images=None):
         # just starting with an empty dict for now
@@ -49,8 +55,8 @@ class PositionManagement(SpineTrackerSettings):
                 self.grab_stack()
                 self.load_acquired_image()
                 # TODO: Set to acquire zoomed out image first
-                self.acq['imgref_imaging'] = np.max(self.acq['imageStack'].copy(),axis = 0)
-                self.acq['imgref_ref'] = np.max(self.acq['imageStack'].copy(),axis = 0)
+                self.acq['imgref_imaging'] = np.max(self.acq['imageStack'].copy(), axis=0)
+                self.acq['imgref_ref'] = np.max(self.acq['imageStack'].copy(), axis=0)
         else:
             self.acq['imgref_imaging'] = ref_images['imaging']
             self.acq['imgref_ref'] = ref_images['ref']
@@ -78,6 +84,7 @@ class PositionManagement(SpineTrackerSettings):
         self.backup_positions()
 
     def update_position(self, pos_id):
+        # TODO: Figure out what's going on here. maybe it's the motor controller, maybe not...
         xyz = self.get_current_position()
         self.positions[pos_id].update(xyz)
         self.frames[PositionsPage].redraw_position_table()
