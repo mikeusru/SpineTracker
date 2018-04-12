@@ -65,8 +65,8 @@ while ~isempty(spineTracker.commandQueue)
             if checkArgCount([2,2],argCount)
                 continue
             end
-            roi_x = command(2);
-            roi_y = command(3);
+            roi_x = str2double(command(2));
+            roi_y = str2double(command(3));
             runUncaging(roi_x,roi_y);
         case 'getcurrentposition'
             disp('getcurrentposition')
