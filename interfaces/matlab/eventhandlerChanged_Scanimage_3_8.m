@@ -186,7 +186,10 @@ write_to_SpineTracker('Zoom',state.acq.zoomFactor);
 end
 
 function runUncaging(roi_x,roi_y)
-global gh state
+global gh state spineTracker
+
+spineTracker.uncaging_flag = true;
+
 % initiate uncaging
 % set up ROI using process similar to yphys_makeRoi
 %% Delete all current ROIs
@@ -228,7 +231,7 @@ updateUAgui;
 % simulate uncaging button press
 yphys_stimScope('start_Callback',gh.yphys.stimScope.start); 
 % respond with UncagingDone
-% UncagingDone is written by either yphys_stimScope or yphys_stimLoop
+% UncagingDone is written by either yphys_stimScope or yphys_stimLoopFcn
 end
 
 function getCurrentPosition()

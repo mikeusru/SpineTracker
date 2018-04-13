@@ -113,7 +113,6 @@ class PositionsPage(ttk.Frame):
         self.gui['canvas_positions'].get_tk_widget().grid(row=0, column=2, rowspan=2, padx=10, pady=10, sticky='nsew')
         self.gui['position_preview_axis'] = self.gui['f_positions'].add_subplot(1, 1, 1)
         self.gui['colorbar_axis'], kw = colorbar.make_axes_gridspec(self.gui['position_preview_axis'])
-        # TODO: add button to auto-align all positions
         self.preview_position_locations()
 
     def create_positions_table(self, container):

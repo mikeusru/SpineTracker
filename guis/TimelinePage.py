@@ -129,7 +129,7 @@ class TimelinePage(ttk.Frame):
             for pos in pos_timeline:
                 start_end = pos_timeline[pos][0][0][:, 0]  # figure out which thing is set to start next
                 pos_ind = list(pos_ids).index(pos)
-                _start = max(start_end[0], min_time[pos_ind])
+                _start = max(start_end[0], min_time[pos_ind]) + (pos_ind * 0.001) #add small amount of time based on position so they are added to the queue sequentially, not at the same time
                 _end = _start + start_end[1] - start_end[0]
                 exclusive = timeline_steps[timeline_index[pos]]['exclusive']
 
@@ -264,6 +264,8 @@ class TimelineStepsFrame(ttk.Frame):
 
     def define_gui_elements(self):
         gui = dict()
+        # TODO: Allow users to add custom steps. The step name is the signal which is sent to the imaging program
+        # So like "Custom Step" becomes custom_step and custom_step_done. Ugh this seems hard... hold off for now. This is for version 2.
         gui['label1'] = ttk.Label(self, text='Step Name:', font=self.controller.get_app_param('large_font'))
         gui['label1'].grid(row=0, column=0, sticky='nw', padx=10, pady=10)
         gui['step_name_entry'] = ttk.Entry(self, width=30,

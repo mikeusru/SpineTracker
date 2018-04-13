@@ -76,6 +76,7 @@ class MacroWindow(tk.Toplevel):
             self.controller.set_macro_imaging_conditions()
             # grab stack
             self.controller.grab_stack()
+            # TODO: Loading this image doesn't always work. Figure out why... Sometimes, it loads the old image.
             self.controller.load_acquired_image(update_figure=False, get_macro=True)
             # make sure image is in correct range
             image_stack = np.array([contrast_stretch(img) for img in self.controller.get_acq_var('macro_image')])
@@ -120,7 +121,6 @@ class MacroWindow(tk.Toplevel):
         x = x * fov_x + x_center
         y = y * fov_y + y_center
         z = z + z_center - self.image.n_frames / 2
-        # TODO: make sure z is always aligned in correct direction
         # add coordinates to position table
         print('x, y, z = {0}, {1}, {2}'.format(x, y, z))
         xyz = {'x': x, 'y': y, 'z': z}

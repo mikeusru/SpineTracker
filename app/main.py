@@ -34,9 +34,6 @@ matplotlib.use("TkAgg")
 style.use("ggplot")
 
 
-# TODO: make acq settings save so can easily restart after program is closed
-
-
 class SpineTracker(InputOutputInterface):
 
     def __init__(self, *args, **kwargs):
@@ -147,6 +144,7 @@ class SpineTracker(InputOutputInterface):
         self.frames[StartPage].gui['drift_label'].configure(
             text='Detected drift of {0:.1f}µm in x and {1:.1f}µm in y'.format(shiftx.item(), shifty.item()))
         self.show_new_images(pos_id=pos_id)
+        self.backup_positions()
 
     def show_new_images(self, pos_id=None):
         image = self.acq['imageStack']
@@ -180,7 +178,7 @@ class SpineTracker(InputOutputInterface):
         for im in image:
             fm = np.append(fm, (focus_measure(im)))
         self.acq['shiftz'] = fm.argmax().item() - np.floor(
-            len(image) / 2)  # TODO: this needs to be checked obviously, depending on how Z info is dealt with
+            len(image) / 2)
         self.acq['FMlist'] = fm
 
     def calc_drift(self, ref_zoom=None):
@@ -221,7 +219,6 @@ class SpineTracker(InputOutputInterface):
         self.frames[TimelinePage].draw_timeline_steps()
 
     def add_step_to_queue(self, step, pos_id):
-        # TODO: Make steps add in the same order every time so they are equally spaced from each other
         single_step = copy.copy(step)  # .copy() returns dict, not TimelineStep object
         single_step['pos_id'] = pos_id
         self.timerStepsQueue.put(single_step)
@@ -256,7 +253,6 @@ class SpineTracker(InputOutputInterface):
                 self.uncage_new_position(single_step)
 
     def image_new_position(self, single_step=None, pos_id=None, ref_zoom=None):
-        # TODO: Keep a log of which positions are imaged and when. export to text or csv after imaging.
         if pos_id is None:
             pos_id = single_step.get('pos_id')
         x, y, z = [self.positions[pos_id][key] for key in ['x', 'y', 'z']]
@@ -269,12 +265,14 @@ class SpineTracker(InputOutputInterface):
         self.run_xyz_drift_correction(pos_id, ref_zoom=ref_zoom)
 
     def uncage_new_position(self, step=None, pos_id=None):
-        # TODO: Add log entry for uncaging
         if pos_id is None:
             pos_id = step.get('pos_id')
         x, y, z = [self.positions[pos_id][key] for key in ['x', 'y', 'z']]
         roi_x, roi_y = self.positions[pos_id]['roi_position']
         self.move_stage(x, y, z)
+        self.write_to_log('Position {0}: Uncaging at {1}:{2}:{3}'.format(pos_id, dt.datetime.now().hour,
+                                                                         dt.datetime.now().minute,
+                                                                         dt.datetime.now().second))
         self.uncage(roi_x, roi_y)
         if step is not None:
             self.stepRunning = False
