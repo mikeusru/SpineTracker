@@ -308,9 +308,9 @@ class SharedFigs(dict):
         super(SharedFigs, self).__init__()
 
         # Shared Timeline Figure
-        self['f_timeline'] = Figure(figsize=(5, 2), dpi=fig_dpi)
-        self['f_timeline'].set_tight_layout(True)
-        self['a_timeline'] = self['f_timeline'].add_subplot(111)
+        self['timeline_figure'] = Figure(figsize=(5, 2), dpi=fig_dpi)
+        self['timeline_figure'].set_tight_layout(True)
+        self['timeline_axis'] = self['timeline_figure'].add_subplot(111)
 
         # Shared Positions Figure
         self['f_positions'] = Figure(figsize=(3, 3), dpi=fig_dpi)

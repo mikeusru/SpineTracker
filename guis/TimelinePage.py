@@ -32,9 +32,9 @@ class TimelinePage(ttk.Frame):
         gui = dict()
         gui['tFrame'] = TimelineStepsFrame(self, self.controller)
         gui['tFrame'].grid(row=0, column=0, columnspan=1)
-        gui['f_timeline'] = self.controller.shared_figs['f_timeline']
-        gui['a_timeline'] = self.controller.shared_figs['a_timeline']
-        gui['canvas_timeline'] = FigureCanvasTkAgg(gui['f_timeline'], self)
+        gui['timeline_figure'] = self.controller.shared_figs['timeline_figure']
+        gui['timeline_axis'] = self.controller.shared_figs['timeline_axis']
+        gui['canvas_timeline'] = FigureCanvasTkAgg(gui['timeline_figure'], self)
         gui['canvas_timeline'].get_tk_widget().config(borderwidth=1, background='gray', highlightcolor='gray',
                                                       highlightbackground='gray')
         gui['canvas_timeline'].show()
@@ -73,7 +73,7 @@ class TimelinePage(ttk.Frame):
         tree.configure(yscrollcommand=scroll.set)
 
     def on_visibility(self, event):
-        fit_fig_to_canvas(self.gui['f_timeline'], self.gui['canvas_timeline'],
+        fit_fig_to_canvas(self.gui['timeline_figure'], self.gui['canvas_timeline'],
                           self.controller.get_app_param('fig_dpi'))
         self.gui['canvas_timeline'].draw_idle()
         self.create_timeline_chart()
@@ -255,7 +255,7 @@ class TimelinePage(ttk.Frame):
 
     def display_timeline_chart(self):
         """Show timeline chart on timeline axis"""
-        self.gui['a_timeline'].clear()
+        self.gui['timeline_axis'].clear()
         y_ind = 0
         y_labels = []
         for pos_id in self.timeline_chart.individual_position_timelines:
@@ -271,19 +271,19 @@ class TimelinePage(ttk.Frame):
                     color_list.append('green')  # exclusive imaging
                 else:
                     color_list.append('red')  # uncaging
-            self.gui['a_timeline'].broken_barh(x_range_list, y_range, color=color_list, edgecolor='black')
-        self.gui['a_timeline'].set_yticks(list(range(self.timeline_chart.get_total_pos_num())))
-        self.gui['a_timeline'].set_yticklabels(self.timeline_chart.get_y_label_list())
-        self.gui['a_timeline'].axis('tight')
-        self.gui['a_timeline'].set_ylim(auto=True)
-        self.gui['a_timeline'].grid(color='k', linestyle=':')
-        y1, y2 = self.gui['a_timeline'].get_ylim()
+            self.gui['timeline_axis'].broken_barh(x_range_list, y_range, color=color_list, edgecolor='black')
+        self.gui['timeline_axis'].set_yticks(list(range(self.timeline_chart.get_total_pos_num())))
+        self.gui['timeline_axis'].set_yticklabels(self.timeline_chart.get_y_label_list())
+        self.gui['timeline_axis'].axis('tight')
+        self.gui['timeline_axis'].set_ylim(auto=True)
+        self.gui['timeline_axis'].grid(color='k', linestyle=':')
+        y1, y2 = self.gui['timeline_axis'].get_ylim()
         if y2 > y1:
-            self.gui['a_timeline'].invert_yaxis()
+            self.gui['timeline_axis'].invert_yaxis()
         legend_patch_red = patches.Patch(color='red', label='Uncaging')
         legend_patch_blue = patches.Patch(color='blue', label='Imaging')
         legend_patch_green = patches.Patch(color='green', label='Exclusive Imaging')
-        self.gui['a_timeline'].legend(handles=[legend_patch_red, legend_patch_blue, legend_patch_green])
+        self.gui['timeline_axis'].legend(handles=[legend_patch_red, legend_patch_blue, legend_patch_green])
         self.gui['canvas_timeline'].draw_idle()
 
     def on_timeline_table_right_click(self, event):

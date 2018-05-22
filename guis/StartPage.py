@@ -52,7 +52,7 @@ class StartPage(ttk.Frame):
         self.gui['canvas_af'].get_tk_widget().config(borderwidth=1, background='gray', highlightcolor='gray',
                                                      highlightbackground='gray')
         self.gui['canvas_af'].get_tk_widget().grid(row=1, column=0, padx=10, pady=10, sticky='nsew')
-        self.gui['canvas_timeline'] = FigureCanvasTkAgg(self.controller.shared_figs['f_timeline'],
+        self.gui['canvas_timeline'] = FigureCanvasTkAgg(self.controller.shared_figs['timeline_figure'],
                                                         self.gui['frame_for_canvases'])
         self.gui['canvas_timeline'].show()
         self.gui['canvas_timeline'].get_tk_widget().config(borderwidth=1, background='gray', highlightcolor='gray',
@@ -67,7 +67,7 @@ class StartPage(ttk.Frame):
         self.posTimers = {}
 
     def on_visibility(self, event):
-        fit_fig_to_canvas(self.controller.shared_figs['f_timeline'], self.gui['canvas_timeline'],
+        fit_fig_to_canvas(self.controller.shared_figs['timeline_figure'], self.gui['canvas_timeline'],
                           self.controller.get_app_param('fig_dpi'))
         fit_fig_to_canvas(self.controller.shared_figs['f_positions'], self.gui['canvas_positions'],
                           self.controller.get_app_param('fig_dpi'))
