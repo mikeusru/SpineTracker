@@ -39,13 +39,13 @@ class SpineTracker(InputOutputInterface):
     def __init__(self, *args, **kwargs):
         super(SpineTracker, self).__init__(*args, **kwargs)
 
-        self.timeline_steps = []
+        self.timeline_steps_general = []
 
         # set properties for main window
         self.protocol("WM_DELETE_WINDOW", self.on_exit)
         # define container for what's in the window
 
-        self.initialize_timeline_steps()
+        self.initialize_timeline_steps_general()
         self.initialize_positions()
         self.frames = {}
         self.windows = {}
@@ -96,10 +96,10 @@ class SpineTracker(InputOutputInterface):
         with open(file_path, "a") as f:
             f.write(line + '\n')
 
-    def initialize_timeline_steps(self):
+    def initialize_timeline_steps_general(self):
         file_name = self.get_app_param('initDirectory') + 'timeline_steps.p'
         if os.path.isfile(file_name):
-            self.timeline_steps = pickle.load(open(file_name, 'rb'))
+            self.timeline_steps_general = pickle.load(open(file_name, 'rb'))
 
     def load_test_image(self, event):  # for testing purposes only
         image = io.imread("../testing/test_image.tif")
@@ -212,11 +212,11 @@ class SpineTracker(InputOutputInterface):
     def add_timeline_step(self, timeline_step):
         index = timeline_step.get('index')
         if index is None:
-            self.timeline_steps.append(timeline_step)
+            self.timeline_steps_general.append(timeline_step)
         else:
-            self.timeline_steps.insert(index, timeline_step)
+            self.timeline_steps_general.insert(index, timeline_step)
 
-        self.frames[TimelinePage].draw_timeline_steps()
+        self.frames[TimelinePage].draw_timeline_steps_general()
 
     def add_step_to_queue(self, step, pos_id):
         single_step = copy.copy(step)  # .copy() returns dict, not TimelineStep object

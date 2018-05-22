@@ -26,7 +26,7 @@ class TimelinePage(ttk.Frame):
         self.gui = self.define_gui_elements()
 
         self.create_timeline_table()
-        self.draw_timeline_steps()
+        self.draw_timeline_steps_general()
 
     def define_gui_elements(self):
         gui = dict()
@@ -80,6 +80,7 @@ class TimelinePage(ttk.Frame):
 
     def create_timeline_chart(self, *args):
         """Creates chart of timeline from scratch"""
+
         class IndividualPositionTimeline:
             def __init__(self, pos_id, pos_count, stagger):
                 self.stagger = stagger
@@ -90,28 +91,34 @@ class TimelinePage(ttk.Frame):
                 self.start_end_time_array = []
                 self.current_index = 0
                 self.mini_steps = []
+                self.timeline_step_individual_list = []
                 self.min_start_time = 0
+                self.step_building_index = 0
                 # TODO: I bet it would be easier if each individual step was its own instance... another refactoring of the TimelineStep class
 
             def add_step(self, step):
+                """divide step into individual steps for each period"""
                 start_time = self.total_time
                 if start_time == 0:
                     duration = step['duration'] + self.stagger * self.pos_count
                 else:
                     duration = step['duration']
                 period = step['period']
-                # TODO: This is done so the exclusively imaged zone shifts as one thing, but may cause a bug later. fix this.
-                if step['exclusive']:
-                    period = duration * 60
-                start_end_time_single_step = self.calc_start_end_time(period, duration, start_time)
-                self.start_end_time_array.append(start_end_time_single_step)
+                start_end_time_list = self.calc_start_end_time(period, duration, start_time)
+                timeline_step_individual = [
+                    MiniTimelineStep(step, start_end_time['start'], start_end_time['end'], self.pos_id) for
+                    start_end_time in start_end_time_list]
+                self.timeline_step_individual_list += timeline_step_individual
                 self.total_time += duration
 
             def calc_start_end_time(self, period, duration, start_time):
+                """Create list of dicts with start and end times for each step"""
                 start_times_single_step = self.calc_start_times(period, duration, start_time)
-                end_times_single_step = self.calc_end_times(start_times_single_step,period)
-                start_end_single_step = np.array([start_times_single_step, end_times_single_step])
-                return start_end_single_step
+                end_times_single_step = self.calc_end_times(start_times_single_step, period)
+                start_end_time_list = [{'start': start, 'end': end} for start, end in
+                                       zip(start_times_single_step, end_times_single_step)]
+                # start_end_single_step = np.array([start_times_single_step, end_times_single_step])
+                return start_end_time_list
 
             def calc_start_times(self, period, duration, start_time):
                 start_time_array = np.arange(start_time, start_time + duration, period / 60)
@@ -121,29 +128,38 @@ class TimelinePage(ttk.Frame):
                 end_times = start_times + period / 60
                 return end_times
 
-            def get_next_start_end_time(self):
-                # TODO: Instead of dealing with multidimensional numpy arrays, program the shifts into methods
-                start_end = self.start_end_time_array[0][0][:, 0]
-                start = max(start_end[0], self.min_start_time)
+            # def get_next_start_end_time(self):
+            #     # TODO: Instead of dealing with multidimensional numpy arrays, program the shifts into methods
+            #     start_end = self.start_end_time_array[0][0][:, 0]
+            #     start = max(start_end[0], self.min_start_time)
+            #     # add small amount of time based on position so they are added to the queue sequentially, not at the same time
+            #     start = start + (self.pos_count * 0.001)
+            #     end = start + start_end[1] - start_end[0]
+            #     return start, end
+
+            def get_next_step(self):
+                individual_step = self.timeline_step_individual_list[self.step_building_index]
+                actual_start_time = max(individual_step['start_time'], self.min_start_time)
                 # add small amount of time based on position so they are added to the queue sequentially, not at the same time
-                start = start + (self.pos_count * 0.001)
-                end = start + start_end[1] - start_end[0]
-                return start, end
+                actual_start_time = actual_start_time + (self.pos_count * 0.001)
+                return individual_step, actual_start_time
+            #
+            # def delete_first_start_end_time(self):
+            #     self.start_end_time_array[0] = np.array(
+            #         [np.delete(self.start_end_time_array[0][0], 0, 1)])
 
-            def delete_first_start_end_time(self):
-                self.start_end_time_array[0] = np.array(
-                    [np.delete(self.start_end_time_array[0][0], 0, 1)])
-
-            def update_min_start_time(self, start_time, end_time, exclusive, reference_pos_id):
-                if exclusive:
-                    self.min_start_time = np.max(end_time, self.min_start_time)
-                else:
-                    if self.pos_id == reference_pos_id:
-                        self.min_start_time = np.max(self.min_start_time, end_time)
-                    self.min_start_time = np.max(self.min_start_time, start_time)
+            # def update_min_start_time(self, start_time, end_time, exclusive, reference_pos_id):
+            def update_min_start_time(self, start_time):
+                self.min_start_time = np.max(self.min_start_time, start_time)
+                # if exclusive:
+                #     self.min_start_time = np.max(end_time, self.min_start_time)
+                # else:
+                #     if self.pos_id == reference_pos_id:
+                #         self.min_start_time = np.max(self.min_start_time, end_time)
+                #     self.min_start_time = np.max(self.min_start_time, start_time)
 
             def is_empty(self):
-                if len(self.start_end_time_array) == 0:
+                if self.step_building_index > len(self.timeline_step_individual_list):
                     return True
                 else:
                     return False
@@ -151,106 +167,128 @@ class TimelinePage(ttk.Frame):
         class TimelineChart:
             def __init__(self, controller):
                 self.controller = controller
-                self.timeline_steps = self.controller.timeline_steps
-                self.positions = self.define_positions()
+                self.timeline_steps_general = self.controller.timeline_steps_general
                 self.stagger = float_or_zero(self.controller.get_settings('stagger'))
-                self.pos_id_list = self.positions.keys()
-                self.individual_position_timelines = {}
+                self.individual_position_timeline_dict = {}
 
             def is_defined_steps(self):
-                if len(self.timeline_steps) == 0:
+                if len(self.timeline_steps_general) == 0:
                     return False
                 else:
                     return True
 
-            def define_positions(self):
+            def get_pos_id_list(self):
                 positions = self.controller.positions
                 if len(positions) == 0:
-                    positions = {1: [], 2: [], 3: [], 4: [], 5: []}
-                return positions
+                    pos_id_list = list(range(1, 6))
+                else:
+                    pos_id_list = [pos_id for pos_id in positions]
+                return pos_id_list
 
-            def construct_base_timelines(self):
-                pos_counter = 0
-                for pos_id in self.pos_id_list:
-                    self.individual_position_timelines[pos_id] = IndividualPositionTimeline(
-                                                            pos_id, pos_counter, self.stagger)
-                    for step in self.timeline_steps:
-                        self.individual_position_timelines[pos_id].add_step(step)
-                    pos_counter += 1
+            def construct_individual_timelines(self):
+                for pos_count, pos_id in enumerate(self.get_pos_id_list(), 1):
+                    self.individual_position_timeline_dict[pos_id] = IndividualPositionTimeline(
+                        pos_id, pos_count, self.stagger)
+                    for step in self.timeline_steps_general:
+                        self.individual_position_timeline_dict[pos_id].add_step(step)
 
-            def get_next_starting_position(self):
-                earliest_start_time = np.array(np.inf)
-                for pos_id in self.individual_position_timelines:
-                    if self.individual_position_timelines[pos_id].is_empty():
-                        continue
-                    potential_start_time, potential_end_time = self.individual_position_timelines[
-                        pos_id].get_next_start_end_time()
-                    timeline_step_number = self.individual_position_timelines[pos_id].current_index
-                    exclusive = self.timeline_steps[timeline_step_number]['exclusive']
-                    if (potential_start_time < earliest_start_time) or (
-                            potential_start_time == earliest_start_time and exclusive):
-                        earliest_start_time = potential_start_time
-                        end_time = potential_end_time
-                        first_pos_id = pos_id
-                return earliest_start_time, end_time, first_pos_id
+            #
+            # def get_next_starting_position(self):
+            #     earliest_start_time = np.array(np.inf)
+            #     for pos_id in self.individual_position_timeline_dict:
+            #         if self.individual_position_timeline_dict[pos_id].is_empty():
+            #             continue
+            #         potential_start_time, potential_end_time = self.individual_position_timeline_dict[
+            #             pos_id].get_next_start_end_time()
+            #         timeline_step_number = self.individual_position_timeline_dict[pos_id].current_index
+            #         exclusive = self.timeline_steps_general[timeline_step_number]['exclusive']
+            #         if (potential_start_time < earliest_start_time) or (
+            #                 potential_start_time == earliest_start_time and exclusive):
+            #             earliest_start_time = potential_start_time
+            #             end_time = potential_end_time
+            #             first_pos_id = pos_id
+            #     return earliest_start_time, end_time, first_pos_id
 
-            def rebuild_timelines_from_mini_steps(self):
+            def get_next_step_if_exclusive(self, previous_step):
+                """If the last step is exclusive and so is this one, use the same position"""
+                if previous_step is None:
+                    return None
+                if previous_step['exclusive']:
+                    pos_id = previous_step['pos_id']
+                    current_step_number = self.individual_position_timeline_dict[pos_id].step_building_index
+                    current_step = self.individual_position_timeline_dict[pos_id].timeline_step_individual_list[current_step_number]
+                    if current_step['exclusive']:
+                        return current_step
+                    else:
+                        return None
+
+            def shift_next_individual_timeline_step(self, previous_step):
+                next_individual_timeline_step = self.get_next_step_if_exclusive(previous_step)
+                if next_individual_timeline_step is None:
+                    earliest_start_time = np.array(np.inf)
+                    next_individual_timeline_step = None
+                    for pos_id in self.individual_position_timeline_dict:
+                        individual_timeline_step, actual_start_time = self.individual_position_timeline_dict[
+                            pos_id].get_next_step()
+                        if (actual_start_time < earliest_start_time) or (
+                                actual_start_time == earliest_start_time and individual_timeline_step['exclusive']):
+                            earliest_start_time = actual_start_time
+                            next_individual_timeline_step = individual_timeline_step
+                next_individual_timeline_step.shift_start_end_times(new_start_time=earliest_start_time)
+                return next_individual_timeline_step
+
+            def shift_individual_timelines_relative_to_each_other(self):
+                """Shift start/end times of all individual steps so they fit along with each other"""
+                previous_step = None
                 while True:
-                    start_time, end_time, pos_id = self.get_next_starting_position()
-                    timeline_step_number = self.individual_position_timelines[pos_id].current_index
-                    mini_timeline_step = MiniTimelineStep(self.timeline_steps[timeline_step_number],
-                                                           start_time, end_time)
-                    self.individual_position_timelines[pos_id].mini_steps.append(mini_timeline_step)
-                    self.individual_position_timelines[pos_id].delete_first_start_end_time()
-                    self.update_all_min_start_times(start_time,end_time, pos_id)
-                    self.move_to_next_step_if_ready(pos_id)
+                    individual_timeline_step = self.shift_next_individual_timeline_step(previous_step)
+                    pos_id = individual_timeline_step['pos_id']
+                    self.update_all_min_start_times(individual_timeline_step)
+                    self.individual_position_timeline_dict[pos_id].step_building_index += 1
                     if self.is_done_building():
                         break
 
-            def move_to_next_step_if_ready(self, pos_id):
-                """If this step is done, move to next step and delete this one"""
-                if self.individual_position_timelines[pos_id].start_end_time_array[0].size == 0:
-                    self.individual_position_timelines[pos_id].current_index += 1
-                    del self.individual_position_timelines[pos_id].start_end_time_array[0]
-
-
-            def update_all_min_start_times(self, start_time, end_time, pos_id):
-                timeline_step_number = self.individual_position_timelines[pos_id].current_index
-                exclusive = self.timeline_steps[timeline_step_number]['exclusive']
-                pos_count = self.individual_position_timelines[pos_id].pos_count
-                for key in self.individual_position_timelines:
-                    self.individual_position_timelines[key].update_min_start_time(start_time, end_time, exclusive, pos_id)
+            def update_all_min_start_times(self, individual_timeline_step):
+                # exclusive = individual_timeline_step['exclusive']
+                # ref_pos_id = individual_timeline_step['pos_id']
+                for pos_id in self.individual_position_timeline_dict:
+                    # self.individual_position_timeline_dict[pos_id].update_min_start_time(
+                    #     individual_timeline_step['start_time'],
+                    #     individual_timeline_step['end_time'],
+                    #     exclusive,
+                    #     ref_pos_id)
+                    self.individual_position_timeline_dict[pos_id].update_min_start_time(
+                        individual_timeline_step['start_time'])
 
             def is_done_building(self):
                 """return False if any individual position timelines are not empty yet"""
-                for _,individual_position_timeline in self.individual_position_timelines:
+                for _, individual_position_timeline in self.individual_position_timeline_dict:
                     if not individual_position_timeline.is_empty():
                         return False
-                else:
-                    return True
+                return True
 
             def get_y_label_list(self):
                 y_label_list = []
-                for _,individual_position_timeline in self.individual_position_timelines:
+                for _, individual_position_timeline in self.individual_position_timeline_dict:
                     y_label_list.append(individual_position_timeline.y_label)
                 return y_label_list
 
             def get_total_pos_num(self):
-                total_pos_num = len(self.pos_id_list)
+                total_pos_num = len(self.get_pos_id_list())
                 return total_pos_num
 
             def get_mini_steps_by_pos(self):
                 mini_steps_by_pos = {}
-                for pos_id,individual_position_timeline in self.individual_position_timelines:
+                for pos_id, individual_position_timeline in self.individual_position_timeline_dict:
                     mini_steps_by_pos[pos_id] = individual_position_timeline.mini_steps
                 return mini_steps_by_pos
 
         self.timeline_chart = TimelineChart(self.controller)
         if not self.timeline_chart.is_defined_steps():
             return
-        self.timeline_chart.construct_base_timelines()
-        self.timeline_chart.rebuild_timelines_from_mini_steps()
-        self.controller.individual_timeline_steps = self.timeline_chart.get_mini_steps_by_pos()
+        self.timeline_chart.construct_individual_timelines()
+        self.timeline_chart.shift_individual_timelines_relative_to_each_other()
+        self.controller.timeline_steps_individual = self.timeline_chart.get_mini_steps_by_pos()
         self.display_timeline_chart()
 
     def display_timeline_chart(self):
@@ -258,12 +296,12 @@ class TimelinePage(ttk.Frame):
         self.gui['timeline_axis'].clear()
         y_ind = 0
         y_labels = []
-        for pos_id in self.timeline_chart.individual_position_timelines:
+        for pos_id in self.timeline_chart.individual_position_timeline_dict:
             y_range = (y_ind - .4, 0.8)
             x_range_list = []
             color_list = []
             y_ind += 1
-            for step in self.timeline_chart.individual_position_timelines[pos_id]:
+            for step in self.timeline_chart.individual_position_timeline_dict[pos_id]:
                 x_range_list.append((step['start_time'], step['end_time'] - step['start_time']))
                 if not step['exclusive']:
                     color_list.append('blue')  # regular imaging
@@ -305,27 +343,27 @@ class TimelinePage(ttk.Frame):
 
     def insert_timeline_step(self, ind):
         self.gui['tFrame'].add_step_callback(self.controller, ind)
-        self.draw_timeline_steps()
+        self.draw_timeline_steps_general()
         self.backup_timeline()
 
     def delete_timeline_step(self, ind):
-        del self.controller.timeline_steps[ind]
-        self.draw_timeline_steps()
+        del self.controller.timeline_steps_general[ind]
+        self.draw_timeline_steps_general()
         self.backup_timeline()
 
     def on_timeline_table_select(self, event):
         # This function is ignored because the class that uses this one as a super also has it
         pass
 
-    def draw_timeline_steps(self):
+    def draw_timeline_steps_general(self):
         tree = self.gui['timelineTree']
-        timeline_steps = self.controller.timeline_steps
+        timeline_steps_general = self.controller.timeline_steps_general
         # clear table first
         for i in tree.get_children():
             tree.delete(i)
         # add values to table
         ii = 1
-        for stepDist in timeline_steps:
+        for stepDist in timeline_steps_general:
             step_name = stepDist['step_name']
             period = stepDist['period']
             duration = stepDist['duration']
@@ -337,8 +375,9 @@ class TimelinePage(ttk.Frame):
         self.create_timeline_chart()
 
     def backup_timeline(self):
-        timeline_steps = self.controller.timeline_steps
-        pickle.dump(timeline_steps, open(self.controller.get_app_param('initDirectory') + 'timeline_steps.p', 'wb'))
+        timeline_steps_general = self.controller.timeline_steps_general
+        pickle.dump(timeline_steps_general,
+                    open(self.controller.get_app_param('initDirectory') + 'timeline_steps.p', 'wb'))
 
 
 class TimelineStepsFrame(ttk.Frame):

@@ -32,7 +32,7 @@ def hello(step,posID):
 #    t2.start()
 
 #==============================================================================
-#individualSteps = app.individual_timeline_steps
+#individualSteps = app.timeline_steps_individual
 #==============================================================================
 
 
