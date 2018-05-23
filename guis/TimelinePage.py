@@ -89,18 +89,16 @@ class TimelinePage(ttk.Frame):
                 self.total_time = 0
                 self.pos_count = pos_count
                 self.start_end_time_array = []
-                self.current_index = 0
                 self.mini_steps = []
                 self.timeline_step_individual_list = []
                 self.min_start_time = 0
                 self.step_building_index = 0
-                # TODO: I bet it would be easier if each individual step was its own instance... another refactoring of the TimelineStep class
 
             def add_step(self, step):
                 """divide step into individual steps for each period"""
                 start_time = self.total_time
                 if start_time == 0:
-                    duration = step['duration'] + self.stagger * self.pos_count
+                    duration = step['duration'] + self.stagger * (self.pos_count - 1)
                 else:
                     duration = step['duration']
                 period = step['period']
@@ -128,38 +126,18 @@ class TimelinePage(ttk.Frame):
                 end_times = start_times + period / 60
                 return end_times
 
-            # def get_next_start_end_time(self):
-            #     # TODO: Instead of dealing with multidimensional numpy arrays, program the shifts into methods
-            #     start_end = self.start_end_time_array[0][0][:, 0]
-            #     start = max(start_end[0], self.min_start_time)
-            #     # add small amount of time based on position so they are added to the queue sequentially, not at the same time
-            #     start = start + (self.pos_count * 0.001)
-            #     end = start + start_end[1] - start_end[0]
-            #     return start, end
-
             def get_next_step(self):
                 individual_step = self.timeline_step_individual_list[self.step_building_index]
                 actual_start_time = max(individual_step['start_time'], self.min_start_time)
                 # add small amount of time based on position so they are added to the queue sequentially, not at the same time
                 actual_start_time = actual_start_time + (self.pos_count * 0.001)
                 return individual_step, actual_start_time
-            #
-            # def delete_first_start_end_time(self):
-            #     self.start_end_time_array[0] = np.array(
-            #         [np.delete(self.start_end_time_array[0][0], 0, 1)])
 
-            # def update_min_start_time(self, start_time, end_time, exclusive, reference_pos_id):
             def update_min_start_time(self, start_time):
-                self.min_start_time = np.max(self.min_start_time, start_time)
-                # if exclusive:
-                #     self.min_start_time = np.max(end_time, self.min_start_time)
-                # else:
-                #     if self.pos_id == reference_pos_id:
-                #         self.min_start_time = np.max(self.min_start_time, end_time)
-                #     self.min_start_time = np.max(self.min_start_time, start_time)
+                self.min_start_time = np.max([self.min_start_time, start_time])
 
             def is_empty(self):
-                if self.step_building_index > len(self.timeline_step_individual_list):
+                if self.step_building_index >= len(self.timeline_step_individual_list):
                     return True
                 else:
                     return False
@@ -192,42 +170,25 @@ class TimelinePage(ttk.Frame):
                     for step in self.timeline_steps_general:
                         self.individual_position_timeline_dict[pos_id].add_step(step)
 
-            #
-            # def get_next_starting_position(self):
-            #     earliest_start_time = np.array(np.inf)
-            #     for pos_id in self.individual_position_timeline_dict:
-            #         if self.individual_position_timeline_dict[pos_id].is_empty():
-            #             continue
-            #         potential_start_time, potential_end_time = self.individual_position_timeline_dict[
-            #             pos_id].get_next_start_end_time()
-            #         timeline_step_number = self.individual_position_timeline_dict[pos_id].current_index
-            #         exclusive = self.timeline_steps_general[timeline_step_number]['exclusive']
-            #         if (potential_start_time < earliest_start_time) or (
-            #                 potential_start_time == earliest_start_time and exclusive):
-            #             earliest_start_time = potential_start_time
-            #             end_time = potential_end_time
-            #             first_pos_id = pos_id
-            #     return earliest_start_time, end_time, first_pos_id
-
             def get_next_step_if_exclusive(self, previous_step):
                 """If the last step is exclusive and so is this one, use the same position"""
                 if previous_step is None:
-                    return None
+                    return None, None
                 if previous_step['exclusive']:
                     pos_id = previous_step['pos_id']
-                    current_step_number = self.individual_position_timeline_dict[pos_id].step_building_index
-                    current_step = self.individual_position_timeline_dict[pos_id].timeline_step_individual_list[current_step_number]
+                    current_step, actual_start_time = self.individual_position_timeline_dict[pos_id].get_next_step()
                     if current_step['exclusive']:
-                        return current_step
-                    else:
-                        return None
+                        return current_step, actual_start_time
+                return None, None
 
             def shift_next_individual_timeline_step(self, previous_step):
-                next_individual_timeline_step = self.get_next_step_if_exclusive(previous_step)
+                next_individual_timeline_step, earliest_start_time = self.get_next_step_if_exclusive(previous_step)
                 if next_individual_timeline_step is None:
                     earliest_start_time = np.array(np.inf)
                     next_individual_timeline_step = None
                     for pos_id in self.individual_position_timeline_dict:
+                        if self.individual_position_timeline_dict[pos_id].is_empty():
+                            continue
                         individual_timeline_step, actual_start_time = self.individual_position_timeline_dict[
                             pos_id].get_next_step()
                         if (actual_start_time < earliest_start_time) or (
@@ -242,6 +203,7 @@ class TimelinePage(ttk.Frame):
                 previous_step = None
                 while True:
                     individual_timeline_step = self.shift_next_individual_timeline_step(previous_step)
+                    previous_step = individual_timeline_step
                     pos_id = individual_timeline_step['pos_id']
                     self.update_all_min_start_times(individual_timeline_step)
                     self.individual_position_timeline_dict[pos_id].step_building_index += 1
@@ -249,27 +211,25 @@ class TimelinePage(ttk.Frame):
                         break
 
             def update_all_min_start_times(self, individual_timeline_step):
-                # exclusive = individual_timeline_step['exclusive']
-                # ref_pos_id = individual_timeline_step['pos_id']
+                reference_pos_id = individual_timeline_step['pos_id']
                 for pos_id in self.individual_position_timeline_dict:
-                    # self.individual_position_timeline_dict[pos_id].update_min_start_time(
-                    #     individual_timeline_step['start_time'],
-                    #     individual_timeline_step['end_time'],
-                    #     exclusive,
-                    #     ref_pos_id)
+                    if (pos_id == reference_pos_id) or individual_timeline_step['exclusive']:
+                        new_min_time = individual_timeline_step['end_time']
+                    else:
+                        new_min_time = individual_timeline_step['start_time']
                     self.individual_position_timeline_dict[pos_id].update_min_start_time(
-                        individual_timeline_step['start_time'])
+                        new_min_time)
 
             def is_done_building(self):
                 """return False if any individual position timelines are not empty yet"""
-                for _, individual_position_timeline in self.individual_position_timeline_dict:
+                for individual_position_timeline in self.individual_position_timeline_dict.values():
                     if not individual_position_timeline.is_empty():
                         return False
                 return True
 
             def get_y_label_list(self):
                 y_label_list = []
-                for _, individual_position_timeline in self.individual_position_timeline_dict:
+                for individual_position_timeline in self.individual_position_timeline_dict.values():
                     y_label_list.append(individual_position_timeline.y_label)
                 return y_label_list
 
@@ -279,7 +239,7 @@ class TimelinePage(ttk.Frame):
 
             def get_mini_steps_by_pos(self):
                 mini_steps_by_pos = {}
-                for pos_id, individual_position_timeline in self.individual_position_timeline_dict:
+                for pos_id, individual_position_timeline in self.individual_position_timeline_dict.items():
                     mini_steps_by_pos[pos_id] = individual_position_timeline.mini_steps
                 return mini_steps_by_pos
 
@@ -301,7 +261,7 @@ class TimelinePage(ttk.Frame):
             x_range_list = []
             color_list = []
             y_ind += 1
-            for step in self.timeline_chart.individual_position_timeline_dict[pos_id]:
+            for step in self.timeline_chart.individual_position_timeline_dict[pos_id].timeline_step_individual_list:
                 x_range_list.append((step['start_time'], step['end_time'] - step['start_time']))
                 if not step['exclusive']:
                     color_list.append('blue')  # regular imaging
@@ -334,8 +294,6 @@ class TimelinePage(ttk.Frame):
         for item in tree.selection():
             item_text = tree.item(item, "text")
             item_number = tree.index(item)
-            print(item_text)
-            print(item_number)
         if len(tree.selection()) == 0:
             return
         self.selected_item_number = item_number

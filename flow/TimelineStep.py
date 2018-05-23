@@ -28,7 +28,7 @@ class TimelineStep(dict):
         x, y, z = [positions[pos_id][xyz] for xyz in ['x', 'y', 'z']]
         return x, y, z
 
-    def shift_start_end_times(self,new_start_time):
+    def shift_start_end_times(self, new_start_time):
         time_shift = new_start_time - self['start_time']
         self['start_time'] += time_shift
         self['end_time'] += time_shift
@@ -36,10 +36,11 @@ class TimelineStep(dict):
 
 class MiniTimelineStep(TimelineStep):
     """Individual steps on the timeline chart"""
+
     def __init__(self, timeline_step, start_time, end_time, pos_id):
-        super().__init__(timeline_step.step_name,
-                         timeline_step.imaging_or_uncaging,
-                         timeline_step.exclusive,
+        super().__init__(timeline_step['step_name'],
+                         timeline_step['imaging_or_uncaging'],
+                         timeline_step['exclusive'],
                          start_time=start_time,
                          end_time=end_time,
                          pos_id=pos_id)
