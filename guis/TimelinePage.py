@@ -81,67 +81,6 @@ class TimelinePage(ttk.Frame):
     def create_timeline_chart(self, *args):
         """Creates chart of timeline from scratch"""
 
-        class IndividualPositionTimeline:
-            def __init__(self, pos_id, pos_count, stagger):
-                self.stagger = stagger
-                self.pos_id = pos_id
-                self.y_label = 'Position {}'.format(pos_id)
-                self.total_time = 0
-                self.pos_count = pos_count
-                self.start_end_time_array = []
-                self.mini_steps = []
-                self.timeline_step_individual_list = []
-                self.min_start_time = 0
-                self.step_building_index = 0
-
-            def add_step(self, step):
-                """divide step into individual steps for each period"""
-                start_time = self.total_time
-                if start_time == 0:
-                    duration = step['duration'] + self.stagger * (self.pos_count - 1)
-                else:
-                    duration = step['duration']
-                period = step['period']
-                start_end_time_list = self.calc_start_end_time(period, duration, start_time)
-                timeline_step_individual = [
-                    MiniTimelineStep(step, start_end_time['start'], start_end_time['end'], self.pos_id) for
-                    start_end_time in start_end_time_list]
-                self.timeline_step_individual_list += timeline_step_individual
-                self.total_time += duration
-
-            def calc_start_end_time(self, period, duration, start_time):
-                """Create list of dicts with start and end times for each step"""
-                start_times_single_step = self.calc_start_times(period, duration, start_time)
-                end_times_single_step = self.calc_end_times(start_times_single_step, period)
-                start_end_time_list = [{'start': start, 'end': end} for start, end in
-                                       zip(start_times_single_step, end_times_single_step)]
-                # start_end_single_step = np.array([start_times_single_step, end_times_single_step])
-                return start_end_time_list
-
-            def calc_start_times(self, period, duration, start_time):
-                start_time_array = np.arange(start_time, start_time + duration, period / 60)
-                return start_time_array
-
-            def calc_end_times(self, start_times, period):
-                end_times = start_times + period / 60
-                return end_times
-
-            def get_next_step(self):
-                individual_step = self.timeline_step_individual_list[self.step_building_index]
-                actual_start_time = max(individual_step['start_time'], self.min_start_time)
-                # add small amount of time based on position so they are added to the queue sequentially, not at the same time
-                actual_start_time = actual_start_time + (self.pos_count * 0.001)
-                return individual_step, actual_start_time
-
-            def update_min_start_time(self, start_time):
-                self.min_start_time = np.max([self.min_start_time, start_time])
-
-            def is_empty(self):
-                if self.step_building_index >= len(self.timeline_step_individual_list):
-                    return True
-                else:
-                    return False
-
         class TimelineChart:
             def __init__(self, controller):
                 self.controller = controller
@@ -242,6 +181,67 @@ class TimelinePage(ttk.Frame):
                 for pos_id, individual_position_timeline in self.individual_position_timeline_dict.items():
                     mini_steps_by_pos[pos_id] = individual_position_timeline.mini_steps
                 return mini_steps_by_pos
+
+        class IndividualPositionTimeline:
+            def __init__(self, pos_id, pos_count, stagger):
+                self.stagger = stagger
+                self.pos_id = pos_id
+                self.y_label = 'Position {}'.format(pos_id)
+                self.total_time = 0
+                self.pos_count = pos_count
+                self.start_end_time_array = []
+                self.mini_steps = []
+                self.timeline_step_individual_list = []
+                self.min_start_time = 0
+                self.step_building_index = 0
+
+            def add_step(self, step):
+                """divide step into individual steps for each period"""
+                start_time = self.total_time
+                if start_time == 0:
+                    duration = step['duration'] + self.stagger * (self.pos_count - 1)
+                else:
+                    duration = step['duration']
+                period = step['period']
+                start_end_time_list = self.calc_start_end_time(period, duration, start_time)
+                timeline_step_individual = [
+                    MiniTimelineStep(step, start_end_time['start'], start_end_time['end'], self.pos_id) for
+                    start_end_time in start_end_time_list]
+                self.timeline_step_individual_list += timeline_step_individual
+                self.total_time += duration
+
+            def calc_start_end_time(self, period, duration, start_time):
+                """Create list of dicts with start and end times for each step"""
+                start_times_single_step = self.calc_start_times(period, duration, start_time)
+                end_times_single_step = self.calc_end_times(start_times_single_step, period)
+                start_end_time_list = [{'start': start, 'end': end} for start, end in
+                                       zip(start_times_single_step, end_times_single_step)]
+                # start_end_single_step = np.array([start_times_single_step, end_times_single_step])
+                return start_end_time_list
+
+            def calc_start_times(self, period, duration, start_time):
+                start_time_array = np.arange(start_time, start_time + duration, period / 60)
+                return start_time_array
+
+            def calc_end_times(self, start_times, period):
+                end_times = start_times + period / 60
+                return end_times
+
+            def get_next_step(self):
+                individual_step = self.timeline_step_individual_list[self.step_building_index]
+                actual_start_time = max(individual_step['start_time'], self.min_start_time)
+                # add small amount of time based on position so they are added to the queue sequentially, not at the same time
+                actual_start_time = actual_start_time + (self.pos_count * 0.001)
+                return individual_step, actual_start_time
+
+            def update_min_start_time(self, start_time):
+                self.min_start_time = np.max([self.min_start_time, start_time])
+
+            def is_empty(self):
+                if self.step_building_index >= len(self.timeline_step_individual_list):
+                    return True
+                else:
+                    return False
 
         self.timeline_chart = TimelineChart(self.controller)
         if not self.timeline_chart.is_defined_steps():
