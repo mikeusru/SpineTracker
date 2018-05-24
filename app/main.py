@@ -64,7 +64,7 @@ class SpineTracker(InputOutputInterface):
         self.ins_thread.start()
 
         self.acq['center_xyz'] = np.array((0, 0, 0))
-        initialize_init_directory(self.get_app_param('initDirectory'))
+        initialize_init_directory(self.get_app_param('init_directory'))
         # create/refresh log file
         self.log_file = open('log.txt', 'w')
 
@@ -97,7 +97,7 @@ class SpineTracker(InputOutputInterface):
             f.write(line + '\n')
 
     def initialize_timeline_steps_general(self):
-        file_name = self.get_app_param('initDirectory') + 'timeline_steps.p'
+        file_name = self.get_app_param('init_directory') + 'timeline_steps.p'
         if os.path.isfile(file_name):
             self.timeline_steps_general = pickle.load(open(file_name, 'rb'))
 

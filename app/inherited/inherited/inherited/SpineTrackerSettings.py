@@ -8,6 +8,170 @@ import sys
 from app.inherited.inherited.inherited.inherited.SpineTrackerContainer import SpineTrackerContainer
 
 
+class SettingsDTO(dict):
+    """Data Transfer Object, initializes all the settings"""
+
+    def __init__(self, container):
+        super(SettingsDTO, self).__init__()
+        self.container = container
+        # Settings set here
+        self['experiment_log_file'] = Setting('experiment_log_file', None, False, '../temp/experiment_log.txt')
+        self['large_font'] = Setting('large_font', None, False, ("Verdana", 12))
+        self['fig_dpi'] = Setting('fig_dpi', None, False, 100)
+        self['init_directory'] = Setting('init_directory', False, False, "../iniFiles/")
+
+        # Settings set in command line
+        self['simulation'] = Setting('simulation', None, False, False)
+        self['verbose'] = Setting('verbose', False, False, False)
+
+        # Settings set in guis
+        self['stagger'] = Setting('stagger', tk.StringVar(container), True, 5,
+                                  callback=self.container.stagger_string_var_callback)
+        self['drift_correction_channel'] = Setting('drift_correction_channel', tk.StringVar(container), True, 1)
+        self['total_channels'] = Setting('total_channels', tk.StringVar(container), True, 2)
+        self['imaging_zoom'] = Setting('imaging_zoom', tk.StringVar(container), True, 30)
+        self['imaging_slices'] = Setting('imaging_slices', tk.StringVar(container), True, 3)
+        self['reference_zoom'] = Setting('reference_zoom', tk.StringVar(container), True, 10)
+        self['reference_slices'] = Setting('reference_slices', tk.StringVar(container), True, 10)
+        self['park_xy_motor'] = Setting('park_xy_motor', tk.BooleanVar(container), True, True)
+        self['macro_resolution_x'] = Setting('macro_resolution_x', tk.StringVar(container), True, 512)
+        self['macro_resolution_y'] = Setting('macro_resolution_y', tk.StringVar(container), True, 512)
+        self['normal_resolution_x'] = Setting('normal_resolution_x', tk.StringVar(container), True, 128)
+        self['normal_resolution_y'] = Setting('normal_resolution_y', tk.StringVar(container), True, 128)
+        self['macro_zoom'] = Setting('macro_zoom', tk.StringVar(container), True, 1)
+        self['macro_z_slices'] = Setting('macro_z_slices', tk.StringVar(container), True, 10)
+        self['uncaging_roi_toggle'] = Setting('uncaging_roi_toggle', tk.BooleanVar(container), True, False)
+        self['image_or_uncage'] = Setting('image_or_uncage', tk.StringVar(container), False, 'Image',
+                                          callback=self.container.image_or_uncage_string_var_callback)
+        self['exclusive'] = Setting('exclusive', tk.BooleanVar(container), False, False)
+        self['duration'] = Setting('duration', tk.StringVar(container), False, 5)
+        self['period'] = Setting('period', tk.StringVar(container), False, 60)
+        self['step_name'] = Setting('step_name', tk.StringVar(container), False, "StepName")
+
+        # Settings gotten from imaging program
+        self['fov_x_y'] = Setting('fov_x_y', None, False, np.array([250, 250]))
+        self['scan_angle_multiplier'] = Setting('scan_angle_multiplier', None, False, np.array([1, 1]))
+        self['scan_angle_range_reference'] = Setting('scan_angle_range_reference', None, False, np.array([15, 15]))
+
+# TODO: Add conversion between data types here. One of the parameters can by dtype, so every time the thing is set or gotten, it can be set to the appropriate data type.
+class Setting:
+
+    def __init__(self, name, gui_var, saved, default, value=None, callback=None):
+        self.setting = name
+        self.gui_var = gui_var
+        self.saved = saved
+        self.default = default
+        self.value = value
+        self.callback = callback
+
+        self.set(self.default)
+        self.update_gui()
+        self.set_trace()
+
+    def set(self, value):
+        self.value = value
+        self.update_gui()
+
+    def update_gui(self):
+        if self.gui_var is not None:
+            self.gui_var.set(self.value)
+
+    def set_trace(self):
+        if self.gui_var is not None:
+            if self.callback is None:
+                self.callback = self._default_trace
+            self.gui_var.trace_add('write', self.callback)
+
+    def _default_trace(self):
+        self.update_value_from_gui()
+
+    def update_value_from_gui(self):
+        self.value = self.gui_var.get()
+
+
+class SettingsManager:
+
+    def __init__(self, container):
+        self.settings_dto = SettingsDTO(container)
+
+    def set_by_name(self, name, value):
+        self.settings_dto[name].set(value)
+
+    # TODO: Pretty sure this won't be a thing anymore
+    def set_by_gui_var(self, gui_var, value):
+        for name, setting in self.settings_dto.items():
+            if setting.gui_var == gui_var:
+                setting.set(value)
+
+    def get_by_name(self, name):
+        return self.settings_dto[name].value
+
+    # TODO: Pretty sure this won't be a thing anymore
+    def get_by_gui_var(self, gui_var):
+        for name, setting in self.settings_dto.items():
+            if setting.gui_var == gui_var:
+                return setting.value
+
+    def load_settings(self):
+        if os.path.isfile(self._get_file_name()):
+            settings_dict = pickle.load(open(self._get_file_name(), 'rb'))
+            self.settings_dto.update(settings_dict)
+
+    def save_settings(self):
+        settings_dict = {}
+        for name, setting in self.settings_dto.items():
+            if setting.saved:
+                settings_dict.update({name: setting})
+        pickle.dump(settings_dict, open(self._get_file_name(), 'wb'))
+
+    def _get_file_name(self):
+        return self.get_by_name('init_directory') + 'user_settings.p'
+
+    def update_gui_from_settings(self, name=None):
+        if not name:
+            for name, setting in self.settings_dto.items():
+                setting.update_gui()
+        else:
+            self.settings_dto[name].update_gui()
+
+
+class CommandLineInterpreter:
+
+    def __init__(self, settings_manager, *args):
+        self.settings_manager = settings_manager
+        self.args = args
+
+    def interpret(self):
+        args = self.args
+        if args is not None:
+            args = args[0]
+            try:
+                options, remainder = getopt.getopt(args, 'sv', ['simulation', 'verbose'])
+            except getopt.GetoptError:
+                print('Error - incorrect input format')
+                print('correct Format: main.py -v -s')
+                sys.exit(2)
+            for opt, val in options:
+                if opt in ('-s', '--simulation'):
+                    print('simulation mode on')
+                    self._set_setting('simulation', True)
+                elif opt in ('-v', '--verbose'):
+                    print('verbose mode on')
+                    self._set_setting('verbose', True)
+
+    def _set_setting(self, name, value):
+        self.settings_manager.set_by_name(name, value)
+
+
+class Initializer(SpineTrackerContainer):
+
+    def __init__(self, *args, **kwargs):
+        super(Initializer, self).__init__()
+        self.settings = SettingsManager(self)
+        self.command_line_interpreter = CommandLineInterpreter(self.settings, *args)
+        self.command_line_interpreter.interpret()
+
+
 class SpineTrackerSettings(SpineTrackerContainer):
 
     def __init__(self, *args, **kwargs):
@@ -18,7 +182,7 @@ class SpineTrackerSettings(SpineTrackerContainer):
                                fig_dpi=100,
                                simulation=False,
                                verbose=False,
-                               initDirectory="../iniFiles/")
+                               init_directory="../iniFiles/")
         self.interpret_command_line_arguments(args)
         self.gui_vars = dict(
             stagger_string_var=tk.StringVar(self),
@@ -109,7 +273,7 @@ class SpineTrackerSettings(SpineTrackerContainer):
                     self.set_app_param('verbose', True)
 
     def load_settings(self):
-        file_name = self.get_app_param('initDirectory') + 'user_settings.p'
+        file_name = self.get_app_param('init_directory') + 'user_settings.p'
         if os.path.isfile(file_name):
             self.settings = pickle.load(open(file_name, 'rb'))
         self.add_missing_settings()
@@ -145,7 +309,7 @@ class SpineTrackerSettings(SpineTrackerContainer):
 
     def save_settings(self):
         user_settings = self.settings
-        pickle.dump(user_settings, open(self.get_app_param('initDirectory') + 'user_settings.p', 'wb'))
+        pickle.dump(user_settings, open(self.get_app_param('init_directory') + 'user_settings.p', 'wb'))
 
     def update_settings_from_gui(self, a=None, b=None, c=None, settings_key=None):
         save_settings_flag = False

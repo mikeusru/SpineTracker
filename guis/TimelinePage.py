@@ -35,7 +35,9 @@ class TimelinePage(ttk.Frame):
         gui['timeline_figure'] = self.controller.shared_figs['timeline_figure']
         gui['timeline_axis'] = self.controller.shared_figs['timeline_axis']
         gui['canvas_timeline'] = FigureCanvasTkAgg(gui['timeline_figure'], self)
-        gui['canvas_timeline'].get_tk_widget().config(borderwidth=1, background='gray', highlightcolor='gray',
+        gui['canvas_timeline'].get_tk_widget().config(borderwidth=1,
+                                                      background='gray',
+                                                      highlightcolor='gray',
                                                       highlightbackground='gray')
         gui['canvas_timeline'].show()
         gui['canvas_timeline'].get_tk_widget().grid(row=2, column=0, columnspan=2,
@@ -335,7 +337,7 @@ class TimelinePage(ttk.Frame):
     def backup_timeline(self):
         timeline_steps_general = self.controller.timeline_steps_general
         pickle.dump(timeline_steps_general,
-                    open(self.controller.get_app_param('initDirectory') + 'timeline_steps.p', 'wb'))
+                    open(self.controller.get_app_param('init_directory') + 'timeline_steps.p', 'wb'))
 
 
 class TimelineStepsFrame(ttk.Frame):

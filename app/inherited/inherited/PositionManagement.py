@@ -15,7 +15,7 @@ class PositionManagement(SpineTrackerSettings):
         self.positions = {}
 
     def initialize_positions(self):
-        file_name = self.get_app_param('initDirectory') + 'positions.p'
+        file_name = self.get_app_param('init_directory') + 'positions.p'
         if os.path.isfile(file_name):
             self.positions = pickle.load(open(file_name, 'rb'))
 
@@ -92,4 +92,4 @@ class PositionManagement(SpineTrackerSettings):
 
     def backup_positions(self):
         positions = self.positions
-        pickle.dump(positions, open(self.get_app_param('initDirectory') + 'positions.p', 'wb'))
+        pickle.dump(positions, open(self.get_app_param('init_directory') + 'positions.p', 'wb'))
