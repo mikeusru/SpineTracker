@@ -25,6 +25,7 @@ class PositionsPage(ttk.Frame):
 
         self.selected_pos_id = None
         self.draggable_circle = None
+        settings = self.controller.settings
         # GUIs
         self.gui['popup'] = tk.Menu(self, tearoff=0)
         self.gui['popup'].add_command(label="Move To Position",
@@ -57,32 +58,32 @@ class PositionsPage(ttk.Frame):
                                                 pady=10, sticky='wn')
 
         self.gui['label_imaging_zoom'] = tk.Label(self.gui['frame_for_zoom'], text="Imaging Zoom",
-                                                  font=self.controller.settings.get('large_font'))
+                                                  font=settings.get('large_font'))
         self.gui['label_imaging_zoom'].grid(row=0, column=0, sticky='nw', padx=10, pady=10)
         self.gui['entry_imaging_zoom'] = ttk.Entry(self.gui['frame_for_zoom'],
-                                                   textvariable=self.controller.gui_vars['imaging_zoom_string_var'])
+                                                   textvariable=settings.get_gui_var('imaging_zoom'))
         self.gui['entry_imaging_zoom'].grid(row=0, column=1, padx=10, pady=10, sticky='nw')
         self.gui['label_ref_zoom'] = tk.Label(self.gui['frame_for_zoom'], text="Reference Zoom",
-                                              font=self.controller.settings.get('large_font'))
+                                              font=settings.get('large_font'))
         self.gui['label_ref_zoom'].grid(row=0, column=2, sticky='nw', padx=10, pady=10)
 
         self.gui['entry_ref_zoom'] = ttk.Entry(self.gui['frame_for_zoom'],
-                                               textvariable=self.controller.gui_vars['reference_zoom_string_var'])
+                                               textvariable=settings.get_gui_var('reference_zoom'))
         self.gui['entry_ref_zoom'].grid(row=0, column=3, padx=10, pady=10, sticky='nw')
 
         self.gui['label_imaging_slices'] = tk.Label(self.gui['frame_for_zoom'], text="Imaging Slices",
-                                                    font=self.controller.settings.get('large_font'))
+                                                    font=settings.get('large_font'))
         self.gui['label_imaging_slices'].grid(row=1, column=0, sticky='nw', padx=10, pady=10)
 
         self.gui['entry_imaging_slices'] = ttk.Entry(self.gui['frame_for_zoom'],
-                                                     textvariable=self.controller.gui_vars['imaging_slices_string_var'])
+                                                     textvariable=settings.get_gui_var('imaging_slices'))
         self.gui['entry_imaging_slices'].grid(row=1, column=1, padx=10, pady=10, sticky='nw')
         self.gui['label_ref_slices'] = tk.Label(self.gui['frame_for_zoom'], text="Reference Slices",
-                                                font=self.controller.settings.get('large_font'))
+                                                font=settings.get('large_font'))
         self.gui['label_ref_slices'].grid(row=1, column=2, sticky='nw', padx=10, pady=10)
 
         self.gui['entry_ref_slices'] = ttk.Entry(self.gui['frame_for_zoom'],
-                                                 textvariable=self.controller.gui_vars['reference_slices_string_var'])
+                                                 textvariable=settings.get_gui_var('reference_slices'))
         self.gui['entry_ref_slices'].grid(row=1, column=3, padx=10, pady=10, sticky='nw')
 
         # Treeview example given at http://knowpapa.com/ttk-treeview/

@@ -21,6 +21,8 @@ class MacroWindow(tk.Toplevel):
         self.title("Macro View")
         self.geometry(newGeometry='700x800+200+200')
 
+        settings = self.controller.settings
+
         # Define GUI Elements
         self.gui = dict(frame_canvas=ttk.Frame(self))
         self.gui['scrollingCanvas'] = ScrolledCanvas(self.gui['frame_canvas'], self, self.controller)
@@ -31,13 +33,13 @@ class MacroWindow(tk.Toplevel):
         self.gui['label_macro_zoom'] = tk.Label(self.gui['frame_buttons'], text="Macro Zoom",
                                                 font=controller.settings.get('large_font'))
         self.gui['entry_macro_zoom'] = ttk.Entry(self.gui['frame_buttons'],
-                                                 textvariable=self.controller.gui_vars['macro_zoom_string_var'],
+                                                 textvariable=settings.get_gui_var('macro_zoom'),
                                                  width=3)
         self.gui['scale_zoom'] = tk.Scale(self, orient=tk.HORIZONTAL)
         self.gui['label_z_slices'] = tk.Label(self.gui['frame_buttons'], text="Number of Z Slices",
                                               font=controller.settings.get('large_font'))
         self.gui['entry_z_slices'] = ttk.Entry(self.gui['frame_buttons'],
-                                               textvariable=self.controller.gui_vars['macro_z_slices_string_var'],
+                                               textvariable=settings.get_gui_var('macro_z_slices'),
                                                width=4)
         self.gui['button_load_macro_image'] = ttk.Button(self.gui['frame_buttons'], text="Grab Macro Image",
                                                          command=lambda: self.load_macro_image())

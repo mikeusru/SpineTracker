@@ -85,7 +85,7 @@ class GetCommands(object):
             self.receivedFlags['fovXY'] = True
         elif command == 'zoom':
             check_num_args(args, 1, 1)
-            self.controller.acq['current_zoom'] = float(args[0])
+            self.controller.settings.set('current_zoom', args[0])
             self.receivedFlags['zoom'] = True
         elif command == 'scananglexy':
             check_num_args(args, 2, 2)
@@ -101,11 +101,11 @@ class GetCommands(object):
             self.receivedFlags['scanAngleRangeReference'] = True
         elif command == 'zslicenum':
             check_num_args(args, 1, 1)
-            self.controller.acq['z_slice_num'] = float(args[0])
+            self.controller.settings.set('z_slice_num', args[0])
             self.receivedFlags['z_slice_num'] = True
         elif command == 'x_y_resolution':
             check_num_args(args, 2, 2)
-            self.controller.acq['x_y_resolution'] = np.array([float(args[0]), float(args[1])])
+            self.controller.settings.set('x_y_resolution', [args[0], args[1]])
             self.receivedFlags['x_y_resolution'] = True
         else:
             print("COMMAND NOT UNDERSTOOD")

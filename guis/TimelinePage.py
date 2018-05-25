@@ -117,6 +117,8 @@ class TimelinePage(ttk.Frame):
                     return None, None
                 if previous_step['exclusive']:
                     pos_id = previous_step['pos_id']
+                    if self.individual_position_timeline_dict[pos_id].is_empty():
+                        return None, None
                     current_step, actual_start_time = self.individual_position_timeline_dict[pos_id].get_next_step()
                     if current_step['exclusive']:
                         return current_step, actual_start_time
@@ -246,11 +248,10 @@ class TimelinePage(ttk.Frame):
                     return False
 
         self.timeline_chart = TimelineChart(self.controller)
-        if not self.timeline_chart.is_defined_steps():
-            return
-        self.timeline_chart.construct_individual_timelines()
-        self.timeline_chart.shift_individual_timelines_relative_to_each_other()
-        self.controller.timeline_steps_individual = self.timeline_chart.get_mini_steps_by_pos()
+        if self.timeline_chart.is_defined_steps():
+            self.timeline_chart.construct_individual_timelines()
+            self.timeline_chart.shift_individual_timelines_relative_to_each_other()
+            self.controller.timeline_steps_individual = self.timeline_chart.get_mini_steps_by_pos()
         self.display_timeline_chart()
 
     def display_timeline_chart(self):
@@ -350,26 +351,27 @@ class TimelineStepsFrame(ttk.Frame):
 
     def define_gui_elements(self):
         gui = dict()
+        settings = self.controller.settings
         # TODO: Allow users to add custom steps. The step name is the signal which is sent to the imaging program
         # So like "Custom Step" becomes custom_step and custom_step_done. Ugh this seems hard... hold off for now. This is for version 2.
         gui['label1'] = ttk.Label(self, text='Step Name:', font=self.controller.settings.get('large_font'))
         gui['label1'].grid(row=0, column=0, sticky='nw', padx=10, pady=10)
         gui['step_name_entry'] = ttk.Entry(self, width=30,
-                                           textvariable=self.controller.gui_vars['step_name_string_var'])
+                                           textvariable=settings.get_gui_var('step_name'))
         gui['step_name_entry'].grid(row=0, column=1, sticky='nw', padx=10, pady=10)
         gui['place_holder_frame'] = ttk.Frame(self)
         gui['place_holder_frame'].grid(row=1, column=1, columnspan=1, sticky='nw', pady=10)
         gui['place_holder_frame'] = ttk.Frame(gui['place_holder_frame'])
         gui['place_holder_frame'].pack(side='left', anchor='w')
         gui['radio_button1'] = ttk.Radiobutton(self, text='Image',
-                                               variable=self.controller.gui_vars['image_or_uncage_string_var'],
+                                               variable=settings.get_gui_var('image_or_uncage'),
                                                value='Image')
         gui['radio_button1'].grid(row=1, column=0, sticky='nw', pady=10, padx=10)
         gui['period_label1'] = ttk.Label(gui['place_holder_frame'], text='  Period: ',
                                          font=self.controller.settings.get('large_font'))
         gui['period_label1'].pack(anchor='w', side='left')
         gui['period_entry'] = ttk.Entry(gui['place_holder_frame'], width=4,
-                                        textvariable=self.controller.gui_vars['period_string_var'])
+                                        textvariable=settings.get_gui_var('period'))
         gui['period_entry'].pack(anchor='w', side='left')
         gui['period_label2'] = ttk.Label(gui['place_holder_frame'], text='sec, ',
                                          font=self.controller.settings.get('large_font'))
@@ -378,17 +380,17 @@ class TimelineStepsFrame(ttk.Frame):
                                            font=self.controller.settings.get('large_font'))
         gui['duration_label1'].pack(anchor='w', side='left')
         gui['duration_entry'] = ttk.Entry(gui['place_holder_frame'], width=4,
-                                          textvariable=self.controller.gui_vars['duration_string_var'])
+                                          textvariable=settings.get_gui_var('duration'))
         gui['duration_entry'].pack(anchor='w', side='left')
         gui['duration_label2'] = ttk.Label(gui['place_holder_frame'], text='min',
                                            font=self.controller.settings.get('large_font'))
         gui['duration_label2'].pack(anchor='w', side='left')
         gui['radio_button2'] = ttk.Radiobutton(self, text='Uncage',
-                                               variable=self.controller.gui_vars['image_or_uncage_string_var'],
+                                               variable=settings.get_gui_var('image_or_uncage'),
                                                value='Uncage')
         gui['radio_button2'].grid(row=2, column=0, sticky='nw', padx=10, pady=3)
         gui['exclusive_checkbutton'] = ttk.Checkbutton(self, text='Exclusive',
-                                                       variable=self.controller.gui_vars['exclusive_bool_var'])
+                                                       variable=settings.get_gui_var('exclusive'))
         gui['exclusive_checkbutton'].grid(row=2, column=1, sticky='nw', padx=10, pady=3)
         gui['stagger_frame'] = ttk.Frame(self)
         gui['stagger_frame'].grid(row=4, column=0, sticky='nw', columnspan=2)
@@ -397,7 +399,7 @@ class TimelineStepsFrame(ttk.Frame):
         gui['stagger_label1'].grid(row=0, column=0, sticky='nw', padx=10, pady=10)
 
         gui['stagger_entry'] = ttk.Entry(gui['stagger_frame'], width=4,
-                                         textvariable=self.controller.gui_vars['stagger_string_var'])
+                                         textvariable=settings.get_gui_var('stagger'))
         gui['stagger_entry'].grid(row=0, column=1, sticky='nw', padx=0, pady=10)
         gui['stagger_label2'] = ttk.Label(gui['stagger_frame'], text='min',
                                           font=self.controller.settings.get('large_font'))
@@ -411,25 +413,26 @@ class TimelineStepsFrame(ttk.Frame):
 
     def add_step_callback(self, cont, ind=None):
         # get values
-        step_name = self.controller.gui_vars['step_name_string_var'].get()
-        period = float_or_none(self.controller.gui_vars['period_string_var'].get())
-        duration = float_or_none(self.controller.gui_vars['duration_string_var'].get())
-        imaging_or_uncaging = self.controller.gui_vars['image_or_uncage_string_var'].get()
-        exclusive = self.controller.gui_vars['exclusive_bool_var'].get()
+        settings = self.controller.settings
+        step_name = settings.get('step_name')
+        period = settings.get('period')
+        duration = settings.get('duration')
+        imaging_or_uncaging = settings.get('image_or_uncage')
+        exclusive = settings.get('exclusive')
         timeline_step = TimelineStep(step_name=step_name, imaging_or_uncaging=imaging_or_uncaging,
                                      exclusive=exclusive, period=period, duration=duration, index=ind)
         cont.add_timeline_step(timeline_step)
         # reset values
-        self.controller.gui_vars['step_name_string_var'].set('')
-        self.controller.gui_vars['period_string_var'].set('')
-        self.controller.gui_vars['duration_string_var'].set('')
+        settings.set('step_name', '')
+        settings.set('period', '')
+        settings.set('duration', '')
         cont.frames[TimelinePage].backup_timeline()
 
     def image_in_from_frame(self, *args):
-        var = self.controller.gui_vars['image_or_uncage_string_var'].get()
+        var = self.controller.settings.get('image_or_uncage')
         if var == "Image":
             self.gui['place_holder_frame'].pack(side='left', anchor='w')
-            self.controller.gui_vars['exclusive_bool_var'].set(False)
+            self.controller.settings.set('exclusive', False)
         else:
             self.gui['place_holder_frame'].pack_forget()
-            self.controller.gui_vars['exclusive_bool_var'].set(True)
+            self.controller.settings.set('exclusive', True)

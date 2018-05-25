@@ -34,5 +34,5 @@ im = Image.open('../images/crab.jpg')
 
 
 ####
-img = app.acq['imageStack']
+img = app.acq['image_stack']
 img = np.max(img,0)

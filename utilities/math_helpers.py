@@ -21,6 +21,18 @@ def float_or_none(x):
         y = float(x)
     return y
 
+def blank_to_none(var):
+    if isinstance(var, str) and (var == ""):
+        return None
+    else:
+        return var
+
+def none_to_blank(var):
+    if var is None:
+        return ""
+    else:
+        return var
+
 
 def float_or_zero(x):
     if x == "":
@@ -30,7 +42,7 @@ def float_or_zero(x):
     return y
 
 
-def focus_measure(image):
+def measure_focus(image):
     # Gaussian derivative (Geusebroek2000)
     w_size = 15
     nn = np.floor(w_size / 2)
@@ -50,6 +62,7 @@ def focus_measure(image):
 
 
 # output is directional shift [x,y] in pixels. based on Sugar et al (2014) paper
+# TODO: instead of having an output, this function can be moved directly to save shiftxy in main program
 def compute_drift(img_ref, img):
     h, w = img_ref.shape
     fft_ref = np.fft.fft2(img_ref)

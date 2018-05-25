@@ -6,7 +6,7 @@ import numpy as np
 import sys
 
 from app.inherited.inherited.inherited.inherited.SpineTrackerContainer import SpineTrackerContainer
-from utilities.math_helpers import float_or_none
+from utilities.math_helpers import float_or_none, blank_to_none, none_to_blank
 
 
 class SettingsDTO(dict):
@@ -45,10 +45,10 @@ class SettingsDTO(dict):
         self._create_gui_variable('uncaging_roi_toggle', tk.BooleanVar, True, False)
         self._create_gui_variable('image_or_uncage', tk.StringVar, False, 'Image',
                                   callback=self.container.image_or_uncage_string_var_callback)
-        self._create_variable('exclusive', tk.BooleanVar, False, False)
-        self._create_variable('duration', tk.StringVar, False, 5, dtype=np.int)
-        self._create_variable('period', tk.StringVar, False, 60, dtype=np.int)
-        self._create_variable('step_name', tk.StringVar, False, "StepName")
+        self._create_gui_variable('exclusive', tk.BooleanVar, False, False)
+        self._create_gui_variable('duration', tk.StringVar, False, 5, dtype=np.int)
+        self._create_gui_variable('period', tk.StringVar, False, 60, dtype=np.int)
+        self._create_gui_variable('step_name', tk.StringVar, False, "StepName")
 
         # Settings gotten from imaging program
         self._create_acquired_variable('fov_x_y', np.array([250, 250]), dtype=np.float32)
@@ -59,6 +59,16 @@ class SettingsDTO(dict):
         self._create_acquired_variable('center_coordinates', np.array([0,0,0]), dtype=np.float32)
         self._create_acquired_variable('center_scan_angle_x_y', np.array([0,0]), dtype=np.float32)
         self._create_acquired_variable('macro_image', np.zeros([128,128]), dtype=np.uint8)
+        self._create_acquired_variable('image_stack', np.zeros([128,128,3]), dtype=np.uint8)
+        self._create_acquired_variable('imgref_ref', np.zeros([128,128,3]), dtype=np.uint8)
+        self._create_acquired_variable('imgref_imaging', np.zeros([128,128,3]), dtype=np.uint8)
+        self._create_acquired_variable('shiftxy', np.array([0,0]), dtype=np.float32)
+        self._create_acquired_variable('shiftz', np.array([0]), dtype=np.float32)
+        self._create_acquired_variable('shiftxy_pixels', dict(shiftx=0, shifty=0))
+        self._create_acquired_variable('focus_list', np.array([0]), dtype=np.float32)
+        self._create_acquired_variable('current_zoom', np.array([0]), dtype=np.int)
+        self._create_acquired_variable('z_slice_num', np.array([0]), dtype=np.int)
+        self._create_acquired_variable('x_y_resolution', np.array([0]), dtype=np.int)
 
 
 
@@ -139,8 +149,9 @@ class Setting:
 
     def _update_dtype(self):
         if self.dtype is not None:
-            self.value = float_or_none(self.value)
-            self.value = np.array(self.value, dtype=self.dtype)
+            self.value = blank_to_none(self.value)
+            if self.value is not None:
+                self.value = np.array(self.value, dtype=self.dtype)
 
     def set(self, value):
         self.value = value
@@ -149,7 +160,9 @@ class Setting:
 
     def update_gui(self):
         if self.gui_var is not None:
-            self.gui_var.set(self.value)
+            # print('var: {}, value: {}'.format(self.gui_var, self.value))
+            value = none_to_blank(self.value)
+            self.gui_var.set(value)
 
     def set_trace(self, callback=None):
         if callback is not None:
@@ -201,6 +214,9 @@ class SettingsManager:
 
     def get(self, name):
         return self.settings_dto[name].value
+
+    def get_gui_var(self, name):
+        return self.settings_dto[name].gui_var
 
     def load_settings(self):
         if os.path.isfile(self._get_file_name()):

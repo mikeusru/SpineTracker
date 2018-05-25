@@ -55,13 +55,13 @@ class PositionManagement(Initializer):
                 self.grab_stack()
                 self.load_acquired_image()
                 # TODO: Set to acquire zoomed out image first
-                self.acq['imgref_imaging'] = np.max(self.acq['imageStack'].copy(), axis=0)
-                self.acq['imgref_ref'] = np.max(self.acq['imageStack'].copy(), axis=0)
+                self.settings.set('imgref_imaging', np.max(self.settings.get('image_stack').copy(), axis=0))
+                self.settings.set('imgref_ref', np.max(self.settings.get('image_stack').copy(), axis=0))
         else:
-            self.acq['imgref_imaging'] = ref_images['imaging']
-            self.acq['imgref_ref'] = ref_images['ref']
-        self.positions[pos_id]['ref_img'] = self.acq['imgref_imaging']
-        self.positions[pos_id]['ref_img_zoomout'] = self.acq['imgref_ref']
+            self.settings.set('imgref_imaging', ref_images['imaging'])
+            self.settings.set('imgref_ref', ref_images['ref'])
+        self.positions[pos_id]['ref_img'] = self.settings.get('imgref_imaging')
+        self.positions[pos_id]['ref_img_zoomout'] = self.settings.get('imgref_ref')
         self.positions[pos_id]['xyzShift'] = np.array([0, 0, 0])
         roi_pos = np.array(self.positions[pos_id]['ref_img'].shape) / 2
         self.positions[pos_id]['roi_position'] = roi_pos

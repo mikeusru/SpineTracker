@@ -28,7 +28,7 @@ from guis.StartPage import StartPage
 from guis.TimelinePage import TimelinePage
 from io_communication.file_listeners import InstructionThread
 from utilities.helper_functions import initialize_init_directory
-from utilities.math_helpers import focus_measure, compute_drift
+from utilities.math_helpers import measure_focus, compute_drift
 
 matplotlib.use("TkAgg")
 style.use("ggplot")
@@ -63,7 +63,7 @@ class SpineTracker(InputOutputInterface):
         self.ins_thread = InstructionThread(self, path, filename, self.getCommands.read_new_instructions)
         self.ins_thread.start()
 
-        self.acq['center_xyz'] = np.array((0, 0, 0))
+        self.settings.set('center_xyz', np.array((0, 0, 0)))
         initialize_init_directory(self.settings.get('init_directory'))
         # create/refresh log file
         self.log_file = open('log.txt', 'w')
@@ -104,39 +104,38 @@ class SpineTracker(InputOutputInterface):
     def load_test_image(self, event):  # for testing purposes only
         image = io.imread("../testing/test_image.tif")
         image = image[np.arange(0, len(image), 2)]
-        self.acq['imageStack'] = image
+        self.settings.set('image_stack', image)
         self.create_figure_for_af_images()
 
     def load_acquired_image(self, update_figure=True, get_macro=False):
         image = io.imread(self.image_file_path)
-        total_chan = int(self.gui_vars['total_channels_string_var'].get())
-        drift_chan = int(self.gui_vars['drift_correction_channel_string_var'].get())
+        total_chan = int(self.settings.get('total_channels'))
+        drift_chan = int(self.settings.get('drift_correction_channel'))
         image = image[np.arange(drift_chan - 1, len(image), total_chan)]
-        self.acq['imageStack'] = image
+        self.settings.set('image_stack', image)
         if get_macro:
-            self.acq['macro_image'] = image
+            self.settings.set('macro_image', image)
         if update_figure:
             self.create_figure_for_af_images()
 
     def load_test_ref_image(self):  # for testing purposes only
         imgref = io.imread("../testing/test_refimg.tif")
-        #        self.acq['imgref'] = imgref
-        self.acq['imgref_imaging'] = imgref
-        self.acq['imgref_ref'] = imgref
+        self.settings.set('imgref_imaging', imgref)
+        self.settings.set('imgref_ref', imgref)
 
     def run_xyz_drift_correction(self, pos_id=None, ref_zoom=None):
-        if 'imageStack' not in self.acq:
-            return
+        # if self.settings.get('image_stack') not in self.acq:
+        #     return
         if pos_id is None:
             pos_id = self.current_pos_id
-        shape = self.acq['imageStack'][0].shape
-        self.acq['imgref_imaging'] = transform.resize(self.positions[pos_id]['ref_img'], shape)
-        self.acq['imgref_ref'] = transform.resize(self.positions[pos_id]['ref_img_zoomout'], shape)
+        shape = self.settings.get('image_stack')[0].shape
+        self.settings.set('imgref_imaging', transform.resize(self.positions[pos_id]['ref_img'], shape))
+        self.settings.set('imgref_ref', transform.resize(self.positions[pos_id]['ref_img_zoomout'], shape))
         self.calc_focus()
         self.calc_drift(ref_zoom)
         # x, y, z = [self.positions[pos_id][key] for key in ['x', 'y', 'z']]
-        shiftx, shifty = self.acq['shiftxy']
-        shiftz = self.acq['shiftz']
+        shiftx, shifty = self.settings.get('shiftxy')
+        shiftz = self.settings.get('shiftz')
         self.positions[pos_id]['x'] -= shiftx
         self.positions[pos_id]['y'] += shifty
         self.positions[pos_id]['z'] += shiftz
@@ -147,7 +146,7 @@ class SpineTracker(InputOutputInterface):
         self.backup_positions()
 
     def show_new_images(self, pos_id=None):
-        image = self.acq['imageStack']
+        image = self.settings.get('image_stack')
         i = 0
         a = self.frames[StartPage].gui['axes_af_images']
         # show images
@@ -158,13 +157,13 @@ class SpineTracker(InputOutputInterface):
             a[i].axis('off')
             i += 1
         # show best focused image
-        max_ind = self.acq['FMlist'].argmax().item()
+        max_ind = self.settings.get('focus_list').argmax().item()
         siz = image[0].shape
         rect = patches.Rectangle((0, 0), siz[0], siz[1], fill=False, linewidth=5, edgecolor='r')
         a[max_ind].add_patch(rect)
         # add arrow to show shift in x,y
         center = np.array([siz[0] / 2, siz[1] / 2])
-        shiftx, shifty = self.acq['shiftxy_pixels']['shiftx'], self.acq['shiftxy_pixels']['shifty']
+        shiftx, shifty = self.settings.get('shiftxy_pixels')['shiftx'], self.settings.get('shiftxy_pixels')['shifty']
         arrow = patches.Arrow(center[1] - shiftx, center[0] - shifty, shiftx, shifty, width=10, color='r')
         a[max_ind].add_patch(arrow)
         if pos_id is not None:
@@ -173,33 +172,32 @@ class SpineTracker(InputOutputInterface):
         self.frames[StartPage].gui['canvas_af'].draw_idle()
 
     def calc_focus(self):
-        image = self.acq['imageStack']
-        fm = np.array([])
-        for im in image:
-            fm = np.append(fm, (focus_measure(im)))
-        self.acq['shiftz'] = fm.argmax().item() - np.floor(
-            len(image) / 2)
-        self.acq['FMlist'] = fm
+        image_stack = self.settings.get('image_stack')
+        focus_list = np.array([])
+        for image in image_stack:
+            focus_list = np.append(focus_list, (measure_focus(image)))
+        self.settings.set('shiftz', focus_list.argmax().item() - np.floor(len(image_stack) / 2))
+        self.settings.set('focus_list', focus_list)
 
     def calc_drift(self, ref_zoom=None):
-        image = np.max(self.acq['imageStack'], 0)
+        image = np.max(self.settings.get('image_stack'), 0)
         zoom = np.float(self.settings.get('current_zoom'))
         fov_x_y = self.settings['fov_x_y']
         if ref_zoom is None:
-            ref_zoom = (self.acq['current_zoom'] == float(self.settings.get('reference_zoom')))
+            ref_zoom = (self.settings.get('current_zoom') == float(self.settings.get('reference_zoom')))
         if ref_zoom:
-            imgref = self.acq['imgref_ref']
+            imgref = self.settings.get('imgref_ref')
         else:
-            imgref = self.acq['imgref_imaging']
-        self.acq['shiftxy_pixels'] = compute_drift(imgref, image)
+            imgref = self.settings.get('imgref_imaging')
+        self.settings.set('shiftxy_pixels', compute_drift(imgref, image))
         shiftx, shifty = np.array(
-            [self.acq['shiftxy_pixels']['shiftx'], self.acq['shiftxy_pixels']['shifty']]) / image.shape * fov_x_y / zoom
-        self.acq['shiftxy'] = (shiftx, shifty)
+            [self.settings.get('shiftxy_pixels')['shiftx'], self.settings.get('shiftxy_pixels')['shifty']]) / image.shape * fov_x_y / zoom
+        self.settings.set('shiftxy', (shiftx, shifty))
 
     def create_figure_for_af_images(self):
-        if 'imageStack' not in self.acq:
-            return
-        image = self.acq['imageStack']
+        # if 'image_stack' not in self.acq:
+        #     return
+        image = self.settings.get('image_stack')
         subplot_length = len(image)
         f = self.frames[StartPage].gui['figure_af_images']
         a = self.frames[StartPage].gui['axes_af_images']
