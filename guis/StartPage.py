@@ -40,11 +40,11 @@ class StartPage(ttk.Frame):
                                             command=lambda: self.stop_imaging())
         self.gui['button_end'].grid(row=4, column=0, padx=10, pady=10, sticky='nw')
         self.gui['drift_label'] = tk.Label(self, text="drift placeholder",
-                                           font=controller.get_app_param('large_font'))
+                                           font=controller.settings.get('large_font'))
         self.gui['drift_label'].grid(row=0, column=1, padx=10, pady=10, sticky='nw')
         self.gui['frame_for_canvases'] = ttk.Frame(self)
         self.gui['frame_for_canvases'].grid(row=1, column=1, columnspan=2, rowspan=2)
-        self.gui['figure_af_images'] = Figure(figsize=(5, 2), dpi=controller.get_app_param('fig_dpi'))
+        self.gui['figure_af_images'] = Figure(figsize=(5, 2), dpi=controller.settings.get('fig_dpi'))
         self.gui['figure_af_images'].subplots_adjust(left=0, right=1, bottom=0, wspace=0.02, hspace=0)
         self.gui['axes_af_images'] = [self.gui['figure_af_images'].add_subplot(1, 1, 1)]
         self.gui['canvas_af'] = FigureCanvasTkAgg(self.gui['figure_af_images'], self.gui['frame_for_canvases'])
@@ -68,9 +68,9 @@ class StartPage(ttk.Frame):
 
     def on_visibility(self, event):
         fit_fig_to_canvas(self.controller.shared_figs['timeline_figure'], self.gui['canvas_timeline'],
-                          self.controller.get_app_param('fig_dpi'))
+                          self.controller.settings.get('fig_dpi'))
         fit_fig_to_canvas(self.controller.shared_figs['f_positions'], self.gui['canvas_positions'],
-                          self.controller.get_app_param('fig_dpi'))
+                          self.controller.settings.get('fig_dpi'))
         for key in ['canvas_af', 'canvas_timeline', 'canvas_positions']:
             self.gui[key].draw_idle()
 

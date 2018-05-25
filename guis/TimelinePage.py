@@ -76,7 +76,7 @@ class TimelinePage(ttk.Frame):
 
     def on_visibility(self, event):
         fit_fig_to_canvas(self.gui['timeline_figure'], self.gui['canvas_timeline'],
-                          self.controller.get_app_param('fig_dpi'))
+                          self.controller.settings.get('fig_dpi'))
         self.gui['canvas_timeline'].draw_idle()
         self.create_timeline_chart()
 
@@ -87,7 +87,7 @@ class TimelinePage(ttk.Frame):
             def __init__(self, controller):
                 self.controller = controller
                 self.timeline_steps_general = self.controller.timeline_steps_general
-                self.stagger = float_or_zero(self.controller.get_settings('stagger'))
+                self.stagger = self.controller.settings.get('stagger')
                 self.individual_position_timeline_dict = {}
 
             def is_defined_steps(self):
@@ -337,7 +337,7 @@ class TimelinePage(ttk.Frame):
     def backup_timeline(self):
         timeline_steps_general = self.controller.timeline_steps_general
         pickle.dump(timeline_steps_general,
-                    open(self.controller.get_app_param('init_directory') + 'timeline_steps.p', 'wb'))
+                    open(self.controller.settings.get('init_directory') + 'timeline_steps.p', 'wb'))
 
 
 class TimelineStepsFrame(ttk.Frame):
@@ -352,7 +352,7 @@ class TimelineStepsFrame(ttk.Frame):
         gui = dict()
         # TODO: Allow users to add custom steps. The step name is the signal which is sent to the imaging program
         # So like "Custom Step" becomes custom_step and custom_step_done. Ugh this seems hard... hold off for now. This is for version 2.
-        gui['label1'] = ttk.Label(self, text='Step Name:', font=self.controller.get_app_param('large_font'))
+        gui['label1'] = ttk.Label(self, text='Step Name:', font=self.controller.settings.get('large_font'))
         gui['label1'].grid(row=0, column=0, sticky='nw', padx=10, pady=10)
         gui['step_name_entry'] = ttk.Entry(self, width=30,
                                            textvariable=self.controller.gui_vars['step_name_string_var'])
@@ -366,22 +366,22 @@ class TimelineStepsFrame(ttk.Frame):
                                                value='Image')
         gui['radio_button1'].grid(row=1, column=0, sticky='nw', pady=10, padx=10)
         gui['period_label1'] = ttk.Label(gui['place_holder_frame'], text='  Period: ',
-                                         font=self.controller.get_app_param('large_font'))
+                                         font=self.controller.settings.get('large_font'))
         gui['period_label1'].pack(anchor='w', side='left')
         gui['period_entry'] = ttk.Entry(gui['place_holder_frame'], width=4,
                                         textvariable=self.controller.gui_vars['period_string_var'])
         gui['period_entry'].pack(anchor='w', side='left')
         gui['period_label2'] = ttk.Label(gui['place_holder_frame'], text='sec, ',
-                                         font=self.controller.get_app_param('large_font'))
+                                         font=self.controller.settings.get('large_font'))
         gui['period_label2'].pack(anchor='w', side='left')
         gui['duration_label1'] = ttk.Label(gui['place_holder_frame'], text='Duration: ',
-                                           font=self.controller.get_app_param('large_font'))
+                                           font=self.controller.settings.get('large_font'))
         gui['duration_label1'].pack(anchor='w', side='left')
         gui['duration_entry'] = ttk.Entry(gui['place_holder_frame'], width=4,
                                           textvariable=self.controller.gui_vars['duration_string_var'])
         gui['duration_entry'].pack(anchor='w', side='left')
         gui['duration_label2'] = ttk.Label(gui['place_holder_frame'], text='min',
-                                           font=self.controller.get_app_param('large_font'))
+                                           font=self.controller.settings.get('large_font'))
         gui['duration_label2'].pack(anchor='w', side='left')
         gui['radio_button2'] = ttk.Radiobutton(self, text='Uncage',
                                                variable=self.controller.gui_vars['image_or_uncage_string_var'],
@@ -393,14 +393,14 @@ class TimelineStepsFrame(ttk.Frame):
         gui['stagger_frame'] = ttk.Frame(self)
         gui['stagger_frame'].grid(row=4, column=0, sticky='nw', columnspan=2)
         gui['stagger_label1'] = ttk.Label(gui['stagger_frame'], text='Stagger: ',
-                                          font=self.controller.get_app_param('large_font'))
+                                          font=self.controller.settings.get('large_font'))
         gui['stagger_label1'].grid(row=0, column=0, sticky='nw', padx=10, pady=10)
 
         gui['stagger_entry'] = ttk.Entry(gui['stagger_frame'], width=4,
                                          textvariable=self.controller.gui_vars['stagger_string_var'])
         gui['stagger_entry'].grid(row=0, column=1, sticky='nw', padx=0, pady=10)
         gui['stagger_label2'] = ttk.Label(gui['stagger_frame'], text='min',
-                                          font=self.controller.get_app_param('large_font'))
+                                          font=self.controller.settings.get('large_font'))
         gui['stagger_label2'].grid(row=0, column=2, sticky='nw', padx=0, pady=10)
 
         gui['add_step_button'] = ttk.Button(self, text="Add Step",

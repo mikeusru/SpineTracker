@@ -29,13 +29,13 @@ class MacroWindow(tk.Toplevel):
         self.gui['button_load_test_macro_image'] = ttk.Button(self.gui['frame_buttons'], text="Load Test Macro Image",
                                                               command=lambda: self.load_macro_image())
         self.gui['label_macro_zoom'] = tk.Label(self.gui['frame_buttons'], text="Macro Zoom",
-                                                font=controller.get_app_param('large_font'))
+                                                font=controller.settings.get('large_font'))
         self.gui['entry_macro_zoom'] = ttk.Entry(self.gui['frame_buttons'],
                                                  textvariable=self.controller.gui_vars['macro_zoom_string_var'],
                                                  width=3)
         self.gui['scale_zoom'] = tk.Scale(self, orient=tk.HORIZONTAL)
         self.gui['label_z_slices'] = tk.Label(self.gui['frame_buttons'], text="Number of Z Slices",
-                                              font=controller.get_app_param('large_font'))
+                                              font=controller.settings.get('large_font'))
         self.gui['entry_z_slices'] = ttk.Entry(self.gui['frame_buttons'],
                                                textvariable=self.controller.gui_vars['macro_z_slices_string_var'],
                                                width=4)
@@ -68,9 +68,9 @@ class MacroWindow(tk.Toplevel):
             self.gui['scrollingCanvas'].set_image()
 
     def load_macro_image(self):
-        if self.controller.get_app_param('simulation'):
+        if self.controller.settings.get('simulation'):
             self.image = Image.open("../testing/macroImage.tif")
-            self.controller.set_acq_var('center_xyz', np.array((0, 0, 0)))
+            self.controller.settings.set('center_xyz', np.array((0, 0, 0)))
         else:
             # set macro zoom and resolution
             self.controller.set_macro_imaging_conditions()
@@ -79,7 +79,7 @@ class MacroWindow(tk.Toplevel):
             # TODO: Loading this image doesn't always work. Figure out why... Sometimes, it loads the old image.
             self.controller.load_acquired_image(update_figure=False, get_macro=True)
             # make sure image is in correct range
-            image_stack = np.array([contrast_stretch(img) for img in self.controller.get_acq_var('macro_image')])
+            image_stack = np.array([contrast_stretch(img) for img in self.controller.settings.get('macro_image')])
             image_stack = image_stack / np.max(image_stack) * 255
             # since PIL doesn't support creating multiframe images, save the image and load it as a workaround for now.
             imlist = []
@@ -91,8 +91,8 @@ class MacroWindow(tk.Toplevel):
             # TODO: open this image automatically when macro window is launched
             # get the motor coordinates
             self.controller.get_current_position()
-            x, y, z = self.controller.get_acq_var('current_coordinates')
-            self.controller.set_acq_var('center_xyz', np.array((x, y, z), dtype=np.float))
+            x, y, z = self.controller.settings.get('current_coordinates')
+            self.controller.settings.set('center_xyz', np.array((x, y, z), dtype=np.float))
 
         self.multi_slice_viewer()
 
@@ -109,11 +109,11 @@ class MacroWindow(tk.Toplevel):
 
     def add_position_on_image_click(self, x, y, z):
         # translate to normal coordinates
-        fov_x, fov_y = np.array(self.controller.settings['fov_x_y']) / float(self.controller.get_settings('macro_zoom'))
+        fov_x, fov_y = np.array(self.controller.settings['fov_x_y']) / float(self.controller.settings.get('macro_zoom'))
         # xy currently originate from top left of image.
         # translate them to coordinate plane directionality.
         # also, make them originate from center
-        x_center, y_center, z_center = self.controller.get_acq_var('center_xyz')
+        x_center, y_center, z_center = self.controller.settings.get('center_xyz')
         xyz_clicked = {'x': x, 'y': y, 'z': z}
         x = x - .5
         y = -y + .5
@@ -128,13 +128,13 @@ class MacroWindow(tk.Toplevel):
         self.controller.add_position(self.controller.frames[PositionsPage], xyz=xyz, ref_images=self.data['refImages'])
 
     def get_ref_images_from_macro(self, xyz_clicked):
-        macro_zoom = float(self.controller.get_settings('macro_zoom'))
-        imaging_zoom = float(self.controller.get_settings('imaging_zoom'))
-        ref_zoom = float(self.controller.get_settings('reference_zoom'))
-        imaging_slices = int(self.controller.get_settings('imaging_slices'))
-        ref_slices = int(self.controller.get_settings('reference_slices'))
-        resolution_x = float(self.controller.get_settings('normal_resolution_x'))
-        resolution_y = float(self.controller.get_settings('normal_resolution_y'))
+        macro_zoom = float(self.controller.settings.get('macro_zoom'))
+        imaging_zoom = float(self.controller.settings.get('imaging_zoom'))
+        ref_zoom = float(self.controller.settings.get('reference_zoom'))
+        imaging_slices = int(self.controller.settings.get('imaging_slices'))
+        ref_slices = int(self.controller.settings.get('reference_slices'))
+        resolution_x = float(self.controller.settings.get('normal_resolution_x'))
+        resolution_y = float(self.controller.settings.get('normal_resolution_y'))
 
 
         frame = self.slice_index
@@ -164,7 +164,7 @@ class MacroWindow(tk.Toplevel):
         #        image = np.array(self.image.size)
         # get maximum projection of image
         # image = np.array(self.image)
-        image = self.controller.get_acq_var('macro_image')  # use original image
+        image = self.controller.settings.get('macro_image')  # use original image
         print('image shape: {}'.format(image.shape))
         # image = np.array(self.image)
         image_imaging_max = np.max(image[imaging_slices_ind, y_index_imaging, x_index_imaging],axis = 0)

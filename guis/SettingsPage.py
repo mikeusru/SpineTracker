@@ -16,13 +16,13 @@ class SettingsPage(ttk.Frame):
     def define_gui_elements(self):
         gui = dict()
         gui['total_image_channels_label'] = tk.Label(self, text="Total Image Channels",
-                                                     font=self.controller.get_app_param('large_font'))
+                                                     font=self.controller.settings.get('large_font'))
         gui['total_image_channels_label'].grid(row=0, column=0, sticky='nw', padx=10, pady=10)
         gui['entry_total_channels'] = ttk.Entry(self,
                                                 textvariable=self.controller.gui_vars['total_channels_string_var'])
         gui['entry_total_channels'].grid(row=0, column=1, padx=10, pady=10, sticky='nw')
         gui['drift_correction_channel_label'] = tk.Label(self, text="Drift Correction Channel",
-                                                         font=self.controller.get_app_param('large_font'))
+                                                         font=self.controller.settings.get('large_font'))
         gui['drift_correction_channel_label'].grid(row=1, column=0, sticky='nw', padx=10, pady=10)
         gui['entry_drift_channel'] = ttk.Entry(self, textvariable=self.controller.gui_vars[
             'drift_correction_channel_string_var'])
@@ -41,7 +41,7 @@ class SettingsPage(ttk.Frame):
         gui['show_uncaging_roi_cb'].grid(row=4, column=0, sticky='nw', pady=10, padx=10)
 
         gui['macro_resolution_label'] = tk.Label(self, text="Macro Imaging Resolution (X,Y pixels)",
-                                                 font=self.controller.get_app_param('large_font'))
+                                                 font=self.controller.settings.get('large_font'))
         gui['macro_resolution_label'].grid(row=5, column=0, sticky='nw', padx=10, pady=10)
 
         gui['entry_macro_resolution_x'] = ttk.Entry(self, textvariable=self.controller.gui_vars[
@@ -53,7 +53,7 @@ class SettingsPage(ttk.Frame):
         gui['entry_macro_resolution_y'].grid(row=5, column=2, padx=10, pady=10, sticky='nw')
 
         gui['normal_resolution_label'] = tk.Label(self, text="Normal Imaging Resolution (X,Y pixels)",
-                                                  font=self.controller.get_app_param('large_font'))
+                                                  font=self.controller.settings.get('large_font'))
         gui['normal_resolution_label'].grid(row=6, column=0, sticky='nw', padx=10, pady=10)
 
         gui['entry_normal_resolution_x'] = ttk.Entry(self, textvariable=self.controller.gui_vars[

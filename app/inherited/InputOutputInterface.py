@@ -18,7 +18,7 @@ class InputOutputInterface(PositionManagement):
     def move_stage(self, x=None, y=None, z=None, pos_id=None):
         if pos_id is not None:
             x, y, z = [self.positions[pos_id][key] for key in ['x', 'y', 'z']]
-        if self.get_settings('park_xy_motor'):
+        if self.settings.get('park_xy_motor'):
             x_motor, y_motor, _ = self.acq['center_xyz']
             self.set_scan_shift(x, y)
         else:
@@ -55,8 +55,8 @@ class InputOutputInterface(PositionManagement):
         self.getCommands.wait_for_received_flag(flag)
 
     def xy_to_scan_angle(self, x, y):
-        scan_angle_multiplier = np.array(self.get_settings('scan_angle_multiplier'))
-        scan_angle_range_reference = np.array(self.get_settings('scan_angle_range_reference'))
+        scan_angle_multiplier = np.array(self.settings.get('scan_angle_multiplier'))
+        scan_angle_range_reference = np.array(self.settings.get('scan_angle_range_reference'))
         fov = np.array(self.settings['fov_x_y'])
         # convert x and y to relative pixel coordinates
         x_center, y_center, _ = self.acq['center_xyz']
@@ -68,8 +68,8 @@ class InputOutputInterface(PositionManagement):
         return scan_shift_fast, -scan_shift_slow
 
     def scan_angle_to_xy(self, scan_angle_x_y, x_center=None, y_center=None):
-        scan_angle_multiplier = np.array(self.get_settings('scan_angle_multiplier'))
-        scan_angle_range_reference = np.array(self.get_settings('scan_angle_range_reference'))
+        scan_angle_multiplier = np.array(self.settings.get('scan_angle_multiplier'))
+        scan_angle_range_reference = np.array(self.settings.get('scan_angle_range_reference'))
         fov = np.array(self.settings['fov_x_y'])
         fs_angular = np.array([scan_angle_x_y[0], -scan_angle_x_y[1]])
         if x_center is None:
@@ -95,7 +95,7 @@ class InputOutputInterface(PositionManagement):
         self.getCommands.receivedFlags[flag] = False
         self.sendCommands.set_zoom(zoom)
         self.getCommands.wait_for_received_flag(flag)
-        self.set_acq_var('current_zoom', zoom)
+        self.settings.set('current_zoom', zoom)
 
     def set_resolution(self, x_resolution, y_resolution):
         flag = 'x_y_resolution'
@@ -104,28 +104,28 @@ class InputOutputInterface(PositionManagement):
         self.getCommands.wait_for_received_flag(flag)
 
     def set_macro_imaging_conditions(self):
-        zoom = self.get_settings('macro_zoom')
-        x_resolution = self.get_settings('macro_resolution_x')
-        y_resolution = self.get_settings('macro_resolution_y')
-        z_slice_num = self.get_settings('macro_z_slices')
+        zoom = self.settings.get('macro_zoom')
+        x_resolution = self.settings.get('macro_resolution_x')
+        y_resolution = self.settings.get('macro_resolution_y')
+        z_slice_num = self.settings.get('macro_z_slices')
         self.set_zoom(zoom)
         self.set_resolution(x_resolution, y_resolution)
         self.set_z_slice_num(z_slice_num)
 
     def set_normal_imaging_conditions(self):
-        zoom = self.get_settings('imaging_zoom')
-        x_resolution = self.get_settings('normal_resolution_x')
-        y_resolution = self.get_settings('normal_resolution_y')
-        z_slice_num = self.get_settings('imaging_slices')
+        zoom = self.settings.get('imaging_zoom')
+        x_resolution = self.settings.get('normal_resolution_x')
+        y_resolution = self.settings.get('normal_resolution_y')
+        z_slice_num = self.settings.get('imaging_slices')
         self.set_zoom(zoom)
         self.set_resolution(x_resolution, y_resolution)
         self.set_z_slice_num(z_slice_num)
 
     def set_reference_imaging_conditions(self):
-        zoom = self.get_settings('reference_zoom')
-        x_resolution = self.get_settings('normal_resolution_x')
-        y_resolution = self.get_settings('normal_resolution_y')
-        z_slice_num = self.get_settings('reference_slices')
+        zoom = self.settings.get('reference_zoom')
+        x_resolution = self.settings.get('normal_resolution_x')
+        y_resolution = self.settings.get('normal_resolution_y')
+        z_slice_num = self.settings.get('reference_slices')
         self.set_zoom(zoom)
         self.set_resolution(x_resolution, y_resolution)
         self.set_z_slice_num(z_slice_num)

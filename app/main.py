@@ -54,7 +54,7 @@ class SpineTracker(InputOutputInterface):
         self.timerStepsQueue = Queue()
 
         # Shared Figures
-        self.shared_figs = SharedFigs(self.get_app_param('fig_dpi'))
+        self.shared_figs = SharedFigs(self.settings.get('fig_dpi'))
 
         # initialize instructions listener
         path, filename = os.path.split(self.inputFile)
@@ -64,7 +64,7 @@ class SpineTracker(InputOutputInterface):
         self.ins_thread.start()
 
         self.acq['center_xyz'] = np.array((0, 0, 0))
-        initialize_init_directory(self.get_app_param('init_directory'))
+        initialize_init_directory(self.settings.get('init_directory'))
         # create/refresh log file
         self.log_file = open('log.txt', 'w')
 
@@ -88,16 +88,16 @@ class SpineTracker(InputOutputInterface):
         print('goodbye')
 
     def start_expt_log(self):
-        file_path = self.get_settings('experiment_log_file')
+        file_path = self.settings.get('experiment_log_file')
         open(file_path, 'a').close()
 
     def write_to_log(self, line):
-        file_path = self.get_settings('experiment_log_file')
+        file_path = self.settings.get('experiment_log_file')
         with open(file_path, "a") as f:
             f.write(line + '\n')
 
     def initialize_timeline_steps_general(self):
-        file_name = self.get_app_param('init_directory') + 'timeline_steps.p'
+        file_name = self.settings.get('init_directory') + 'timeline_steps.p'
         if os.path.isfile(file_name):
             self.timeline_steps_general = pickle.load(open(file_name, 'rb'))
 
@@ -183,10 +183,10 @@ class SpineTracker(InputOutputInterface):
 
     def calc_drift(self, ref_zoom=None):
         image = np.max(self.acq['imageStack'], 0)
-        zoom = np.float(self.get_acq_var('current_zoom'))
+        zoom = np.float(self.settings.get('current_zoom'))
         fov_x_y = self.settings['fov_x_y']
         if ref_zoom is None:
-            ref_zoom = (self.acq['current_zoom'] == float(self.get_settings('reference_zoom')))
+            ref_zoom = (self.acq['current_zoom'] == float(self.settings.get('reference_zoom')))
         if ref_zoom:
             imgref = self.acq['imgref_ref']
         else:

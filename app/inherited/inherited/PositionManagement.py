@@ -4,23 +4,23 @@ import pickle
 
 import numpy as np
 
-from app.inherited.inherited.inherited.SpineTrackerSettings import SpineTrackerSettings
+from app.inherited.inherited.inherited.SpineTrackerSettings import Initializer
 from guis.PositionsPage import PositionsPage
 
 
-class PositionManagement(SpineTrackerSettings):
+class PositionManagement(Initializer):
 
     def __init__(self, *args, **kwargs):
         super(PositionManagement, self).__init__(*args, **kwargs)
         self.positions = {}
 
     def initialize_positions(self):
-        file_name = self.get_app_param('init_directory') + 'positions.p'
+        file_name = self.settings.get('init_directory') + 'positions.p'
         if os.path.isfile(file_name):
             self.positions = pickle.load(open(file_name, 'rb'))
 
     def get_current_position(self):
-        if self.get_app_param('simulation'):
+        if self.settings.get('simulation'):
             # simulate position for now.
             # eventually, pull position from other program here
             x_with_scan_shift = np.random.randint(-100, 100)
@@ -31,12 +31,12 @@ class PositionManagement(SpineTrackerSettings):
             self.getCommands.receivedFlags[flag] = False
             self.sendCommands.get_current_position()
             self.getCommands.wait_for_received_flag(flag)
-            x, y, z = self.get_acq_var('current_coordinates')
+            x, y, z = self.settings.get('current_coordinates')
             flag = 'scanAngleXY'
             self.getCommands.receivedFlags[flag] = False
             self.sendCommands.get_scan_angle_xy()
             self.getCommands.wait_for_received_flag(flag)
-            current_scan_angle_x_y = self.get_acq_var('current_scan_angle_x_y')
+            current_scan_angle_x_y = self.settings.get('current_scan_angle_x_y')
             x_with_scan_shift, y_with_scan_shift = self.scan_angle_to_xy(current_scan_angle_x_y, x_center=x, y_center=y)
         return {'x': x_with_scan_shift, 'y': y_with_scan_shift, 'z': z}
 
@@ -49,7 +49,7 @@ class PositionManagement(SpineTrackerSettings):
         self.positions[pos_id] = xyz
         if ref_images is None:
             # load sample ref images
-            if self.get_app_param('simulation'):
+            if self.settings.get('simulation'):
                 self.load_test_ref_image()
             else:
                 self.grab_stack()
@@ -92,4 +92,4 @@ class PositionManagement(SpineTrackerSettings):
 
     def backup_positions(self):
         positions = self.positions
-        pickle.dump(positions, open(self.get_app_param('init_directory') + 'positions.p', 'wb'))
+        pickle.dump(positions, open(self.settings.get('init_directory') + 'positions.p', 'wb'))

@@ -57,13 +57,13 @@ class PositionsPage(ttk.Frame):
                                                 pady=10, sticky='wn')
 
         self.gui['label_imaging_zoom'] = tk.Label(self.gui['frame_for_zoom'], text="Imaging Zoom",
-                                                  font=self.controller.get_app_param('large_font'))
+                                                  font=self.controller.settings.get('large_font'))
         self.gui['label_imaging_zoom'].grid(row=0, column=0, sticky='nw', padx=10, pady=10)
         self.gui['entry_imaging_zoom'] = ttk.Entry(self.gui['frame_for_zoom'],
                                                    textvariable=self.controller.gui_vars['imaging_zoom_string_var'])
         self.gui['entry_imaging_zoom'].grid(row=0, column=1, padx=10, pady=10, sticky='nw')
         self.gui['label_ref_zoom'] = tk.Label(self.gui['frame_for_zoom'], text="Reference Zoom",
-                                              font=self.controller.get_app_param('large_font'))
+                                              font=self.controller.settings.get('large_font'))
         self.gui['label_ref_zoom'].grid(row=0, column=2, sticky='nw', padx=10, pady=10)
 
         self.gui['entry_ref_zoom'] = ttk.Entry(self.gui['frame_for_zoom'],
@@ -71,14 +71,14 @@ class PositionsPage(ttk.Frame):
         self.gui['entry_ref_zoom'].grid(row=0, column=3, padx=10, pady=10, sticky='nw')
 
         self.gui['label_imaging_slices'] = tk.Label(self.gui['frame_for_zoom'], text="Imaging Slices",
-                                                    font=self.controller.get_app_param('large_font'))
+                                                    font=self.controller.settings.get('large_font'))
         self.gui['label_imaging_slices'].grid(row=1, column=0, sticky='nw', padx=10, pady=10)
 
         self.gui['entry_imaging_slices'] = ttk.Entry(self.gui['frame_for_zoom'],
                                                      textvariable=self.controller.gui_vars['imaging_slices_string_var'])
         self.gui['entry_imaging_slices'].grid(row=1, column=1, padx=10, pady=10, sticky='nw')
         self.gui['label_ref_slices'] = tk.Label(self.gui['frame_for_zoom'], text="Reference Slices",
-                                                font=self.controller.get_app_param('large_font'))
+                                                font=self.controller.settings.get('large_font'))
         self.gui['label_ref_slices'].grid(row=1, column=2, sticky='nw', padx=10, pady=10)
 
         self.gui['entry_ref_slices'] = ttk.Entry(self.gui['frame_for_zoom'],
@@ -92,7 +92,7 @@ class PositionsPage(ttk.Frame):
         self.create_positions_table(self.gui['positions_table_frame'])
 
         # create canvas for previewing reference images
-        self.gui['ref_images_fig'] = Figure(figsize=(4, 2), dpi=controller.get_app_param('fig_dpi'))
+        self.gui['ref_images_fig'] = Figure(figsize=(4, 2), dpi=controller.settings.get('fig_dpi'))
         self.gui['ref_images_fig'].subplots_adjust(left=0, right=1, bottom=0, top=1, wspace=0.02, hspace=0)
         self.gui['canvas_preview_ref_images'] = FigureCanvasTkAgg(self.gui['ref_images_fig'],
                                                                   self.gui['frame_for_graphics'])
@@ -181,7 +181,7 @@ class PositionsPage(ttk.Frame):
 
     def on_visibility(self, event):
         fit_fig_to_canvas(self.gui['f_positions'], self.gui['canvas_positions'],
-                          self.controller.get_app_param('fig_dpi'))
+                          self.controller.settings.get('fig_dpi'))
         self.redraw_position_table()
         self.gui['canvas_preview_ref_images'].draw_idle()
 
@@ -243,7 +243,7 @@ class PositionsPage(ttk.Frame):
         self.gui['canvas_preview_ref_images'].draw_idle()
 
     def draw_roi(self, pos_id, ax):
-        if self.controller.get_settings('uncaging_roi_toggle'):
+        if self.controller.settings.get('uncaging_roi_toggle'):
             ax_width = abs(np.diff(ax.get_xlim()).item())
             x, y = self.controller.positions[pos_id]['roi_position']
             circ = patches.Circle((x, y), radius=ax_width / 20, fill=False, linewidth=ax_width / 20, edgecolor='r')

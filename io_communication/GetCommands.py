@@ -23,7 +23,7 @@ class GetCommands(object):
             if len(line) > 0:
                 ii += 1
             if ii > inst_len:
-                if self.controller.get_app_param('verbose'):
+                if self.controller.settings.get('verbose'):
                     print('\nnew line {0}\n'.format(ii))
                     print('\nnew instructions received\n')
                     print('\n{0}\n'.format(line))
@@ -62,7 +62,7 @@ class GetCommands(object):
         if command == 'stagemovedone':
             check_num_args(args, 3, 3)
             x, y, z = [float(args[xyz]) for xyz in [0, 1, 2]]
-            if self.controller.get_app_param('verbose'):
+            if self.controller.settings.get('verbose'):
                 print('\nStage Moved to x= {0} , y = {1}, z = {2}\n'.format(x, y, z))
             self.receivedFlags['stageMoveDone'] = True
         elif command == 'grabonestackdone':
@@ -73,7 +73,7 @@ class GetCommands(object):
         elif command == 'currentposition':
             check_num_args(args, 3, 3)
             x, y, z = [float(args[xyz]) for xyz in [0, 1, 2]]
-            self.controller.set_acq_var('current_coordinates', [x, y, z])
+            self.controller.settings.set('current_coordinates', [x, y, z])
             self.receivedFlags['currentPosition'] = True
         elif command == 'uncagingdone':
             check_num_args(args, 0, 0)
@@ -89,15 +89,15 @@ class GetCommands(object):
             self.receivedFlags['zoom'] = True
         elif command == 'scananglexy':
             check_num_args(args, 2, 2)
-            self.controller.set_acq_var('current_scan_angle_x_y', np.array([float(args[0]), float(args[1])]))
+            self.controller.settings.set('current_scan_angle_x_y', np.array([float(args[0]), float(args[1])]))
             self.receivedFlags['scanAngleXY'] = True
         elif command == 'scananglemultiplier':
             check_num_args(args, 2, 2)
-            self.controller.set_settings('scan_angle_multiplier',np.array([float(args[0]), float(args[1])]))
+            self.controller.settings.set('scan_angle_multiplier',np.array([float(args[0]), float(args[1])]))
             self.receivedFlags['scanAngleMultiplier'] = True
         elif command == 'scananglerangereference':
             check_num_args(args, 2, 2)
-            self.controller.set_settings('scan_angle_range_reference',np.array([float(args[0]), float(args[1])]))
+            self.controller.settings.set('scan_angle_range_reference',np.array([float(args[0]), float(args[1])]))
             self.receivedFlags['scanAngleRangeReference'] = True
         elif command == 'zslicenum':
             check_num_args(args, 1, 1)
