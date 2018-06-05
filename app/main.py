@@ -101,8 +101,8 @@ class SpineTracker(InputOutputInterface):
         if os.path.isfile(file_name):
             self.timeline_steps_general = pickle.load(open(file_name, 'rb'))
 
-    def load_test_image(self, event):  # for testing purposes only
-        image = io.imread("../testing/test_image.tif")
+    def load_test_image(self, event):  # for test purposes only
+        image = io.imread("../test/test_image.tif")
         image = image[np.arange(0, len(image), 2)]
         self.settings.set('image_stack', image)
         self.create_figure_for_af_images()
@@ -118,8 +118,8 @@ class SpineTracker(InputOutputInterface):
         if update_figure:
             self.create_figure_for_af_images()
 
-    def load_test_ref_image(self):  # for testing purposes only
-        imgref = io.imread("../testing/test_refimg.tif")
+    def load_test_ref_image(self):  # for test purposes only
+        imgref = io.imread("../test/test_refimg.tif")
         self.settings.set('imgref_imaging', imgref)
         self.settings.set('imgref_ref', imgref)
 

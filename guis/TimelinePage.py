@@ -5,7 +5,6 @@ import numpy as np
 
 from flow.TimelineStep import TimelineStep, MiniTimelineStep
 from utilities.helper_functions import fit_fig_to_canvas
-from utilities.math_helpers import float_or_zero, float_or_none
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib import patches
 import pickle

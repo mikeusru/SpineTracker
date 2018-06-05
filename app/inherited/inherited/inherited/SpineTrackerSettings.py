@@ -476,5 +476,5 @@ class Initializer(SpineTrackerContainer):
     # def set_acq_var(self, k, v):
     #     self.acq[k] = v
 
-    # def load_test_ref_image(self):  # for testing purposes only
+    # def load_test_ref_image(self):  # for test purposes only
     #     pass

@@ -14,12 +14,12 @@ def round_math(n, n_digits=0):
     return part / (10 ** n_digits)
 
 
-def float_or_none(x):
-    if x == "":
-        y = None
-    else:
-        y = float(x)
-    return y
+# def float_or_none(x):
+#     if x == "":
+#         y = None
+#     else:
+#         y = float(x)
+#     return y
 
 def blank_to_none(var):
     if isinstance(var, str) and (var == ""):
@@ -34,12 +34,12 @@ def none_to_blank(var):
         return var
 
 
-def float_or_zero(x):
-    if x == "":
-        y = 0.0
-    else:
-        y = float(x)
-    return y
+# def float_or_zero(x):
+#     if x == "":
+#         y = 0.0
+#     else:
+#         y = float(x)
+#     return y
 
 
 def measure_focus(image):

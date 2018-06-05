@@ -71,7 +71,7 @@ class MacroWindow(tk.Toplevel):
 
     def load_macro_image(self):
         if self.controller.settings.get('simulation'):
-            self.image = Image.open("../testing/macroImage.tif")
+            self.image = Image.open("../test/macroImage.tif")
             self.controller.settings.set('center_xyz', np.array((0, 0, 0)))
         else:
             # set macro zoom and resolution
