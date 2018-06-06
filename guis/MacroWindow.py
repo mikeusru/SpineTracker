@@ -6,7 +6,7 @@ from PIL import Image, ImageTk, ImageMath, ImageOps
 from skimage import transform
 
 from guis.PositionsPage import PositionsPage
-from utilities.math_helpers import round_math, histogram_equalize, contrast_stretch
+from utilities.math_helpers import round_math, contrast_stretch
 
 matplotlib.use("TkAgg")
 

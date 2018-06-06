@@ -28,14 +28,14 @@ class PositionManagement(Initializer):
             z = np.random.randint(-100, 100)
         else:
             flag = 'currentPosition'
-            self.getCommands.receivedFlags[flag] = False
-            self.sendCommands.get_current_position()
-            self.getCommands.wait_for_received_flag(flag)
+            self.command_reader.received_flags[flag] = False
+            self.command_writer.get_current_position()
+            self.command_reader.wait_for_received_flag(flag)
             x, y, z = self.settings.get('current_coordinates')
             flag = 'scanAngleXY'
-            self.getCommands.receivedFlags[flag] = False
-            self.sendCommands.get_scan_angle_xy()
-            self.getCommands.wait_for_received_flag(flag)
+            self.command_reader.received_flags[flag] = False
+            self.command_writer.get_scan_angle_xy()
+            self.command_reader.wait_for_received_flag(flag)
             current_scan_angle_x_y = self.settings.get('current_scan_angle_x_y')
             x_with_scan_shift, y_with_scan_shift = self.scan_angle_to_xy(current_scan_angle_x_y, x_center=x, y_center=y)
         return {'x': x_with_scan_shift, 'y': y_with_scan_shift, 'z': z}

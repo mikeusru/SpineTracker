@@ -1,8 +1,8 @@
 import numpy as np
 
 from app.inherited.inherited.PositionManagement import PositionManagement
-from io_communication.GetCommands import GetCommands
-from io_communication.SendCommands import SendCommands
+from io_communication.CommandReader import CommandReader
+from io_communication.CommandWriter import CommandWriter
 
 
 class InputOutputInterface(PositionManagement):
@@ -12,8 +12,8 @@ class InputOutputInterface(PositionManagement):
         self.outputFile = "../instructions_output.txt"
         self.inputFile = "../instructions_input.txt"
         self.instructions = []
-        self.sendCommands = SendCommands(self, self.outputFile)
-        self.getCommands = GetCommands(self, self.inputFile)
+        self.command_writer = CommandWriter(self, self.outputFile)
+        self.command_reader = CommandReader(self, self.inputFile)
 
     def move_stage(self, x=None, y=None, z=None, pos_id=None):
         if pos_id is not None:
@@ -25,34 +25,34 @@ class InputOutputInterface(PositionManagement):
             x_motor = x
             y_motor = y
         flag = 'stageMoveDone'
-        self.getCommands.receivedFlags[flag] = False
-        self.sendCommands.move_stage(x_motor, y_motor, z)
-        self.getCommands.wait_for_received_flag(flag)
+        self.command_reader.received_flags[flag] = False
+        self.command_writer.move_stage(x_motor, y_motor, z)
+        self.command_reader.wait_for_received_flag(flag)
 
     def grab_stack(self):
         flag = 'grabOneStackDone'
-        self.getCommands.receivedFlags[flag] = False
-        self.sendCommands.grab_one_stack()
-        self.getCommands.wait_for_received_flag(flag)
+        self.command_reader.received_flags[flag] = False
+        self.command_writer.grab_one_stack()
+        self.command_reader.wait_for_received_flag(flag)
 
     def uncage(self, roi_x, roi_y):
         flag = 'uncagingDone'
-        self.getCommands.receivedFlags[flag] = False
-        self.sendCommands.do_uncaging(roi_x, roi_y)
-        self.getCommands.wait_for_received_flag(flag)
+        self.command_reader.received_flags[flag] = False
+        self.command_writer.do_uncaging(roi_x, roi_y)
+        self.command_reader.wait_for_received_flag(flag)
 
     def set_scan_shift(self, x, y):
         scan_shift_fast, scan_shift_slow = self.xy_to_scan_angle(x, y)
         flag = 'scanAngleXY'
-        self.getCommands.receivedFlags[flag] = False
-        self.sendCommands.set_scan_shift(scan_shift_fast, scan_shift_slow)
-        self.getCommands.wait_for_received_flag(flag)
+        self.command_reader.received_flags[flag] = False
+        self.command_writer.set_scan_shift(scan_shift_fast, scan_shift_slow)
+        self.command_reader.wait_for_received_flag(flag)
 
     def set_z_slice_num(self, z_slice_num):
         flag = 'z_slice_num'
-        self.getCommands.receivedFlags[flag] = False
-        self.sendCommands.set_z_slice_num(z_slice_num)
-        self.getCommands.wait_for_received_flag(flag)
+        self.command_reader.received_flags[flag] = False
+        self.command_writer.set_z_slice_num(z_slice_num)
+        self.command_reader.wait_for_received_flag(flag)
 
     def xy_to_scan_angle(self, x, y):
         scan_angle_multiplier = np.array(self.settings.get('scan_angle_multiplier'))
@@ -81,27 +81,27 @@ class InputOutputInterface(PositionManagement):
 
     def get_scan_props(self):
         flag = 'scanAngleMultiplier'
-        self.getCommands.receivedFlags[flag] = False
-        self.sendCommands.get_scan_angle_multiplier()
-        self.getCommands.wait_for_received_flag(flag)
+        self.command_reader.received_flags[flag] = False
+        self.command_writer.get_scan_angle_multiplier()
+        self.command_reader.wait_for_received_flag(flag)
 
         flag = 'scanAngleRangeReference'
-        self.getCommands.receivedFlags[flag] = False
-        self.sendCommands.get_scan_angle_range_reference()
-        self.getCommands.wait_for_received_flag(flag)
+        self.command_reader.received_flags[flag] = False
+        self.command_writer.get_scan_angle_range_reference()
+        self.command_reader.wait_for_received_flag(flag)
 
     def set_zoom(self, zoom):
         flag = 'zoom'
-        self.getCommands.receivedFlags[flag] = False
-        self.sendCommands.set_zoom(zoom)
-        self.getCommands.wait_for_received_flag(flag)
+        self.command_reader.received_flags[flag] = False
+        self.command_writer.set_zoom(zoom)
+        self.command_reader.wait_for_received_flag(flag)
         self.settings.set('current_zoom', zoom)
 
     def set_resolution(self, x_resolution, y_resolution):
         flag = 'x_y_resolution'
-        self.getCommands.receivedFlags[flag] = False
-        self.sendCommands.set_x_y_resolution(x_resolution, y_resolution)
-        self.getCommands.wait_for_received_flag(flag)
+        self.command_reader.received_flags[flag] = False
+        self.command_writer.set_x_y_resolution(x_resolution, y_resolution)
+        self.command_reader.wait_for_received_flag(flag)
 
     def set_macro_imaging_conditions(self):
         zoom = self.settings.get('macro_zoom')

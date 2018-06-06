@@ -1,14 +1,12 @@
 import os
 
 
-class SendCommands(object):
-    def __init__(self, controller, file_path, *args, **kwargs):
-        self.controller = controller
-        self.file_path = file_path
-        self.args = args
-        self.kwargs = kwargs
-        if not os.path.isfile(file_path):
-            open(file_path, 'a').close()
+class CommandWriter:
+    def __init__(self, settings):
+        self.settings = settings
+        self.file_path = settings.get('output_file')
+        if not os.path.isfile(self.file_path):
+            open(self.file_path, 'a').close()
 
     def move_stage(self, x, y, z):
         self.write_command('moveXYZ', x, y, z)
@@ -51,6 +49,7 @@ class SendCommands(object):
 
     def write_command(self, *args):
         command = ",".join([str(x) for x in args])
-        self.controller.print_status('\nWriting Command {0}\n'.format(command))
+        # self.controller.print_status('\nWriting Command {0}\n'.format(command))
+        print('\nWriting Command {0}\n'.format(command))
         with open(self.file_path, "a") as f:
             f.write('\n' + command)

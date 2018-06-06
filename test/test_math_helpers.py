@@ -56,6 +56,7 @@ class TestMath(unittest.TestCase):
         result = none_to_blank(432432.6564)
         self.assertEqual(result, 432432.6564)
 
+    #TODO: make the base drift computation make more sense, change the polarity later
     def test_compute_drift(self):
         image_ref = np.zeros([25, 25], dtype=np.uint8)
         image_ref[13, 13] = 100

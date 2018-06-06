@@ -47,20 +47,20 @@ class SpineTracker(InputOutputInterface):
 
         self.initialize_timeline_steps_general()
         self.initialize_positions()
-        self.frames = {}
+        # self.frames = {}
         self.windows = {}
         self.stepRunning = False
         self.instructions_in_queue = Queue()
         self.timerStepsQueue = Queue()
 
         # Shared Figures
-        self.shared_figs = SharedFigs(self.settings.get('fig_dpi'))
+        # self.shared_figs = SharedFigs(self.settings.get('fig_dpi'))
 
         # initialize instructions listener
         path, filename = os.path.split(self.inputFile)
         with self.instructions_in_queue.mutex:
             self.instructions_in_queue.queue.clear()
-        self.ins_thread = InstructionThread(self, path, filename, self.getCommands.read_new_instructions)
+        self.ins_thread = InstructionThread(self, path, filename, self.command_reader.read_new_commands)
         self.ins_thread.start()
 
         self.settings.set('center_xyz', np.array((0, 0, 0)))
@@ -108,7 +108,7 @@ class SpineTracker(InputOutputInterface):
         self.create_figure_for_af_images()
 
     def load_acquired_image(self, update_figure=True, get_macro=False):
-        image = io.imread(self.image_file_path)
+        image = io.imread(self.settings.get('image_file_path'))
         total_chan = int(self.settings.get('total_channels'))
         drift_chan = int(self.settings.get('drift_correction_channel'))
         image = image[np.arange(drift_chan - 1, len(image), total_chan)]
@@ -256,7 +256,7 @@ class SpineTracker(InputOutputInterface):
         x, y, z = [self.positions[pos_id][key] for key in ['x', 'y', 'z']]
         self.move_stage(x, y, z)
         self.grab_stack()
-        self.write_to_log('Position {}: {}'.format(pos_id,  self.image_file_path))
+        self.write_to_log('Position {}: {}'.format(pos_id,  self.settings.get('image_file_path')))
         if single_step is not None:
             self.stepRunning = False
         self.load_acquired_image()

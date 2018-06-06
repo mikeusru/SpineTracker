@@ -85,9 +85,9 @@ def compute_drift(img_ref, img):
     return {'shiftx': shift_x[0], 'shifty': shift_y[0]}
 
 
-def histogram_equalize(img):
-    img_cdf, bin_centers = exposure.cumulative_distribution(img)
-    return np.interp(img, bin_centers, img_cdf)
+# def histogram_equalize(img):
+#     img_cdf, bin_centers = exposure.cumulative_distribution(img)
+#     return np.interp(img, bin_centers, img_cdf)
 
 def contrast_stretch(img):
     p2, p98 = np.percentile(img, (2, 98))
