@@ -49,9 +49,9 @@ class SpineTracker(InputOutputInterface):
         self.initialize_positions()
         # self.frames = {}
         self.windows = {}
-        self.stepRunning = False
+        self.step_running = False
         self.instructions_in_queue = Queue()
-        self.timerStepsQueue = Queue()
+        self.timer_steps_queue = Queue()
 
         # Shared Figures
         # self.shared_figs = SharedFigs(self.settings.get('fig_dpi'))
@@ -76,7 +76,7 @@ class SpineTracker(InputOutputInterface):
 
         self.current_pos_id = 1
 
-    def show_macro_view_window(self):
+    def build_macro_window(self):
         self.windows[MacroWindow] = MacroWindow(self)
 
     def on_exit(self):
@@ -105,10 +105,10 @@ class SpineTracker(InputOutputInterface):
         image = io.imread("../test/test_image.tif")
         image = image[np.arange(0, len(image), 2)]
         self.settings.set('image_stack', image)
-        self.create_figure_for_af_images()
+        self.reset_figure_for_af_images()
 
-    def load_acquired_image(self, update_figure=True, get_macro=False):
-        image = io.imread(self.settings.get('image_file_path'))
+    def load_image(self, update_figure=True, get_macro=False):
+        image = io.imread(self.image_file_path)
         total_chan = int(self.settings.get('total_channels'))
         drift_chan = int(self.settings.get('drift_correction_channel'))
         image = image[np.arange(drift_chan - 1, len(image), total_chan)]
@@ -116,7 +116,7 @@ class SpineTracker(InputOutputInterface):
         if get_macro:
             self.settings.set('macro_image', image)
         if update_figure:
-            self.create_figure_for_af_images()
+            self.reset_figure_for_af_images()
 
     def load_test_ref_image(self):  # for test purposes only
         imgref = io.imread("../test/test_refimg.tif")
@@ -194,7 +194,7 @@ class SpineTracker(InputOutputInterface):
             [self.settings.get('shiftxy_pixels')['shiftx'], self.settings.get('shiftxy_pixels')['shifty']]) / image.shape * fov_x_y / zoom
         self.settings.set('shiftxy', (shiftx, shifty))
 
-    def create_figure_for_af_images(self):
+    def reset_figure_for_af_images(self):
         # if 'image_stack' not in self.acq:
         #     return
         image = self.settings.get('image_stack')
@@ -219,19 +219,19 @@ class SpineTracker(InputOutputInterface):
     def add_step_to_queue(self, step, pos_id):
         single_step = copy.copy(step)  # .copy() returns dict, not TimelineStep object
         single_step['pos_id'] = pos_id
-        self.timerStepsQueue.put(single_step)
+        self.timer_steps_queue.put(single_step)
 
     def run_step_from_queue(self):
         while self.imagingActive:
             # update() function on the GUI is necessary to keep it active
             self.update()
-            if self.stepRunning:  # make sure something isn't already running
+            if self.step_running:  # make sure something isn't already running
                 continue
-            if not self.timerStepsQueue.empty():
-                single_step = self.timerStepsQueue.get()
+            if not self.timer_steps_queue.empty():
+                single_step = self.timer_steps_queue.get()
             else:
                 continue
-            self.stepRunning = True
+            self.step_running = True
             pos_id = single_step.get('pos_id')
             if single_step.get('exclusive'):
                 ex = 'Exclusive'
@@ -256,10 +256,10 @@ class SpineTracker(InputOutputInterface):
         x, y, z = [self.positions[pos_id][key] for key in ['x', 'y', 'z']]
         self.move_stage(x, y, z)
         self.grab_stack()
-        self.write_to_log('Position {}: {}'.format(pos_id,  self.settings.get('image_file_path')))
+        self.write_to_log('Position {}: {}'.format(pos_id,  self.image_file_path))
         if single_step is not None:
-            self.stepRunning = False
-        self.load_acquired_image()
+            self.step_running = False
+        self.load_image()
         self.run_xyz_drift_correction(pos_id, ref_zoom=ref_zoom)
 
     def uncage_new_position(self, step=None, pos_id=None):
@@ -273,7 +273,7 @@ class SpineTracker(InputOutputInterface):
                                                                          dt.datetime.now().second))
         self.uncage(roi_x, roi_y)
         if step is not None:
-            self.stepRunning = False
+            self.step_running = False
 
     def print_status(self, following_string):
         if self.app_params['verbose']:

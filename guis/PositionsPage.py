@@ -49,7 +49,7 @@ class PositionsPage(ttk.Frame):
         self.gui['button_clear_positions'].grid(row=1, column=0, padx=10,
                                                 pady=10, sticky='wn')
         self.gui['button_macro_view'] = ttk.Button(self.gui['frame_for_buttons'], text="Macro View",
-                                                   command=lambda: controller.show_macro_view_window())
+                                                   command=lambda: controller.build_macro_window())
         self.gui['button_macro_view'].grid(row=2, column=0, padx=10,
                                            pady=10, sticky='wn')
         self.gui['button_align_positions'] = ttk.Button(self.gui['frame_for_buttons'], text="Align All To Reference",

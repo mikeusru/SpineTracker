@@ -79,7 +79,7 @@ class MacroWindow(tk.Toplevel):
             # grab stack
             self.controller.grab_stack()
             # TODO: Loading this image doesn't always work. Figure out why... Sometimes, it loads the old image.
-            self.controller.load_acquired_image(update_figure=False, get_macro=True)
+            self.controller.load_image(update_figure=False, get_macro=True)
             # make sure image is in correct range
             image_stack = np.array([contrast_stretch(img) for img in self.controller.settings.get('macro_image')])
             image_stack = image_stack / np.max(image_stack) * 255

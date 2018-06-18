@@ -53,7 +53,7 @@ class PositionManagement(Initializer):
                 self.load_test_ref_image()
             else:
                 self.grab_stack()
-                self.load_acquired_image()
+                self.load_image()
                 # TODO: Set to acquire zoomed out image first
                 self.settings.set('imgref_imaging', np.max(self.settings.get('image_stack').copy(), axis=0))
                 self.settings.set('imgref_ref', np.max(self.settings.get('image_stack').copy(), axis=0))

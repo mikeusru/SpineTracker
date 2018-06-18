@@ -3,6 +3,7 @@
 """
 from matplotlib.figure import Figure
 
+from guis.MacroWindow import MacroWindow
 from guis.PositionsPage import PositionsPage
 from guis.SettingsPage import SettingsPage
 from guis.StartPage import StartPage
@@ -22,7 +23,17 @@ class MainGuiBuilder(tk.Tk):
         self.container = ttk.Notebook(self)
         self.container.pack(side="top", fill="both", expand=True)
         self.frames = self.build_frames()
+        self.windows = self.build_windows()
         self.shared_figs = self.build_shared_figs()
+        self.protocol("WM_DELETE_WINDOW", self.run_on_exit)
+
+    def run_on_exit(self):
+        print('quitting')
+        self.ins_thread.stop()
+        print('Instruction listener closed')
+        self.log_file.close()
+        self.destroy()
+        print('goodbye')
 
     def build_frames(self):
         frames = {}
@@ -32,9 +43,24 @@ class MainGuiBuilder(tk.Tk):
             self.container.add(frame, text=F.name)
         return frames
 
+    def build_macro_window(self):
+        windows = {MacroWindow: MacroWindow(self)}
+        return windows
+
     def build_shared_figs(self):
         fig_dpi = self.settings.get('fig_dpi')
         return SharedFigs(fig_dpi)
+
+    def reset_figure_for_af_images(self):
+        image = self.settings.get('image_stack')
+        subplot_length = len(image)
+        figure = self.frames[StartPage].gui['figure_af_images']
+        axes = self.frames[StartPage].gui['axes_af_images']
+        for axis in axes.copy():
+            axes.remove(axis)
+            figure.delaxes(axis)
+        for i in range(subplot_length):
+            axes.append(figure.add_subplot(1, subplot_length, i + 1))
 
 
 class SharedFigs(dict):
