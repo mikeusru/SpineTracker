@@ -114,13 +114,14 @@ class AcquiredImage:
 
     def get_x_y_z_drift(self, reference_max_projection):
         # shape = self.settings.get('image_stack')[0].shape
-        z_drift = self.calc_focus()
-        self.calc_x_y_drift(reference_max_projection)
-        shiftx, shifty = self.settings.get('shiftxy')
-        shiftz = self.settings.get('shiftz')
-        self.positions[pos_id]['x'] -= shiftx
-        self.positions[pos_id]['y'] += shifty
-        self.positions[pos_id]['z'] += shiftz
+        shift_z = self.calc_focus()
+        shift_x_y = self.calc_x_y_drift(reference_max_projection)
+        # shiftx, shifty = self.settings.get('shiftxy')
+        # shiftz = self.settings.get('shiftz')
+        # TODO: Left Off Here
+        self.positions[pos_id]['x'] -= shift_x_y.x
+        self.positions[pos_id]['y'] += shift_x_y.y
+        self.positions[pos_id]['z'] += shift_z
         self.positions[pos_id]['xyzShift'] = self.positions[pos_id]['xyzShift'] + np.array([shiftx, shifty, shiftz])
         self.frames[StartPage].gui['drift_label'].configure(
             text='Detected drift of {0:.1f}µm in x and {1:.1f}µm in y'.format(shiftx.item(), shifty.item()))
@@ -139,22 +140,46 @@ class AcquiredImage:
         self.z_shift_history.append(z_shift)
         return z_shift
 
-    def calc_x_y_pixel_drift(self, reference_max_projection):
+    def calc_x_y_drift(self, reference_max_projection):
         image_max_projection = self.get_max_projection()
         reference_resized = transform.resize(reference_max_projection, image_max_projection.shape)
-        shiftxy_pixels = compute_drift(reference_resized, image_max_projection)
-
+        shift_x_y = ShiftXY()
+        shift_x_y.compute_drift_x_y(reference_resized, image_max_projection)
         fov_x_y = self.settings.get('fov_x_y')
         zoom = self.zoom
+        shift_x_y.scale_x_y_drift_to_image(fov_x_y, zoom, image_max_projection.shape)
+        self.x_y_shift_history.append(shift_x_y)
+        return shift_x_y
 
-        # TODO: Left Off Here
-    def scale_x_y_drift_to_image(self):
+class ShiftXY:
 
-        self.settings.set('shiftxy_pixels', compute_drift(imgref, image))
-        shiftx, shifty = np.array(
-            [self.settings.get('shiftxy_pixels')['shiftx'],
-             self.settings.get('shiftxy_pixels')['shifty']]) / image.shape * fov_x_y / zoom
-        self.settings.set('shiftxy', (shiftx, shifty))
+    def __init__(self):
+        self.x = 0
+        self.y = 0
+
+    def compute_drift_x_y(self, img_ref, img):
+        h, w = img_ref.shape
+        fft_ref = np.fft.fft2(img_ref)
+        fft_img = np.fft.fft2(img)
+        center_y = h / 2
+        center_x = w / 2
+        prod = fft_ref * np.conj(fft_img)
+        cc = np.fft.ifft2(prod)
+        max_y, max_x = np.nonzero(np.fft.fftshift(cc) == np.max(cc))
+        shift_y = max_y - center_y
+        shift_x = max_x - center_x
+        # Checks to see if there is an ambiguity problem with FFT because of the
+        # periodic boundary in FFT (not sure why or if this is necessary but I'm
+        # keeping it around for now)
+        if np.abs(shift_y) > h / 2:
+            shift_y = shift_y - np.sign(shift_y) * h
+        if np.abs(shift_x) > h / 2:
+            shift_x = shift_x - np.sign(shift_x) * w
+        self.x = shift_x
+        self.y = shift_y
+
+    def scale_x_y_drift_to_image(self, fov_x_y, zoom, image_shape):
+        self.x, self.y = np.array([self.x,self.y]) / image_shape * fov_x_y / zoom
 
 class ReferenceImage(AcquiredImage):
 
