@@ -30,7 +30,7 @@ class StartPage(ttk.Frame):
         self.gui['button_load_test_ref_image'].grid(row=1, column=0, padx=10, pady=10, sticky='nw')
         self.gui['button_run_drift_correction'] = ttk.Button(self.gui['frame_left_buttons'],
                                                              text="Run Drift Correction",
-                                                             command=lambda: controller.run_xyz_drift_correction(
+                                                             command=lambda: controller.correct_xyz_drift(
                                                                  pos_id=1))
         self.gui['button_run_drift_correction'].grid(row=2, column=0, padx=10, pady=10, sticky='nw')
         self.gui['button_start'] = ttk.Button(self.gui['frame_left_buttons'], text="Start Imaging",

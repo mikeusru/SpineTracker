@@ -2,6 +2,8 @@ import os
 import pickle
 from collections.abc import Mapping
 from queue import Queue
+
+from scipy import ndimage
 from skimage import io, transform
 from app.MainGuiBuilder import MainGuiBuilder
 from app.inherited.inherited.inherited.SpineTrackerSettings import SettingsManager, CommandLineInterpreter
@@ -10,7 +12,7 @@ from io_communication.CommandWriter import CommandWriter
 from io_communication.file_listeners import InstructionThread
 from utilities.helper_functions import initialize_init_directory
 import numpy as np
-
+import copy
 from utilities.math_helpers import measure_focus, compute_drift
 
 
@@ -24,7 +26,7 @@ class SpineTracker:
         self.communication = self.initialize_communication()
         self.timeline = Timeline(self.settings)
         self.positions = Positions(self.settings)
-        self.current_session = Session(self.settings, self.gui)
+        self.current_session = Session(self.settings, self.gui, self.positions)
 
         # TODO: This should go somewhere else...
         initialize_init_directory(self.settings.get('init_directory'))
@@ -49,9 +51,10 @@ class SpineTracker:
 
 class Session:
 
-    def __init__(self, settings, gui):
+    def __init__(self, settings, gui, positions):
         self.settings = settings
         self.gui = gui
+        self.positions = positions
         self.timer_steps_queue = Queue()
         self.step_running = False
         self.current_pos_id = 1
@@ -82,12 +85,19 @@ class Session:
         if update_figure:
             self.gui.reset_figure_for_af_images()
 
-    def run_drift_correction(self, pos_id=None, ref_zoom=None):
+    def correct_xyz_drift(self, pos_id=None, ref_zoom=None):
         if pos_id is None:
             pos_id = self.current_pos_id
         # TODO: identify whether this is a zoomed out or regular reference image
         reference_max_projection = self.reference_image.get_max_projection()
-        self.current_image.get_x_y_z_drift(reference_max_projection)
+        self.current_image.calc_x_y_z_drift(reference_max_projection)
+        self.positions[pos_id]['x'] -= self.current_image.drift_x_y_z.x
+        self.positions[pos_id]['y'] += self.current_image.drift_x_y_z.y
+        self.positions[pos_id]['z'] += self.current_image.drift_x_y_z.z
+        self.gui.post_drift(self.current_image.drift_x_y_z)
+        # TODO: Left off here. send a signal to self.gui probably for this.
+        self.show_new_images(pos_id=pos_id)
+        self.backup_positions()
 
 
 # TODO: reference and macro images can inherit this class and overwrite some options
@@ -100,9 +110,8 @@ class AcquiredImage:
         self.is_reference = False
         self.zoom = 1
         self.pos_id = 1
-        self.focus_list = []
-        self.z_shift_history = []
-        self.x_y_shift_history = []
+        self.drift_x_y_z_history = []
+        self.drift_x_y_z = DriftXYZ()
 
     def load(self):
         image_file_path = self.settings.get('image_file_path')
@@ -110,52 +119,65 @@ class AcquiredImage:
         drift_chan = int(self.settings.get('drift_correction_channel'))
         image_stack = io.imread(image_file_path)
         image_stack = image_stack[np.arange(drift_chan - 1, len(image_stack), total_chan)]
-        self.image = image_stack
+        self.image_stack = image_stack
 
-    def get_x_y_z_drift(self, reference_max_projection):
+    def calc_x_y_z_drift(self, reference_max_projection):
         # shape = self.settings.get('image_stack')[0].shape
-        shift_z = self.calc_focus()
-        shift_x_y = self.calc_x_y_drift(reference_max_projection)
-        # shiftx, shifty = self.settings.get('shiftxy')
-        # shiftz = self.settings.get('shiftz')
-        # TODO: Left Off Here
-        self.positions[pos_id]['x'] -= shift_x_y.x
-        self.positions[pos_id]['y'] += shift_x_y.y
-        self.positions[pos_id]['z'] += shift_z
-        self.positions[pos_id]['xyzShift'] = self.positions[pos_id]['xyzShift'] + np.array([shiftx, shifty, shiftz])
-        self.frames[StartPage].gui['drift_label'].configure(
-            text='Detected drift of {0:.1f}µm in x and {1:.1f}µm in y'.format(shiftx.item(), shifty.item()))
-        self.show_new_images(pos_id=pos_id)
-        self.backup_positions()
+        self.drift_x_y_z.compute_drift_z(self.image_stack)
+        self.calc_x_y_drift(reference_max_projection)
+        # TODO This is probably a mutable object so it'll change in the list? gotta figure out a way to copy it
+        self.drift_x_y_z_history.append(self.drift_x_y_z.copy())
+
 
     def get_max_projection(self):
-        return np.max(self.image.copy(), axis=0)
-
-    def calc_focus(self):
-        focus_list = np.array([])
-        for image_slice in self.image_stack:
-            focus_list = np.append(focus_list, (measure_focus(image_slice)))
-        self.focus_list = focus_list
-        z_shift = focus_list.argmax().item() - np.floor(len(self.image_stack) / 2)
-        self.z_shift_history.append(z_shift)
-        return z_shift
+        return np.max(self.image_stack.copy(), axis=0)
 
     def calc_x_y_drift(self, reference_max_projection):
         image_max_projection = self.get_max_projection()
         reference_resized = transform.resize(reference_max_projection, image_max_projection.shape)
-        shift_x_y = ShiftXY()
-        shift_x_y.compute_drift_x_y(reference_resized, image_max_projection)
         fov_x_y = self.settings.get('fov_x_y')
-        zoom = self.zoom
-        shift_x_y.scale_x_y_drift_to_image(fov_x_y, zoom, image_max_projection.shape)
-        self.x_y_shift_history.append(shift_x_y)
-        return shift_x_y
+        self.drift_x_y_z.compute_drift_x_y(reference_resized, image_max_projection)
+        self.drift_x_y_z.scale_x_y_drift_to_image(fov_x_y, self.zoom, image_max_projection.shape)
 
-class ShiftXY:
+
+
+class DriftXYZ:
 
     def __init__(self):
         self.x = 0
         self.y = 0
+        self.z = 0
+        self.focus_list = np.array([])
+
+    def copy(self):
+        return copy.deepcopy(self)
+
+    def compute_drift_z(self, image_stack):
+        focus_list = []
+        for image_slice in image_stack:
+            focus_list.append(self.measure_focus(image_slice))
+        focus_list = np.array(focus_list)
+        drift_z = focus_list.argmax().item() - np.floor(len(image_stack) / 2)
+        self.z = drift_z
+        self.focus_list = focus_list
+
+    def measure_focus(self, image):
+        # Gaussian derivative (Geusebroek2000)
+        w_size = 15
+        nn = np.floor(w_size / 2)
+        sig = nn / 2.5
+        r = np.arange(-nn.astype(int), nn.astype(int) + 1)
+        x, y = np.meshgrid(r, r)
+        gg = np.exp(-(x ** 2 + y ** 2) / (2 * sig ** 2)) / (2 * np.pi * sig)
+        gx = -x * gg / (sig ** 2)
+        gx = gx / np.sum(gx, 1)
+        gy = -y * gg / (sig ** 2)
+        gy = gy / np.sum(gy)
+        ry = ndimage.convolve(image.astype(float), gx, mode='nearest')
+        rx = ndimage.convolve(image.astype(float), gy, mode='nearest')
+        f_m = rx ** 2 + ry ** 2
+        f_m = np.mean(f_m)
+        return f_m
 
     def compute_drift_x_y(self, img_ref, img):
         h, w = img_ref.shape
@@ -179,13 +201,15 @@ class ShiftXY:
         self.y = shift_y
 
     def scale_x_y_drift_to_image(self, fov_x_y, zoom, image_shape):
-        self.x, self.y = np.array([self.x,self.y]) / image_shape * fov_x_y / zoom
+        self.x, self.y = np.array([self.x, self.y]) / image_shape * fov_x_y / zoom
+
 
 class ReferenceImage(AcquiredImage):
 
     def __init__(self, settings):
         super(ReferenceImage, self).__init__(settings)
         self.is_reference = True
+
 
 class MacroImage(AcquiredImage):
 
@@ -373,7 +397,7 @@ class SpineTracker(InputOutputInterface):
     #     self.settings.set('imgref_imaging', imgref)
     #     self.settings.set('imgref_ref', imgref)
 
-    def run_xyz_drift_correction(self, pos_id=None, ref_zoom=None):
+    def correct_xyz_drift(self, pos_id=None, ref_zoom=None):
         # if self.settings.get('image_stack') not in self.acq:
         #     return
         if pos_id is None:
@@ -511,7 +535,7 @@ class SpineTracker(InputOutputInterface):
         if single_step is not None:
             self.step_running = False
         self.load_image()
-        self.run_xyz_drift_correction(pos_id, ref_zoom=ref_zoom)
+        self.correct_xyz_drift(pos_id, ref_zoom=ref_zoom)
 
     def uncage_new_position(self, step=None, pos_id=None):
         if pos_id is None:

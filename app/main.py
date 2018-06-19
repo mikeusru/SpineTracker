@@ -123,7 +123,7 @@ class SpineTracker(InputOutputInterface):
         self.settings.set('imgref_imaging', imgref)
         self.settings.set('imgref_ref', imgref)
 
-    def run_xyz_drift_correction(self, pos_id=None, ref_zoom=None):
+    def correct_xyz_drift(self, pos_id=None, ref_zoom=None):
         # if self.settings.get('image_stack') not in self.acq:
         #     return
         if pos_id is None:
@@ -260,7 +260,7 @@ class SpineTracker(InputOutputInterface):
         if single_step is not None:
             self.step_running = False
         self.load_image()
-        self.run_xyz_drift_correction(pos_id, ref_zoom=ref_zoom)
+        self.correct_xyz_drift(pos_id, ref_zoom=ref_zoom)
 
     def uncage_new_position(self, step=None, pos_id=None):
         if pos_id is None:

@@ -62,6 +62,12 @@ class MainGuiBuilder(tk.Tk):
         for i in range(subplot_length):
             axes.append(figure.add_subplot(1, subplot_length, i + 1))
 
+    def post_drift(self, drift_x_y_z):
+        self.frames[StartPage].gui['drift_label'].configure(
+            text='Detected drift of {0:.1f}µm in x, {1:.1f}µm in y, and {2:.1} in z'.format(drift_x_y_z.x,
+                                                                                            drift_x_y_z.y,
+                                                                                            drift_x_y_z.z))
+
 
 class SharedFigs(dict):
 

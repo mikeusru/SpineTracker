@@ -42,23 +42,6 @@ def none_to_blank(var):
 #     return y
 
 
-def measure_focus(image):
-    # Gaussian derivative (Geusebroek2000)
-    w_size = 15
-    nn = np.floor(w_size / 2)
-    sig = nn / 2.5
-    r = np.arange(-nn.astype(int), nn.astype(int) + 1)
-    x, y = np.meshgrid(r, r)
-    gg = np.exp(-(x ** 2 + y ** 2) / (2 * sig ** 2)) / (2 * np.pi * sig)
-    gx = -x * gg / (sig ** 2)
-    gx = gx / np.sum(gx, 1)
-    gy = -y * gg / (sig ** 2)
-    gy = gy / np.sum(gy)
-    ry = ndimage.convolve(image.astype(float), gx, mode='nearest')
-    rx = ndimage.convolve(image.astype(float), gy, mode='nearest')
-    f_m = rx ** 2 + ry ** 2
-    f_m = np.mean(f_m)
-    return f_m
 
 
 # output is directional shift [x,y] in pixels. based on Sugar et al (2014) paper
