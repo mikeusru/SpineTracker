@@ -30,7 +30,7 @@ class InputOutputInterface(PositionManagement):
         self.command_reader.wait_for_received_flag(flag)
 
     def grab_stack(self):
-        flag = 'grabOneStackDone'
+        flag = 'grab_one_stack_done'
         self.command_reader.received_flags[flag] = False
         self.command_writer.grab_one_stack()
         self.command_reader.wait_for_received_flag(flag)

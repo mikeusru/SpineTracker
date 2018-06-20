@@ -221,8 +221,8 @@ class SpineTracker(InputOutputInterface):
         single_step['pos_id'] = pos_id
         self.timer_steps_queue.put(single_step)
 
-    def run_step_from_queue(self):
-        while self.imagingActive:
+    def run_step_from_queue_when_appropriate(self):
+        while self.imaging_active:
             # update() function on the GUI is necessary to keep it active
             self.update()
             if self.step_running:  # make sure something isn't already running

@@ -51,38 +51,30 @@ class MainGuiBuilder(tk.Tk):
         fig_dpi = self.settings.get('fig_dpi')
         return SharedFigs(fig_dpi)
 
-    def reset_figure_for_af_images(self):
-        image = self.settings.get('image_stack')
-        subplot_length = len(image)
-        figure = self.frames[StartPage].gui['figure_af_images']
-        axes = self.frames[StartPage].gui['axes_af_images']
-        for axis in axes.copy():
-            axes.remove(axis)
-            figure.delaxes(axis)
-        for i in range(subplot_length):
-            axes.append(figure.add_subplot(1, subplot_length, i + 1))
+    def reset_figure_for_af_images(self, current_image):
+        self.frames[StartPage].clear_drift_image_axes()
+        self.frames[StartPage].create_drift_image_axes(current_image)
 
     def show_drift_numbers(self, drift_x_y_z):
         self.frames[StartPage].gui['drift_label'].configure(
-            text='Detected drift of {0:.1f}µm in x, {1:.1f}µm in y, and {2:.1} in z'.format(drift_x_y_z.x,
-                                                                                            drift_x_y_z.y,
-                                                                                            drift_x_y_z.z))
+            text='Detected drift of {0:.1f}µm in x, {1:.1f}µm in y, and {2:.1} in z'.format(drift_x_y_z.x_um,
+                                                                                            drift_x_y_z.y_um,
+                                                                                            drift_x_y_z.z_um))
 
     def show_drift_info(self, current_image, pos_id=None):
         self.show_drift_numbers(current_image.drift_x_y_z)
         self.show_drift_images(current_image)
-        self.update_drift_position_marker(current_image.drift_x_y_z, pos_id)
+        self.update_position_marker(pos_id)
+        self.frames[StartPage].update_canvases()
 
     def show_drift_images(self, current_image):
         self.frames[StartPage].display_image_stack(current_image)
         self.frames[StartPage].indicate_drift_on_images(current_image)
 
-
-    def update_drift_position_marker(self, drift_x_z_z, pos_id):
+    def update_position_marker(self, pos_id):
         if pos_id is not None:
             self.frames[PositionsPage].select_position_in_graph(pos_id)
-        self.frames[StartPage].gui['canvas_positions'].draw_idle()
-        self.frames[StartPage].gui['canvas_af'].draw_idle()
+
 
 class SharedFigs(dict):
 

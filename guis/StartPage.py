@@ -6,7 +6,7 @@ import matplotlib
 from matplotlib import patches
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
-
+import numpy as np
 from flow.PositionTimer import PositionTimer
 from utilities.helper_functions import fit_fig_to_canvas
 
@@ -19,6 +19,7 @@ class StartPage(ttk.Frame):
     def __init__(self, parent, controller):
         ttk.Frame.__init__(self, parent)
         self.controller = controller
+        self.settings = controller.settings
         self.bind("<Visibility>", self.on_visibility)
         self.gui = dict()
         self.gui['frame_left_buttons'] = ttk.Frame(self)
@@ -72,8 +73,7 @@ class StartPage(ttk.Frame):
                           self.controller.settings.get('fig_dpi'))
         fit_fig_to_canvas(self.controller.shared_figs['f_positions'], self.gui['canvas_positions'],
                           self.controller.settings.get('fig_dpi'))
-        for key in ['canvas_af', 'canvas_timeline', 'canvas_positions']:
-            self.gui[key].draw_idle()
+        self.update_canvases()
 
     def start_imaging(self):
         # get scan angle conversion properties
@@ -91,15 +91,15 @@ class StartPage(ttk.Frame):
             self.posTimers[posID] = PositionTimer(self.controller, individual_steps[posID],
                                                   self.controller.add_step_to_queue, posID)
         # start imaging
-        self.controller.imagingActive = True
-        self.controller.queRun = threading.Thread(target=self.controller.run_step_from_queue)
+        self.controller.imaging_active = True
+        self.controller.queRun = threading.Thread(target=self.controller.run_step_from_queue_when_appropriate)
         self.controller.queRun.daemon = True
         self.controller.queRun.start()
 
     def stop_imaging(self):
         for posID in self.posTimers:
             self.posTimers[posID].stop()
-        self.controller.imagingActive = False
+        self.controller.imaging_active = False
 
     def display_image_stack(self, current_image):
         image_stack = current_image.image_stack
@@ -112,14 +112,33 @@ class StartPage(ttk.Frame):
             a[count].axis('off')
             count += 1
 
-    def indicate_drift_on_images(self, image_stack):
+    def indicate_drift_on_images(self, current_image):
         # show best focused image
-        max_ind = self.settings.get('focus_list').argmax().item()
-        siz = image_stack[0].shape
+        max_ind = current_image.drift_x_y_z.focus_list.argmax().item()
+        siz = current_image.image_stack[0].shape
         rect = patches.Rectangle((0, 0), siz[0], siz[1], fill=False, linewidth=5, edgecolor='r')
+        a = self.gui['axes_af_images']
         a[max_ind].add_patch(rect)
         # add arrow to show shift in x,y
         center = np.array([siz[0] / 2, siz[1] / 2])
-        shiftx, shifty = self.settings.get('shiftxy_pixels')['shiftx'], self.settings.get('shiftxy_pixels')['shifty']
-        arrow = patches.Arrow(center[1] - shiftx, center[0] - shifty, shiftx, shifty, width=10, color='r')
+        drift_x, drift_y = (current_image.drift_x_y_z.x_pixels, current_image.drift_x_y_z.y_pixels)
+        arrow = patches.Arrow(center[1] - drift_x, center[0] - drift_y, drift_x, drift_y, width=10, color='r')
         a[max_ind].add_patch(arrow)
+
+    def update_canvases(self):
+        for key in ['canvas_af', 'canvas_timeline', 'canvas_positions']:
+            self.gui[key].draw_idle()
+
+    def clear_drift_image_axes(self):
+        figure = self.gui['figure_af_images']
+        axes = self.gui['axes_af_images']
+        for axis in axes.copy():
+            axes.remove(axis)
+            figure.delaxes(axis)
+
+    def create_drift_image_axes(self, current_image):
+        subplot_length = len(current_image.image_stack)
+        figure = self.gui['figure_af_images']
+        axes = self.gui['axes_af_images']
+        for i in range(subplot_length):
+            axes.append(figure.add_subplot(1, subplot_length, i + 1))

@@ -73,7 +73,7 @@ class CommandReader:
             # commands need to be separated by commas, not spaces, otherwise file paths will cause problems
             check_num_args(args, 1, 1)
             self.settings.set('image_file_path', args[0])
-            self.received_flags['grabOneStackDone'] = True
+            self.received_flags['grab_one_stack_done'] = True
         elif command == 'currentposition':
             check_num_args(args, 3, 3)
             x, y, z = [float(args[xyz]) for xyz in [0, 1, 2]]

@@ -344,7 +344,7 @@ class TimelineStepsFrame(ttk.Frame):
     def __init__(self, parent, controller):
         ttk.Frame.__init__(self, parent)
         self.controller = controller
-
+        self.parent = parent
         # Gui Elements
         self.gui = self.define_gui_elements()
 
@@ -404,8 +404,7 @@ class TimelineStepsFrame(ttk.Frame):
                                           font=self.controller.settings.get('large_font'))
         gui['stagger_label2'].grid(row=0, column=2, sticky='nw', padx=0, pady=10)
 
-        gui['add_step_button'] = ttk.Button(self, text="Add Step",
-                                            command=lambda: self.add_step_callback(self.controller))
+        gui['add_step_button'] = ttk.Button(self, text="Add Step", command=self.add_step_callback)
         gui['add_step_button'].grid(row=3, column=0, padx=10, pady=10, sticky='wn')
         gui['place_holder_frame'] = gui['place_holder_frame']
         return gui
@@ -420,7 +419,8 @@ class TimelineStepsFrame(ttk.Frame):
         exclusive = settings.get('exclusive')
         timeline_step = TimelineStep(step_name=step_name, imaging_or_uncaging=imaging_or_uncaging,
                                      exclusive=exclusive, period=period, duration=duration, index=ind)
-        cont.add_timeline_step(timeline_step)
+        self.controller.add_timeline_step(timeline_step)
+        self.parent.draw_timeline_steps_general()
         # reset values
         settings.set('step_name', '')
         settings.set('period', '')
