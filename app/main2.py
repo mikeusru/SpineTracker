@@ -94,9 +94,7 @@ class Session:
         self.positions[pos_id]['x'] -= self.current_image.drift_x_y_z.x
         self.positions[pos_id]['y'] += self.current_image.drift_x_y_z.y
         self.positions[pos_id]['z'] += self.current_image.drift_x_y_z.z
-        self.gui.post_drift(self.current_image.drift_x_y_z)
-        # TODO: Left off here. send a signal to self.gui probably for this.
-        self.show_new_images(pos_id=pos_id)
+        self.gui.show_drift_info(image_stack=self.current_image, pos_id=pos_id)
         self.backup_positions()
 
 
@@ -128,7 +126,6 @@ class AcquiredImage:
         # TODO This is probably a mutable object so it'll change in the list? gotta figure out a way to copy it
         self.drift_x_y_z_history.append(self.drift_x_y_z.copy())
 
-
     def get_max_projection(self):
         return np.max(self.image_stack.copy(), axis=0)
 
@@ -138,7 +135,6 @@ class AcquiredImage:
         fov_x_y = self.settings.get('fov_x_y')
         self.drift_x_y_z.compute_drift_x_y(reference_resized, image_max_projection)
         self.drift_x_y_z.scale_x_y_drift_to_image(fov_x_y, self.zoom, image_max_projection.shape)
-
 
 
 class DriftXYZ:
@@ -397,29 +393,29 @@ class SpineTracker(InputOutputInterface):
     #     self.settings.set('imgref_imaging', imgref)
     #     self.settings.set('imgref_ref', imgref)
 
-    def correct_xyz_drift(self, pos_id=None, ref_zoom=None):
-        # if self.settings.get('image_stack') not in self.acq:
-        #     return
-        if pos_id is None:
-            pos_id = self.current_pos_id
-        shape = self.settings.get('image_stack')[0].shape
-        self.settings.set('imgref_imaging', transform.resize(self.positions[pos_id]['ref_img'], shape))
-        self.settings.set('imgref_ref', transform.resize(self.positions[pos_id]['ref_img_zoomout'], shape))
-        self.calc_focus()
-        self.calc_drift(ref_zoom)
-        # x, y, z = [self.positions[pos_id][key] for key in ['x', 'y', 'z']]
-        shiftx, shifty = self.settings.get('shiftxy')
-        shiftz = self.settings.get('shiftz')
-        self.positions[pos_id]['x'] -= shiftx
-        self.positions[pos_id]['y'] += shifty
-        self.positions[pos_id]['z'] += shiftz
-        self.positions[pos_id]['xyzShift'] = self.positions[pos_id]['xyzShift'] + np.array([shiftx, shifty, shiftz])
-        self.frames[StartPage].gui['drift_label'].configure(
-            text='Detected drift of {0:.1f}µm in x and {1:.1f}µm in y'.format(shiftx.item(), shifty.item()))
-        self.show_new_images(pos_id=pos_id)
-        self.backup_positions()
+    # def correct_xyz_drift(self, pos_id=None, ref_zoom=None):
+    #     # if self.settings.get('image_stack') not in self.acq:
+    #     #     return
+    #     if pos_id is None:
+    #         pos_id = self.current_pos_id
+    #     shape = self.settings.get('image_stack')[0].shape
+    #     self.settings.set('imgref_imaging', transform.resize(self.positions[pos_id]['ref_img'], shape))
+    #     self.settings.set('imgref_ref', transform.resize(self.positions[pos_id]['ref_img_zoomout'], shape))
+    #     self.calc_focus()
+    #     self.calc_drift(ref_zoom)
+    #     # x, y, z = [self.positions[pos_id][key] for key in ['x', 'y', 'z']]
+    #     shiftx, shifty = self.settings.get('shiftxy')
+    #     shiftz = self.settings.get('shiftz')
+    #     self.positions[pos_id]['x'] -= shiftx
+    #     self.positions[pos_id]['y'] += shifty
+    #     self.positions[pos_id]['z'] += shiftz
+    #     self.positions[pos_id]['xyzShift'] = self.positions[pos_id]['xyzShift'] + np.array([shiftx, shifty, shiftz])
+    #     self.frames[StartPage].gui['drift_label'].configure(
+    #         text='Detected drift of {0:.1f}µm in x and {1:.1f}µm in y'.format(shiftx.item(), shifty.item()))
+    #     self.show_acquired_stack(pos_id=pos_id)
+    #     self.backup_positions()
 
-    def show_new_images(self, pos_id=None):
+    def show_acquired_stack(self, pos_id=None):
         image = self.settings.get('image_stack')
         i = 0
         a = self.frames[StartPage].gui['axes_af_images']

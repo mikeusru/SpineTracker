@@ -142,10 +142,10 @@ class SpineTracker(InputOutputInterface):
         self.positions[pos_id]['xyzShift'] = self.positions[pos_id]['xyzShift'] + np.array([shiftx, shifty, shiftz])
         self.frames[StartPage].gui['drift_label'].configure(
             text='Detected drift of {0:.1f}µm in x and {1:.1f}µm in y'.format(shiftx.item(), shifty.item()))
-        self.show_new_images(pos_id=pos_id)
+        self.show_acquired_stack(pos_id=pos_id)
         self.backup_positions()
 
-    def show_new_images(self, pos_id=None):
+    def show_acquired_stack(self, pos_id=None):
         image = self.settings.get('image_stack')
         i = 0
         a = self.frames[StartPage].gui['axes_af_images']

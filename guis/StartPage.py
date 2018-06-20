@@ -3,6 +3,7 @@ import tkinter as tk
 from tkinter import ttk
 
 import matplotlib
+from matplotlib import patches
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 
@@ -99,3 +100,26 @@ class StartPage(ttk.Frame):
         for posID in self.posTimers:
             self.posTimers[posID].stop()
         self.controller.imagingActive = False
+
+    def display_image_stack(self, current_image):
+        image_stack = current_image.image_stack
+        a = self.gui['axes_af_images']
+        # show images
+        for count, image in enumerate(image_stack):
+            a[count].clear()
+            a[count].imshow(image)
+            a[count].axis('equal')
+            a[count].axis('off')
+            count += 1
+
+    def indicate_drift_on_images(self, image_stack):
+        # show best focused image
+        max_ind = self.settings.get('focus_list').argmax().item()
+        siz = image_stack[0].shape
+        rect = patches.Rectangle((0, 0), siz[0], siz[1], fill=False, linewidth=5, edgecolor='r')
+        a[max_ind].add_patch(rect)
+        # add arrow to show shift in x,y
+        center = np.array([siz[0] / 2, siz[1] / 2])
+        shiftx, shifty = self.settings.get('shiftxy_pixels')['shiftx'], self.settings.get('shiftxy_pixels')['shifty']
+        arrow = patches.Arrow(center[1] - shiftx, center[0] - shifty, shiftx, shifty, width=10, color='r')
+        a[max_ind].add_patch(arrow)
