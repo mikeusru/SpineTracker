@@ -60,7 +60,6 @@ class Session:
         self.step_running = False
         self.imaging_active = False
         self.current_pos_id = 1
-        # TODO: Sequester these into a separate images dict or something
         self.current_image = AcquiredImage(settings)
         self.reference_image = ReferenceImage(settings)
         self.reference_image_zoomed_out = ReferenceImage(settings)
@@ -75,8 +74,7 @@ class Session:
         with open(file_path, "a") as file:
             file.write(line + '\n')
 
-    # TODO : Switch the update_figure thing to a higher function
-    def load_image(self, update_figure=True, image_type='standard'):
+    def load_image(self, image_type='standard'):
         if image_type == 'standard':
             self.current_image.zoom = self.settings.get('imaging_zoom')
             self.current_image.load()
@@ -89,7 +87,7 @@ class Session:
             self.reference_image_zoomed_out.load()
         elif image_type == 'macro':
             self.macro_image.load()
-        if update_figure:
+        if not image_type == 'macro':
             self.gui.reset_figure_for_af_images()
 
     def correct_xyz_drift(self, pos_id=None, zoom=None):
