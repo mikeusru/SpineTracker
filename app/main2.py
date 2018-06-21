@@ -4,8 +4,8 @@ from queue import Queue
 
 from scipy import ndimage
 from skimage import io, transform
-from app.MainGuiBuilder import MainGuiBuilder
-from app.inherited.inherited.inherited.SpineTrackerSettings import SettingsManager, CommandLineInterpreter
+from app.guis import MainGuiBuilder
+from app.settings import SettingsManager, CommandLineInterpreter
 from guis import TimelinePage
 from io_communication.CommandReader import CommandReader
 from io_communication.CommandWriter import CommandWriter

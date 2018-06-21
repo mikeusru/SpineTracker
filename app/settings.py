@@ -9,16 +9,7 @@ from app.inherited.inherited.inherited.inherited.SpineTrackerContainer import Sp
 from utilities.math_helpers import blank_to_none, none_to_blank
 
 
-class Initializer(SpineTrackerContainer):
-
-    def __init__(self, *args, **kwargs):
-        super(Initializer, self).__init__()
-        self.settings = SettingsManager(self)
-        self.settings.initialize_settings()
-        self.command_line_interpreter = CommandLineInterpreter(self.settings, *args)
-        self.command_line_interpreter.interpret()
-
-
+# TODO: Check if container has to be the giu for creating gui vars, or if it can just be the main app
 class SettingsManager:
 
     def __init__(self, container):

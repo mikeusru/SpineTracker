@@ -4,7 +4,7 @@ import pickle
 
 import numpy as np
 
-from app.inherited.inherited.inherited.SpineTrackerSettings import Initializer
+from app.inherited.inherited.inherited.Settings import Initializer
 from guis.PositionsPage import PositionsPage
 
 
