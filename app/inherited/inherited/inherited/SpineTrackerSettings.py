@@ -110,7 +110,7 @@ class SettingsDTO(dict):
 
         # Settings set in guis
         self._create_gui_variable('stagger', tk.StringVar, True, 5,
-                                  callback=self.container.stagger_string_var_callback, dtype=np.int)
+                                  callback=self.container.update_timeline_chart, dtype=np.int)
         self._create_gui_variable('drift_correction_channel', tk.StringVar, True, 1, dtype=np.int)
         self._create_gui_variable('total_channels', tk.StringVar, True, 2, dtype=np.int)
         self._create_gui_variable('imaging_zoom', tk.StringVar, True, 30, dtype=np.int)
@@ -126,7 +126,7 @@ class SettingsDTO(dict):
         self._create_gui_variable('macro_z_slices', tk.StringVar, True, 10, dtype=np.int)
         self._create_gui_variable('uncaging_roi_toggle', tk.BooleanVar, True, False)
         self._create_gui_variable('image_or_uncage', tk.StringVar, False, 'Image',
-                                  callback=self.container.image_or_uncage_string_var_callback)
+                                  callback=self.container.switch_between_image_and_uncage_guis)
         self._create_gui_variable('exclusive', tk.BooleanVar, False, False)
         self._create_gui_variable('duration', tk.StringVar, False, 5, dtype=np.int)
         self._create_gui_variable('period', tk.StringVar, False, 60, dtype=np.int)

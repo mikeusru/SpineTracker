@@ -24,7 +24,7 @@ class InputOutputInterface(PositionManagement):
         else:
             x_motor = x
             y_motor = y
-        flag = 'stageMoveDone'
+        flag = 'stage_move_done'
         self.command_reader.received_flags[flag] = False
         self.command_writer.move_stage(x_motor, y_motor, z)
         self.command_reader.wait_for_received_flag(flag)
@@ -36,14 +36,14 @@ class InputOutputInterface(PositionManagement):
         self.command_reader.wait_for_received_flag(flag)
 
     def uncage(self, roi_x, roi_y):
-        flag = 'uncagingDone'
+        flag = 'uncaging_done'
         self.command_reader.received_flags[flag] = False
         self.command_writer.do_uncaging(roi_x, roi_y)
         self.command_reader.wait_for_received_flag(flag)
 
     def set_scan_shift(self, x, y):
         scan_shift_fast, scan_shift_slow = self.xy_to_scan_angle(x, y)
-        flag = 'scanAngleXY'
+        flag = 'scan_angle_x_y'
         self.command_reader.received_flags[flag] = False
         self.command_writer.set_scan_shift(scan_shift_fast, scan_shift_slow)
         self.command_reader.wait_for_received_flag(flag)

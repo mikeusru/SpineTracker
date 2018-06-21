@@ -282,11 +282,11 @@ class SpineTracker(InputOutputInterface):
             print(string)
             self.log_file.write(string)
 
-    def stagger_string_var_callback(self, *args):
+    def update_timeline_chart(self, *args):
         # Callback to the StringVar
         self.frames[TimelinePage].create_timeline_chart()
 
-    def image_or_uncage_string_var_callback(self, *args):
+    def switch_between_image_and_uncage_guis(self, *args):
         # Callback to the StringVar
         self.frames[TimelinePage].gui['tFrame'].image_in_from_frame()
 

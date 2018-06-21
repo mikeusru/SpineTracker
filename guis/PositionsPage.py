@@ -29,7 +29,7 @@ class PositionsPage(ttk.Frame):
         # GUIs
         self.gui['popup'] = tk.Menu(self, tearoff=0)
         self.gui['popup'].add_command(label="Move To Position",
-                                      command=lambda: self.controller.move_stage(pos_id=self.selected_pos_id))
+                                      command=lambda: self.controller.move_to_pos_id(pos_id=self.selected_pos_id))
         self.gui['popup'].add_command(label="Update XYZ",
                                       command=lambda: self.controller.update_position(self.selected_pos_id))
         self.gui['popup'].add_command(label="Delete",

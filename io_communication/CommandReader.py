@@ -68,7 +68,7 @@ class CommandReader:
             x, y, z = [float(args[xyz]) for xyz in [0, 1, 2]]
             if self.settings.get('verbose'):
                 print('\nStage Moved to x= {0} , y = {1}, z = {2}\n'.format(x, y, z))
-            self.received_flags['stageMoveDone'] = True
+            self.received_flags['stage_move_done'] = True
         elif command == 'grabonestackdone':
             # commands need to be separated by commas, not spaces, otherwise file paths will cause problems
             check_num_args(args, 1, 1)
@@ -81,7 +81,7 @@ class CommandReader:
             self.received_flags['currentPosition'] = True
         elif command == 'uncagingdone':
             check_num_args(args, 0, 0)
-            self.received_flags['uncagingDone'] = True
+            self.received_flags['uncaging_done'] = True
         elif command == 'fovXY_um':
             check_num_args(args, 2, 2)
             fov_x_y = np.array([float(args[XY]) for XY in [0, 1]])
@@ -94,7 +94,7 @@ class CommandReader:
         elif command == 'scananglexy':
             check_num_args(args, 2, 2)
             self.settings.set('current_scan_angle_x_y', np.array([float(args[0]), float(args[1])]))
-            self.received_flags['scanAngleXY'] = True
+            self.received_flags['scan_angle_x_y'] = True
         elif command == 'scananglemultiplier':
             check_num_args(args, 2, 2)
             self.settings.set('scan_angle_multiplier',np.array([float(args[0]), float(args[1])]))

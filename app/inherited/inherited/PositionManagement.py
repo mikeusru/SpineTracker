@@ -32,7 +32,7 @@ class PositionManagement(Initializer):
             self.command_writer.get_current_position()
             self.command_reader.wait_for_received_flag(flag)
             x, y, z = self.settings.get('current_coordinates')
-            flag = 'scanAngleXY'
+            flag = 'scan_angle_x_y'
             self.command_reader.received_flags[flag] = False
             self.command_writer.get_scan_angle_xy()
             self.command_reader.wait_for_received_flag(flag)
