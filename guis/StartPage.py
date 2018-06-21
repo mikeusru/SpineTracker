@@ -86,7 +86,7 @@ class StartPage(ttk.Frame):
         self.controller.start_expt_log()
         with self.controller.timer_steps_queue.mutex:
             self.controller.timer_steps_queue.queue.clear()
-        individual_steps = self.controller.timeline_steps_individual
+        individual_steps = self.controller.timeline.get_steps_for_queue()
         for posID in individual_steps:
             self.posTimers[posID] = PositionTimer(self.controller, individual_steps[posID],
                                                   self.controller.add_step_to_queue, posID)

@@ -3,7 +3,7 @@ from tkinter import ttk
 import matplotlib
 import numpy as np
 
-from flow.TimelineStep import TimelineStep, MiniTimelineStep
+from flow.TimelineStep import TimelineStepBlock, TimelineStepsMini
 from utilities.helper_functions import fit_fig_to_canvas
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib import patches
@@ -89,7 +89,7 @@ class TimelinePage(ttk.Frame):
                 self.stagger = self.controller.settings.get('stagger')
                 self.individual_position_timeline_dict = {}
 
-            def is_defined_steps(self):
+            def check_if_steps_defined(self):
                 if len(self.timeline_steps_general) == 0:
                     return False
                 else:
@@ -103,7 +103,7 @@ class TimelinePage(ttk.Frame):
                     pos_id_list = [pos_id for pos_id in positions]
                 return pos_id_list
 
-            def construct_individual_timelines(self):
+            def populate_individual_timelines(self):
                 for pos_count, pos_id in enumerate(self.get_pos_id_list(), 1):
                     self.individual_position_timeline_dict[pos_id] = IndividualPositionTimeline(
                         pos_id, pos_count, self.stagger)
@@ -208,7 +208,7 @@ class TimelinePage(ttk.Frame):
                 period = step['period']
                 start_end_time_list = self.calc_start_end_time(period, duration, start_time)
                 timeline_step_individual = [
-                    MiniTimelineStep(step, start_end_time['start'], start_end_time['end'], self.pos_id) for
+                    TimelineStepsMini(step, start_end_time['start'], start_end_time['end'], self.pos_id) for
                     start_end_time in start_end_time_list]
                 self.timeline_step_individual_list += timeline_step_individual
                 self.total_time += duration
@@ -247,8 +247,8 @@ class TimelinePage(ttk.Frame):
                     return False
 
         self.timeline_chart = TimelineChart(self.controller)
-        if self.timeline_chart.is_defined_steps():
-            self.timeline_chart.construct_individual_timelines()
+        if self.timeline_chart.check_if_steps_defined():
+            self.timeline_chart.populate_individual_timelines()
             self.timeline_chart.shift_individual_timelines_relative_to_each_other()
             self.controller.timeline_steps_individual = self.timeline_chart.get_mini_steps_by_pos()
         self.display_timeline_chart()
@@ -417,7 +417,7 @@ class TimelineStepsFrame(ttk.Frame):
         duration = settings.get('duration')
         imaging_or_uncaging = settings.get('image_or_uncage')
         exclusive = settings.get('exclusive')
-        timeline_step = TimelineStep(step_name=step_name, imaging_or_uncaging=imaging_or_uncaging,
+        timeline_step = TimelineStepBlock(step_name=step_name, imaging_or_uncaging=imaging_or_uncaging,
                                      exclusive=exclusive, period=period, duration=duration, index=ind)
         self.controller.add_timeline_step(timeline_step)
         self.parent.draw_timeline_steps_general()

@@ -1,9 +1,9 @@
-class TimelineStep(dict):
+class TimelineStepBlock(dict):
     """Whole Timeline Steps"""
 
     def __init__(self, step_name, imaging_or_uncaging, exclusive, period=60, duration=1,
                  start_time=None, end_time=None, index=None, pos_id=None):
-        super(TimelineStep, self).__init__()
+        super(TimelineStepBlock, self).__init__()
         if duration is None:
             duration = 1
         if period is None:
@@ -34,7 +34,7 @@ class TimelineStep(dict):
         self['end_time'] += time_shift
 
 
-class MiniTimelineStep(TimelineStep):
+class TimelineStepsMini(TimelineStepBlock):
     """Individual steps on the timeline chart"""
 
     def __init__(self, timeline_step, start_time, end_time, pos_id):

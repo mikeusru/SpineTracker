@@ -20,7 +20,7 @@ from matplotlib.figure import Figure
 from skimage import io, transform
 
 from app.inherited.InputOutputInterface import InputOutputInterface
-from flow.TimelineStep import TimelineStep
+from flow.TimelineStep import TimelineStepBlock
 from guis.MacroWindow import MacroWindow
 from guis.PositionsPage import PositionsPage
 from guis.SettingsPage import SettingsPage
@@ -217,7 +217,7 @@ class SpineTracker(InputOutputInterface):
         self.frames[TimelinePage].draw_timeline_steps_general()
 
     def add_step_to_queue(self, step, pos_id):
-        single_step = copy.copy(step)  # .copy() returns dict, not TimelineStep object
+        single_step = copy.copy(step)  # .copy() returns dict, not TimelineStepBlock object
         single_step['pos_id'] = pos_id
         self.timer_steps_queue.put(single_step)
 
