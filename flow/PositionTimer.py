@@ -2,11 +2,12 @@ import threading
 
 
 class PositionTimer(object):
-    def __init__(self, controller, steps, fun, *args, **kwargs):
-        self.controller = controller
+    def __init__(self, session, steps, fun, pos_id, *args, **kwargs):
+        self.session = session
         self._timer = None
         self.steps = steps
         self.function = fun
+        self.pos_id = pos_id
         self.args = args
         self.kwargs = kwargs
         self.is_running = False
@@ -21,7 +22,7 @@ class PositionTimer(object):
     def _run(self, step_count):
         self.is_running = False
         self.start()  # starts next timer countdown before running function
-        self.function(self.steps[step_count], *self.args, **self.kwargs)
+        self.function(self.steps[step_count], self.pos_id, *self.args, **self.kwargs)
 
     def start(self):
         if not self.is_running:
@@ -36,7 +37,7 @@ class PositionTimer(object):
             self.stepCount += 1
             # for now, interval is store in minutes. probably a good idea to change it to seconds.
             interval = interval * 60
-            self.controller.print_status('\nTimer Interval = {0}'.format(interval))
+            self.session.print_status('\nTimer Interval = {0}'.format(interval))
             self._timer = threading.Timer(interval, self._run, args=[step_count])
             self._timer.start()
             self.is_running = True

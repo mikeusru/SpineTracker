@@ -11,7 +11,7 @@ import datetime
 
 print_lock = threading.Lock()
 
-def hello(step,posID):
+def hello(step,pos_id):
     print_lock.acquire()
     time.sleep(.0001)
     if step['EX']:
@@ -19,7 +19,7 @@ def hello(step,posID):
     else:
         ex = 'Non-Exclusive'
     
-    print('{0} {1} Timer {2} running at {3}s '.format(ex, step['imaging_or_uncaging'], posID, datetime.datetime.now().second))
+    print('{0} {1} Timer {2} running at {3}s '.format(ex, step['imaging_or_uncaging'], pos_id, datetime.datetime.now().second))
     time.sleep(.2)
 #    print(name + ' has aquired the lock')
 #    print('oh herro')
@@ -81,13 +81,13 @@ class PositionTimer(object):
         self._timer.cancel()
         self.is_running = False
           
-posTimers = {}
+position_timers = {}
 for key in individualSteps:
     timerName = 'posTimer' + str(key)
-    posTimers[key] = PositionTimer(individualSteps[key],hello,key)
+    position_timers[key] = PositionTimer(individualSteps[key],hello,key)
     
 try:
     time.sleep(20)
 finally:
-    for key in posTimers:
-        posTimers[key].stop()
+    for key in position_timers:
+        position_timers[key].stop()

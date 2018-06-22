@@ -106,7 +106,7 @@ class PositionsPage(ttk.Frame):
         for i in range(2):
             self.gui['ref_images_axes'].append(self.gui['ref_images_fig'].add_subplot(1, 2, i + 1))
         # relative positions figure
-        self.gui['f_positions'] = self.controller.shared_figs['f_positions']
+        self.gui['f_positions'] = self.session.gui.shared_figs['f_positions']
         self.gui['canvas_positions'] = FigureCanvasTkAgg(self.gui['f_positions'], self.gui['frame_for_graphics'])
         self.gui['canvas_positions'].show()
         self.gui['canvas_positions'].get_tk_widget().config(borderwidth=1, background='gray', highlightcolor='gray',

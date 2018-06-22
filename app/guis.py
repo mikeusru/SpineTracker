@@ -14,8 +14,9 @@ from tkinter import ttk
 
 class MainGuiBuilder(tk.Tk):
 
-    def __init__(self, settings):
-        self.settings = settings
+    def __init__(self, session):
+        self.settings = session.settings
+        self.session = session
         tk.Tk.__init__(self)
         tk.Tk.iconbitmap(self, default="../images/crabIco.ico")  # icon doesn't work
         tk.Tk.wm_title(self, "SpineTracker")
@@ -38,7 +39,7 @@ class MainGuiBuilder(tk.Tk):
     def build_frames(self):
         frames = {}
         for F in (StartPage, SettingsPage, PositionsPage, TimelinePage):
-            frame = F(self.container, self)
+            frame = F(self.container, self.session)
             frames[F] = frame
             self.container.add(frame, text=F.name)
         return frames

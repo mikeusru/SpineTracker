@@ -31,8 +31,8 @@ class TimelinePage(ttk.Frame):
         gui = dict()
         gui['tFrame'] = TimelineStepsFrame(self, self.controller)
         gui['tFrame'].grid(row=0, column=0, columnspan=1)
-        gui['timeline_figure'] = self.controller.shared_figs['timeline_figure']
-        gui['timeline_axis'] = self.controller.shared_figs['timeline_axis']
+        gui['timeline_figure'] = self.session.gui.shared_figs['timeline_figure']
+        gui['timeline_axis'] = self.session.gui.shared_figs['timeline_axis']
         gui['canvas_timeline'] = FigureCanvasTkAgg(gui['timeline_figure'], self)
         gui['canvas_timeline'].get_tk_widget().config(borderwidth=1,
                                                       background='gray',

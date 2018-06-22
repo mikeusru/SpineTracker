@@ -1,5 +1,6 @@
 import os
 import pickle
+import threading
 from queue import Queue
 
 from scipy import ndimage
@@ -8,6 +9,7 @@ from skimage import io, transform
 from app.PositionsManager import PositionsManager
 from app.guis import MainGuiBuilder
 from app.settings import SettingsManager, CommandLineInterpreter
+from flow.PositionTimer import PositionTimer
 from guis import TimelinePage
 from io_communication.CommandReader import CommandReader
 from io_communication.CommandWriter import CommandWriter
@@ -25,19 +27,18 @@ class SpineTracker:
         self.args = args
         self.settings = self.initialize_settings()
         self.command_line_interpreter = self.initialize_command_line_interpreter()
-        self.gui = self.initialize_guis()
         self.communication = self.initialize_communication()
         self.positions = self.initialize_positions()
         self.timeline = Timeline(self.settings, self.positions)
         self.session = Session(self.settings,
-                               self.gui,
                                self.positions,
                                self.communication,
                                self.timeline)
-
+        self.gui = self.initialize_guis()
         # TODO: This should go somewhere else...
         initialize_init_directory(self.settings.get('init_directory'))
         self.log_file = open('log.txt', 'w')
+        self.gui.bind_session(self.session)
 
     def initialize_settings(self):
         settings = SettingsManager(self)
@@ -45,7 +46,7 @@ class SpineTracker:
         return settings
 
     def initialize_guis(self):
-        return MainGuiBuilder(self.settings)
+        return MainGuiBuilder(self.session)
 
     def initialize_command_line_interpreter(self):
         command_line_interpreter = CommandLineInterpreter(self.settings, self.args)
@@ -66,9 +67,9 @@ class SpineTracker:
 
 class Session:
 
-    def __init__(self, settings, gui, positions, communication, timeline):
+    def __init__(self, settings, positions, communication, timeline):
         self.settings = settings
-        self.gui = gui
+        self.gui = None
         self.positions = positions
         self.timeline = timeline
         self.communication = communication
@@ -80,6 +81,11 @@ class Session:
         self.ref_image = ReferenceImage(settings)
         self.ref_image_zoomed_out = ReferenceImage(settings)
         self.macro_image = MacroImage(settings)
+        self.position_timers = {}
+        self.queue_run = None
+
+    def bind_guis(self, gui):
+        self.gui = gui
 
     def start_expt_log(self):
         file_path = self.settings.get('experiment_log_file')
@@ -105,7 +111,7 @@ class Session:
             self.macro_image.load()
         else:
             pass
-        #TODO: Throw error if it's some other kind of image
+        # TODO: Throw error if it's some other kind of image
         if not image_type == 'macro':
             self.gui.reset_figure_for_af_images()
 
@@ -236,6 +242,26 @@ class Session:
     def switch_between_image_and_uncage_guis(self, *args):
         self.gui.frames[TimelinePage].gui['tFrame'].image_in_from_frame()
 
+    def start_imaging(self):
+        self.communication.get_scan_props()
+        self.communication.set_normal_imaging_conditions()
+        self.position_timers = {}
+        self.start_expt_log()
+        self.timer_steps_queue.clear_timers()
+        individual_steps = self.timeline.get_steps_for_queue()
+        for pos_id in individual_steps:
+            self.position_timers[pos_id] = PositionTimer(self, individual_steps[pos_id],
+                                                         self.add_step_to_queue, pos_id)
+        self.imaging_active = True
+        self.queue_run = threading.Thread(target=self.run_steps_from_queue_when_appropriate)
+        self.queue_run.daemon = True
+        self.queue_run.start()
+
+    def stop_imaging(self):
+        for pos_id in self.position_timers:
+            self.position_timers[pos_id].stop()
+        self.imaging_active = False
+
 
 class TimerStepsQueue(Queue):
 
@@ -263,6 +289,10 @@ class TimerStepsQueue(Queue):
         print('{0} {1} Timer {2} running at {3}:{4}:{5} '.format(ex, single_step['imaging_or_uncaging'], pos_id,
                                                                  dt.datetime.now().hour, dt.datetime.now().minute,
                                                                  dt.datetime.now().second))
+
+    def clear_timers(self):
+        with self.mutex:
+            self.queue.clear()
 
 
 class AcquiredImage:
@@ -525,7 +555,7 @@ class Communication:
         self.set_resolution(x_resolution, y_resolution)
         self.set_z_slice_num(z_slice_num)
 
-    #TODO: Coordinates should be in their own class, combining motor and scan angle together.
+    # TODO: Coordinates should be in their own class, combining motor and scan angle together.
     def get_current_position(self):
         flag = 'current_positions'
         self.command_reader.received_flags[flag] = False
