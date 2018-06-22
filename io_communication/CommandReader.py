@@ -77,8 +77,8 @@ class CommandReader:
         elif command == 'currentposition':
             check_num_args(args, 3, 3)
             x, y, z = [float(args[xyz]) for xyz in [0, 1, 2]]
-            self.settings.set('current_coordinates', [x, y, z])
-            self.received_flags['currentPosition'] = True
+            self.settings.set('current_motor_coordinates', [x, y, z])
+            self.received_flags['current_positions'] = True
         elif command == 'uncagingdone':
             check_num_args(args, 0, 0)
             self.received_flags['uncaging_done'] = True

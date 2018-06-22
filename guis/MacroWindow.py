@@ -93,7 +93,7 @@ class MacroWindow(tk.Toplevel):
             # TODO: open this image automatically when macro window is launched
             # get the motor coordinates
             self.controller.get_current_position()
-            x, y, z = self.controller.settings.get('current_coordinates')
+            x, y, z = self.controller.settings.get('current_motor_coordinates')
             self.controller.settings.set('center_xyz', np.array((x, y, z), dtype=np.float))
 
         self.multi_slice_viewer()

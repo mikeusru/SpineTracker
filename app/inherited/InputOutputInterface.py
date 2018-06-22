@@ -1,11 +1,11 @@
 import numpy as np
 
-from app.inherited.inherited.PositionManagement import PositionManagement
+from app.PositionsManager import PositionsManager
 from io_communication.CommandReader import CommandReader
 from io_communication.CommandWriter import CommandWriter
 
 
-class InputOutputInterface(PositionManagement):
+class InputOutputInterface(PositionsManager):
 
     def __init__(self, *args, **kwargs):
         super(InputOutputInterface, self).__init__(*args, **kwargs)

@@ -4,6 +4,8 @@ from queue import Queue
 
 from scipy import ndimage
 from skimage import io, transform
+
+from app.PositionsManager import PositionsManager
 from app.guis import MainGuiBuilder
 from app.settings import SettingsManager, CommandLineInterpreter
 from guis import TimelinePage
@@ -25,9 +27,13 @@ class SpineTracker:
         self.command_line_interpreter = self.initialize_command_line_interpreter()
         self.gui = self.initialize_guis()
         self.communication = self.initialize_communication()
-        self.positions = Positions(self.settings)
+        self.positions = self.initialize_positions()
         self.timeline = Timeline(self.settings, self.positions)
-        self.current_session = Session(self.settings, self.gui, self.positions, self.communication)
+        self.session = Session(self.settings,
+                               self.gui,
+                               self.positions,
+                               self.communication,
+                               self.timeline)
 
         # TODO: This should go somewhere else...
         initialize_init_directory(self.settings.get('init_directory'))
@@ -49,16 +55,22 @@ class SpineTracker:
     def initialize_communication(self):
         return Communication(self.settings)
 
+    def initialize_positions(self):
+        positions = PositionsManager(self.settings)
+        positions.load_previous_positions()
+        return positions
+
     def mainloop(self):
         self.gui.mainloop()
 
 
 class Session:
 
-    def __init__(self, settings, gui, positions, communication):
+    def __init__(self, settings, gui, positions, communication, timeline):
         self.settings = settings
         self.gui = gui
         self.positions = positions
+        self.timeline = timeline
         self.communication = communication
         self.timer_steps_queue = TimerStepsQueue()
         self.step_running = False
@@ -91,6 +103,9 @@ class Session:
             self.reference_image_zoomed_out.load()
         elif image_type == 'macro':
             self.macro_image.load()
+        else:
+            pass
+        #TODO: Throw error if it's some other kind of image
         if not image_type == 'macro':
             self.gui.reset_figure_for_af_images()
 
@@ -173,6 +188,16 @@ class Session:
         self.write_to_log('Position {0}: Uncaging at {1}:{2}:{3}'.format(pos_id, dt.datetime.now().hour,
                                                                          dt.datetime.now().minute,
                                                                          dt.datetime.now().second))
+
+    def create_new_position(self):
+        self.communication.set_reference_imaging_conditions()
+        self.communication.grab_stack()
+        self.load_image('reference_zoomed_out')
+        self.communication.set_normal_imaging_conditions()
+        self.communication.grab_stack()
+        self.load_image('reference')
+        self.communication.get_current_position()
+        self.positions.create_new_pos(self.reference_image, self.reference_image_zoomed_out)
 
     def move_to_pos_id(self, pos_id):
         x, y, z = [self.positions[pos_id][key] for key in ['x', 'y', 'z']]
@@ -477,6 +502,22 @@ class Communication:
         self.set_resolution(x_resolution, y_resolution)
         self.set_z_slice_num(z_slice_num)
 
+    #TODO: Coordinates should be in their own class, combining motor and scan angle together.
+    def get_current_position(self):
+        flag = 'current_positions'
+        self.command_reader.received_flags[flag] = False
+        self.command_writer.get_current_position()
+        self.command_reader.wait_for_received_flag(flag)
+        x, y, z = self.settings.get('current_motor_coordinates')
+        flag = 'scan_angle_x_y'
+        self.command_reader.received_flags[flag] = False
+        self.command_writer.get_scan_angle_xy()
+        self.command_reader.wait_for_received_flag(flag)
+        current_scan_angle_x_y = self.settings.get('current_scan_angle_x_y')
+        x_with_scan_shift, y_with_scan_shift = self.scan_angle_to_xy(current_scan_angle_x_y, x_center=x, y_center=y)
+        self.settings.set('current_combined_coordinates', x_with_scan_shift, y_with_scan_shift, z)
+        return {'x': x_with_scan_shift, 'y': y_with_scan_shift, 'z': z}
+
 
 class Timeline:
 
@@ -740,17 +781,6 @@ class TimelineStepsMini(TimelineStepBlock):
                          start_time=start_time,
                          end_time=end_time,
                          pos_id=pos_id)
-
-
-class Positions(dict):
-
-    def __init__(self, settings):
-        super(Positions, self).__init__()
-        self.settings = settings
-
-    def get_roi_x_y(self, pos_id):
-        roi_x, roi_y = self[pos_id]['roi_position']
-        return roi_x, roi_y
 
 
 if __name__ == "__main__":

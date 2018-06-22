@@ -46,7 +46,7 @@ class SpineTracker(InputOutputInterface):
         # define container for what's in the window
 
         self.initialize_timeline_steps_general()
-        self.initialize_positions()
+        self.load_previous_positions()
         # self.frames = {}
         self.windows = {}
         self.step_running = False
