@@ -5,7 +5,6 @@ import tkinter as tk
 import numpy as np
 import sys
 
-from app.inherited.inherited.inherited.inherited.SpineTrackerContainer import SpineTrackerContainer
 from utilities.math_helpers import blank_to_none, none_to_blank
 
 
@@ -131,18 +130,10 @@ class SettingsDTO(dict):
         self._create_acquired_variable('current_motor_coordinates', np.array([0,0,0]), dtype=np.float32)
         self._create_acquired_variable('current_scan_angle_x_y', np.array([0,0]), dtype=np.float32)
         self._create_acquired_variable('current_combined_coordinates', np.array([0,0,0]), dtype=np.float32)
-        self._create_acquired_variable('center_xyz', np.array([0, 0, 0]), dtype=np.float32)
-        self._create_acquired_variable('center_coordinates', np.array([0, 0, 0]), dtype=np.float32)
+        self._create_acquired_variable('center_motor_coordinates', np.array([0, 0, 0]), dtype=np.float32)
         self._create_acquired_variable('center_scan_angle_x_y', np.array([0, 0]), dtype=np.float32)
         self._create_acquired_variable('macro_image', np.zeros([128, 128]), dtype=np.uint8)
         self._create_acquired_variable('image_file_path', '../test/test_image.tif')
-        self._create_acquired_variable('image_stack', np.zeros([128, 128, 3]), dtype=np.uint8)
-        self._create_acquired_variable('imgref_ref', np.zeros([128, 128, 3]), dtype=np.uint8)
-        self._create_acquired_variable('imgref_imaging', np.zeros([128, 128, 3]), dtype=np.uint8)
-        self._create_acquired_variable('shiftxy', np.array([0, 0]), dtype=np.float32)
-        self._create_acquired_variable('shiftz', np.array([0]), dtype=np.float32)
-        self._create_acquired_variable('shiftxy_pixels', dict(shiftx=0, shifty=0))
-        self._create_acquired_variable('focus_list', np.array([0]), dtype=np.float32)
         self._create_acquired_variable('current_zoom', np.array([0]), dtype=np.int)
         self._create_acquired_variable('z_slice_num', np.array([0]), dtype=np.int)
         self._create_acquired_variable('x_y_resolution', np.array([0]), dtype=np.int)

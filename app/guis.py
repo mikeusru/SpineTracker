@@ -75,6 +75,9 @@ class MainGuiBuilder(tk.Tk):
         if pos_id is not None:
             self.frames[PositionsPage].select_position_in_graph(pos_id)
 
+    def update_positions_table(self):
+        self.frames[PositionsPage].redraw_position_table()
+
 
 class SharedFigs(dict):
 

@@ -72,7 +72,7 @@ class MacroWindow(tk.Toplevel):
     def load_macro_image(self):
         if self.controller.settings.get('simulation'):
             self.image = Image.open("../test/macroImage.tif")
-            self.controller.settings.set('center_xyz', np.array((0, 0, 0)))
+            self.controller.settings.set('center_motor_coordinates', np.array((0, 0, 0)))
         else:
             # set macro zoom and resolution
             self.controller.set_macro_imaging_conditions()
@@ -94,7 +94,7 @@ class MacroWindow(tk.Toplevel):
             # get the motor coordinates
             self.controller.get_current_position()
             x, y, z = self.controller.settings.get('current_motor_coordinates')
-            self.controller.settings.set('center_xyz', np.array((x, y, z), dtype=np.float))
+            self.controller.settings.set('center_motor_coordinates', np.array((x, y, z), dtype=np.float))
 
         self.multi_slice_viewer()
 
@@ -115,7 +115,7 @@ class MacroWindow(tk.Toplevel):
         # xy currently originate from top left of image.
         # translate them to coordinate plane directionality.
         # also, make them originate from center
-        x_center, y_center, z_center = self.controller.settings.get('center_xyz')
+        x_center, y_center, z_center = self.controller.settings.get('center_motor_coordinates')
         xyz_clicked = {'x': x, 'y': y, 'z': z}
         x = x - .5
         y = -y + .5
@@ -127,7 +127,7 @@ class MacroWindow(tk.Toplevel):
         print('x, y, z = {0}, {1}, {2}'.format(x, y, z))
         xyz = {'x': x, 'y': y, 'z': z}
         self.get_ref_images_from_macro(xyz_clicked)
-        self.controller.add_position(self.controller.frames[PositionsPage], xyz=xyz, ref_images=self.data['refImages'])
+        self.controller.create_new_position(take_new_refs=False)
 
     def get_ref_images_from_macro(self, xyz_clicked):
         macro_zoom = float(self.controller.settings.get('macro_zoom'))

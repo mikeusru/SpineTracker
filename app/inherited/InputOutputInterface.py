@@ -19,7 +19,7 @@ class InputOutputInterface(PositionsManager):
         if pos_id is not None:
             x, y, z = [self.positions[pos_id][key] for key in ['x', 'y', 'z']]
         if self.settings.get('park_xy_motor'):
-            x_motor, y_motor, _ = self.settings.get('center_xyz')
+            x_motor, y_motor, _ = self.settings.get('center_motor_coordinates')
             self.set_scan_shift(x, y)
         else:
             x_motor = x
@@ -59,7 +59,7 @@ class InputOutputInterface(PositionsManager):
         scan_angle_range_reference = np.array(self.settings.get('scan_angle_range_reference'))
         fov = np.array(self.settings['fov_x_y'])
         # convert x and y to relative pixel coordinates
-        x_center, y_center, _ = self.settings.get('center_xyz')
+        x_center, y_center, _ = self.settings.get('center_motor_coordinates')
         fs_coordinates = np.array([x - x_center, y - y_center])
         fs_normalized = fs_coordinates / fov
         fs_angular = fs_normalized * scan_angle_multiplier * scan_angle_range_reference
@@ -73,7 +73,7 @@ class InputOutputInterface(PositionsManager):
         fov = np.array(self.settings['fov_x_y'])
         fs_angular = np.array([scan_angle_x_y[0], -scan_angle_x_y[1]])
         if x_center is None:
-            x_center, y_center, _ = self.settings.get('center_xyz')
+            x_center, y_center, _ = self.settings.get('center_motor_coordinates')
         fs_normalized = fs_angular / (scan_angle_multiplier * scan_angle_range_reference)
         fs_coordinates = fs_normalized * fov
         x, y = fs_coordinates + np.array([x_center, y_center])

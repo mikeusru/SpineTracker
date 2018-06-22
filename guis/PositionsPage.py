@@ -33,7 +33,7 @@ class PositionsPage(ttk.Frame):
         self.gui['popup'].add_command(label="Update XYZ",
                                       command=lambda: self.controller.update_position(self.selected_pos_id))
         self.gui['popup'].add_command(label="Delete",
-                                      command=lambda: self.controller.delete_positions(self.selected_pos_id))
+                                      command=lambda: self.controller.remove_position(self.selected_pos_id))
 
         self.gui['frame_for_buttons'] = ttk.Frame(self)
         self.gui['frame_for_buttons'].grid(column=0, row=0, sticky='nw')
@@ -42,7 +42,7 @@ class PositionsPage(ttk.Frame):
         self.gui['frame_for_graphics'] = ttk.Frame(self)
         self.gui['frame_for_graphics'].grid(column=1, row=0, sticky='nsew')
         self.gui['button_add_position'] = ttk.Button(self.gui['frame_for_buttons'], text="Add current position",
-                                                     command=lambda: controller.add_position(self))
+                                                     command=lambda: controller.create_new_position(self))
         self.gui['button_add_position'].grid(row=0, column=0, padx=10, pady=10, sticky='wn')
         self.gui['button_clear_positions'] = ttk.Button(self.gui['frame_for_buttons'], text="Clear All Positions",
                                                         command=lambda: controller.clear_positions(self))
@@ -246,7 +246,7 @@ class PositionsPage(ttk.Frame):
     def draw_roi(self, pos_id, ax):
         if self.controller.settings.get('uncaging_roi_toggle'):
             ax_width = abs(np.diff(ax.get_xlim()).item())
-            x, y = self.controller.positions[pos_id]['roi_position']
+            x, y = self.controller.positions[pos_id]['roi_x_y']
             circ = patches.Circle((x, y), radius=ax_width / 20, fill=False, linewidth=ax_width / 20, edgecolor='r')
             ax.add_patch(circ)
             dc = DraggableCircle(self, self.controller.positions[pos_id], circ)
