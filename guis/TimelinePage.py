@@ -15,21 +15,19 @@ matplotlib.use("TkAgg")
 class TimelinePage(ttk.Frame):
     name = 'Timeline'
 
-    def __init__(self, parent, controller):
-        ttk.Frame.__init__(self, parent)
+    def __init__(self, container, session):
+        ttk.Frame.__init__(self, container)
+        self.session = session
         self.bind("<Visibility>", self.on_visibility)
-        self.controller = controller
         self.selected_item_number = None
-
-        # Define GUI elements
+        self.color_chart = ColorChart()
         self.gui = self.define_gui_elements()
-
         self.create_timeline_table()
         self.draw_timeline_steps_general()
 
     def define_gui_elements(self):
         gui = dict()
-        gui['tFrame'] = TimelineStepsFrame(self, self.controller)
+        gui['tFrame'] = TimelineStepsFrame(self, self.session)
         gui['tFrame'].grid(row=0, column=0, columnspan=1)
         gui['timeline_figure'] = self.session.gui.shared_figs['timeline_figure']
         gui['timeline_axis'] = self.session.gui.shared_figs['timeline_axis']
@@ -75,216 +73,51 @@ class TimelinePage(ttk.Frame):
 
     def on_visibility(self, event):
         fit_fig_to_canvas(self.gui['timeline_figure'], self.gui['canvas_timeline'],
-                          self.controller.settings.get('fig_dpi'))
-        self.gui['canvas_timeline'].draw_idle()
+                          self.session.settings.get('fig_dpi'))
+        self.redraw_canvas()
         self.create_timeline_chart()
 
+    def redraw_canvas(self):
+        self.gui['canvas_timeline'].draw_idle()
+
     def create_timeline_chart(self, *args):
-        """Creates chart of timeline from scratch"""
-
-        class TimelineChart:
-            def __init__(self, controller):
-                self.controller = controller
-                self.timeline_steps_general = self.controller.timeline_steps_general
-                self.stagger = self.controller.settings.get('stagger')
-                self.individual_position_timeline_dict = {}
-
-            def check_if_steps_defined(self):
-                if len(self.timeline_steps_general) == 0:
-                    return False
-                else:
-                    return True
-
-            def get_pos_id_list(self):
-                positions = self.controller.positions
-                if len(positions) == 0:
-                    pos_id_list = list(range(1, 6))
-                else:
-                    pos_id_list = [pos_id for pos_id in positions]
-                return pos_id_list
-
-            def populate_individual_timelines(self):
-                for pos_count, pos_id in enumerate(self.get_pos_id_list(), 1):
-                    self.individual_position_timeline_dict[pos_id] = IndividualPositionTimeline(
-                        pos_id, pos_count, self.stagger)
-                    for step in self.timeline_steps_general:
-                        self.individual_position_timeline_dict[pos_id].add_step(step)
-
-            def get_next_step_if_exclusive(self, previous_step):
-                """If the last step is exclusive and so is this one, use the same position"""
-                if previous_step is None:
-                    return None, None
-                if previous_step['exclusive']:
-                    pos_id = previous_step['pos_id']
-                    if self.individual_position_timeline_dict[pos_id].is_empty():
-                        return None, None
-                    current_step, actual_start_time = self.individual_position_timeline_dict[pos_id].get_next_step()
-                    if current_step['exclusive']:
-                        return current_step, actual_start_time
-                return None, None
-
-            def shift_next_individual_timeline_step(self, previous_step):
-                next_individual_timeline_step, earliest_start_time = self.get_next_step_if_exclusive(previous_step)
-                if next_individual_timeline_step is None:
-                    earliest_start_time = np.array(np.inf)
-                    next_individual_timeline_step = None
-                    for pos_id in self.individual_position_timeline_dict:
-                        if self.individual_position_timeline_dict[pos_id].is_empty():
-                            continue
-                        individual_timeline_step, actual_start_time = self.individual_position_timeline_dict[
-                            pos_id].get_next_step()
-                        if (actual_start_time < earliest_start_time) or (
-                                actual_start_time == earliest_start_time and individual_timeline_step['exclusive']):
-                            earliest_start_time = actual_start_time
-                            next_individual_timeline_step = individual_timeline_step
-                next_individual_timeline_step.shift_start_end_times(new_start_time=earliest_start_time)
-                return next_individual_timeline_step
-
-            def shift_individual_timelines_relative_to_each_other(self):
-                """Shift start/end times of all individual steps so they fit along with each other"""
-                previous_step = None
-                while True:
-                    individual_timeline_step = self.shift_next_individual_timeline_step(previous_step)
-                    previous_step = individual_timeline_step
-                    pos_id = individual_timeline_step['pos_id']
-                    self.update_all_min_start_times(individual_timeline_step)
-                    self.individual_position_timeline_dict[pos_id].step_building_index += 1
-                    if self.is_done_building():
-                        break
-
-            def update_all_min_start_times(self, individual_timeline_step):
-                reference_pos_id = individual_timeline_step['pos_id']
-                for pos_id in self.individual_position_timeline_dict:
-                    if (pos_id == reference_pos_id) or individual_timeline_step['exclusive']:
-                        new_min_time = individual_timeline_step['end_time']
-                    else:
-                        new_min_time = individual_timeline_step['start_time']
-                    self.individual_position_timeline_dict[pos_id].update_min_start_time(
-                        new_min_time)
-
-            def is_done_building(self):
-                """return False if any individual position timelines are not empty yet"""
-                for individual_position_timeline in self.individual_position_timeline_dict.values():
-                    if not individual_position_timeline.is_empty():
-                        return False
-                return True
-
-            def get_y_label_list(self):
-                y_label_list = []
-                for individual_position_timeline in self.individual_position_timeline_dict.values():
-                    y_label_list.append(individual_position_timeline.y_label)
-                return y_label_list
-
-            def get_total_pos_num(self):
-                total_pos_num = len(self.get_pos_id_list())
-                return total_pos_num
-
-            def get_mini_steps_by_pos(self):
-                mini_steps_by_pos = {}
-                for pos_id, individual_position_timeline in self.individual_position_timeline_dict.items():
-                    mini_steps_by_pos[pos_id] = individual_position_timeline.mini_steps
-                return mini_steps_by_pos
-
-        class IndividualPositionTimeline:
-            def __init__(self, pos_id, pos_count, stagger):
-                self.stagger = stagger
-                self.pos_id = pos_id
-                self.y_label = 'Position {}'.format(pos_id)
-                self.total_time = 0
-                self.pos_count = pos_count
-                self.start_end_time_array = []
-                self.mini_steps = []
-                self.timeline_step_individual_list = []
-                self.min_start_time = 0
-                self.step_building_index = 0
-
-            def add_step(self, step):
-                """divide step into individual steps for each period"""
-                start_time = self.total_time
-                if start_time == 0:
-                    duration = step['duration'] + self.stagger * (self.pos_count - 1)
-                else:
-                    duration = step['duration']
-                period = step['period']
-                start_end_time_list = self.calc_start_end_time(period, duration, start_time)
-                timeline_step_individual = [
-                    TimelineStepsMini(step, start_end_time['start'], start_end_time['end'], self.pos_id) for
-                    start_end_time in start_end_time_list]
-                self.timeline_step_individual_list += timeline_step_individual
-                self.total_time += duration
-
-            def calc_start_end_time(self, period, duration, start_time):
-                """Create list of dicts with start and end times for each step"""
-                start_times_single_step = self.calc_start_times(period, duration, start_time)
-                end_times_single_step = self.calc_end_times(start_times_single_step, period)
-                start_end_time_list = [{'start': start, 'end': end} for start, end in
-                                       zip(start_times_single_step, end_times_single_step)]
-                # start_end_single_step = np.array([start_times_single_step, end_times_single_step])
-                return start_end_time_list
-
-            def calc_start_times(self, period, duration, start_time):
-                start_time_array = np.arange(start_time, start_time + duration, period / 60)
-                return start_time_array
-
-            def calc_end_times(self, start_times, period):
-                end_times = start_times + period / 60
-                return end_times
-
-            def get_next_step(self):
-                individual_step = self.timeline_step_individual_list[self.step_building_index]
-                actual_start_time = max(individual_step['start_time'], self.min_start_time)
-                # add small amount of time based on position so they are added to the queue sequentially, not at the same time
-                actual_start_time = actual_start_time + (self.pos_count * 0.001)
-                return individual_step, actual_start_time
-
-            def update_min_start_time(self, start_time):
-                self.min_start_time = np.max([self.min_start_time, start_time])
-
-            def is_empty(self):
-                if self.step_building_index >= len(self.timeline_step_individual_list):
-                    return True
-                else:
-                    return False
-
-        self.timeline_chart = TimelineChart(self.controller)
-        if self.timeline_chart.check_if_steps_defined():
-            self.timeline_chart.populate_individual_timelines()
-            self.timeline_chart.shift_individual_timelines_relative_to_each_other()
-            self.controller.timeline_steps_individual = self.timeline_chart.get_mini_steps_by_pos()
+        self.session.timeline.build_full_timeline()
         self.display_timeline_chart()
 
+    # TODO: eventually make the chart its own class
     def display_timeline_chart(self):
-        """Show timeline chart on timeline axis"""
+        timeline = self.session.timeline
+        color_chart = self.color_chart
         self.gui['timeline_axis'].clear()
         y_ind = 0
-        y_labels = []
-        for pos_id in self.timeline_chart.individual_position_timeline_dict:
+        for pos_id in timeline.ordered_timelines_by_positions:
             y_range = (y_ind - .4, 0.8)
             x_range_list = []
             color_list = []
             y_ind += 1
-            for step in self.timeline_chart.individual_position_timeline_dict[pos_id].timeline_step_individual_list:
+            for step in timeline.individual_position_timeline_dict[pos_id].timeline_step_individual_list:
                 x_range_list.append((step['start_time'], step['end_time'] - step['start_time']))
                 if not step['exclusive']:
-                    color_list.append('blue')  # regular imaging
+                    color_list.append(color_chart.imaging)
                 elif step['exclusive'] and step['imaging_or_uncaging'] == 'Image':
-                    color_list.append('green')  # exclusive imaging
+                    color_list.append(color_chart.exclusive_imaging)
                 else:
-                    color_list.append('red')  # uncaging
+                    color_list.append(color_chart.uncaging)
             self.gui['timeline_axis'].broken_barh(x_range_list, y_range, color=color_list, edgecolor='black')
-        self.gui['timeline_axis'].set_yticks(list(range(self.timeline_chart.get_total_pos_num())))
-        self.gui['timeline_axis'].set_yticklabels(self.timeline_chart.get_y_label_list())
+        self.gui['timeline_axis'].set_yticks(list(range(timeline.get_total_pos_num())))
+        self.gui['timeline_axis'].set_yticklabels(timeline.get_y_label_list())
         self.gui['timeline_axis'].axis('tight')
         self.gui['timeline_axis'].set_ylim(auto=True)
         self.gui['timeline_axis'].grid(color='k', linestyle=':')
         y1, y2 = self.gui['timeline_axis'].get_ylim()
         if y2 > y1:
             self.gui['timeline_axis'].invert_yaxis()
-        legend_patch_red = patches.Patch(color='red', label='Uncaging')
-        legend_patch_blue = patches.Patch(color='blue', label='Imaging')
-        legend_patch_green = patches.Patch(color='green', label='Exclusive Imaging')
-        self.gui['timeline_axis'].legend(handles=[legend_patch_red, legend_patch_blue, legend_patch_green])
-        self.gui['canvas_timeline'].draw_idle()
+        legend_patch_uncaging = patches.Patch(color=color_chart.uncaging, label='Uncaging')
+        legend_patch_imaging = patches.Patch(color=color_chart.imaging, label='Imaging')
+        legend_patch_exclusive_imaging = patches.Patch(color=color_chart.exclusive_imaging, label='Exclusive Imaging')
+        self.gui['timeline_axis'].legend(
+            handles=[legend_patch_uncaging, legend_patch_imaging, legend_patch_exclusive_imaging])
+        self.redraw_canvas()
 
     def on_timeline_table_right_click(self, event):
         tree = self.gui['timelineTree']
@@ -302,12 +135,12 @@ class TimelinePage(ttk.Frame):
         self.gui['popup'].post(event.x_root, event.y_root)
 
     def insert_timeline_step(self, ind):
-        self.gui['tFrame'].add_step_callback(self.controller, ind)
+        self.gui['tFrame'].add_step_callback(self.session, ind)
         self.draw_timeline_steps_general()
         self.backup_timeline()
 
     def delete_timeline_step(self, ind):
-        del self.controller.timeline_steps_general[ind]
+        del self.session.timeline_steps_general[ind]
         self.draw_timeline_steps_general()
         self.backup_timeline()
 
@@ -317,7 +150,7 @@ class TimelinePage(ttk.Frame):
 
     def draw_timeline_steps_general(self):
         tree = self.gui['timelineTree']
-        timeline_steps_general = self.controller.timeline_steps_general
+        timeline_steps_general = self.session.timeline_steps_general
         # clear table first
         for i in tree.get_children():
             tree.delete(i)
@@ -335,25 +168,25 @@ class TimelinePage(ttk.Frame):
         self.create_timeline_chart()
 
     def backup_timeline(self):
-        timeline_steps_general = self.controller.timeline_steps_general
+        timeline_steps_general = self.session.timeline_steps_general
         pickle.dump(timeline_steps_general,
-                    open(self.controller.settings.get('init_directory') + 'timeline_steps.p', 'wb'))
+                    open(self.session.settings.get('init_directory') + 'timeline_steps.p', 'wb'))
 
 
 class TimelineStepsFrame(ttk.Frame):
-    def __init__(self, parent, controller):
-        ttk.Frame.__init__(self, parent)
-        self.controller = controller
-        self.parent = parent
+    def __init__(self, container, session):
+        ttk.Frame.__init__(self, container)
+        self.session = session
+        self.container = container
         # Gui Elements
         self.gui = self.define_gui_elements()
 
     def define_gui_elements(self):
         gui = dict()
-        settings = self.controller.settings
+        settings = self.session.settings
         # TODO: Allow users to add custom steps. The step name is the signal which is sent to the imaging program
         # So like "Custom Step" becomes custom_step and custom_step_done. Ugh this seems hard... hold off for now. This is for version 2.
-        gui['label1'] = ttk.Label(self, text='Step Name:', font=self.controller.settings.get('large_font'))
+        gui['label1'] = ttk.Label(self, text='Step Name:', font=self.session.settings.get('large_font'))
         gui['label1'].grid(row=0, column=0, sticky='nw', padx=10, pady=10)
         gui['step_name_entry'] = ttk.Entry(self, width=30,
                                            textvariable=settings.get_gui_var('step_name'))
@@ -367,22 +200,22 @@ class TimelineStepsFrame(ttk.Frame):
                                                value='Image')
         gui['radio_button1'].grid(row=1, column=0, sticky='nw', pady=10, padx=10)
         gui['period_label1'] = ttk.Label(gui['place_holder_frame'], text='  Period: ',
-                                         font=self.controller.settings.get('large_font'))
+                                         font=self.session.settings.get('large_font'))
         gui['period_label1'].pack(anchor='w', side='left')
         gui['period_entry'] = ttk.Entry(gui['place_holder_frame'], width=4,
                                         textvariable=settings.get_gui_var('period'))
         gui['period_entry'].pack(anchor='w', side='left')
         gui['period_label2'] = ttk.Label(gui['place_holder_frame'], text='sec, ',
-                                         font=self.controller.settings.get('large_font'))
+                                         font=self.session.settings.get('large_font'))
         gui['period_label2'].pack(anchor='w', side='left')
         gui['duration_label1'] = ttk.Label(gui['place_holder_frame'], text='Duration: ',
-                                           font=self.controller.settings.get('large_font'))
+                                           font=self.session.settings.get('large_font'))
         gui['duration_label1'].pack(anchor='w', side='left')
         gui['duration_entry'] = ttk.Entry(gui['place_holder_frame'], width=4,
                                           textvariable=settings.get_gui_var('duration'))
         gui['duration_entry'].pack(anchor='w', side='left')
         gui['duration_label2'] = ttk.Label(gui['place_holder_frame'], text='min',
-                                           font=self.controller.settings.get('large_font'))
+                                           font=self.session.settings.get('large_font'))
         gui['duration_label2'].pack(anchor='w', side='left')
         gui['radio_button2'] = ttk.Radiobutton(self, text='Uncage',
                                                variable=settings.get_gui_var('image_or_uncage'),
@@ -394,14 +227,14 @@ class TimelineStepsFrame(ttk.Frame):
         gui['stagger_frame'] = ttk.Frame(self)
         gui['stagger_frame'].grid(row=4, column=0, sticky='nw', columnspan=2)
         gui['stagger_label1'] = ttk.Label(gui['stagger_frame'], text='Stagger: ',
-                                          font=self.controller.settings.get('large_font'))
+                                          font=self.session.settings.get('large_font'))
         gui['stagger_label1'].grid(row=0, column=0, sticky='nw', padx=10, pady=10)
 
         gui['stagger_entry'] = ttk.Entry(gui['stagger_frame'], width=4,
                                          textvariable=settings.get_gui_var('stagger'))
         gui['stagger_entry'].grid(row=0, column=1, sticky='nw', padx=0, pady=10)
         gui['stagger_label2'] = ttk.Label(gui['stagger_frame'], text='min',
-                                          font=self.controller.settings.get('large_font'))
+                                          font=self.session.settings.get('large_font'))
         gui['stagger_label2'].grid(row=0, column=2, sticky='nw', padx=0, pady=10)
 
         gui['add_step_button'] = ttk.Button(self, text="Add Step", command=self.add_step_callback)
@@ -411,16 +244,16 @@ class TimelineStepsFrame(ttk.Frame):
 
     def add_step_callback(self, cont, ind=None):
         # get values
-        settings = self.controller.settings
+        settings = self.session.settings
         step_name = settings.get('step_name')
         period = settings.get('period')
         duration = settings.get('duration')
         imaging_or_uncaging = settings.get('image_or_uncage')
         exclusive = settings.get('exclusive')
         timeline_step = TimelineStepBlock(step_name=step_name, imaging_or_uncaging=imaging_or_uncaging,
-                                     exclusive=exclusive, period=period, duration=duration, index=ind)
-        self.controller.add_timeline_step(timeline_step)
-        self.parent.draw_timeline_steps_general()
+                                          exclusive=exclusive, period=period, duration=duration, index=ind)
+        self.session.add_timeline_step(timeline_step)
+        self.container.draw_timeline_steps_general()
         # reset values
         settings.set('step_name', '')
         settings.set('period', '')
@@ -428,10 +261,18 @@ class TimelineStepsFrame(ttk.Frame):
         cont.frames[TimelinePage].backup_timeline()
 
     def image_in_from_frame(self, *args):
-        var = self.controller.settings.get('image_or_uncage')
+        var = self.session.settings.get('image_or_uncage')
         if var == "Image":
             self.gui['place_holder_frame'].pack(side='left', anchor='w')
-            self.controller.settings.set('exclusive', False)
+            self.session.settings.set('exclusive', False)
         else:
             self.gui['place_holder_frame'].pack_forget()
-            self.controller.settings.set('exclusive', True)
+            self.session.settings.set('exclusive', True)
+
+
+class ColorChart():
+    def __init__(self):
+        super(ColorChart, self).__init__()
+        self.uncaging = 'red'
+        self.imaging = 'blue'
+        self.exclusive_imaging = 'green'
