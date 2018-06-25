@@ -5,6 +5,7 @@ import tkinter as tk
 import numpy as np
 import sys
 
+from app.Coordinates import Coordinates
 from utilities.math_helpers import blank_to_none, none_to_blank
 
 
@@ -127,11 +128,6 @@ class SettingsDTO(dict):
         self._create_acquired_variable('scan_angle_multiplier', np.array([1, 1]), dtype=np.float32)
         self._create_acquired_variable('scan_angle_range_reference', np.array([15, 15]), dtype=np.float32)
         self._create_acquired_variable('current_zoom', None, dtype=np.int)
-        self._create_acquired_variable('current_motor_coordinates', np.array([0,0,0]), dtype=np.float32)
-        self._create_acquired_variable('current_scan_angle_x_y', np.array([0,0]), dtype=np.float32)
-        self._create_acquired_variable('current_combined_coordinates', np.array([0,0,0]), dtype=np.float32)
-        self._create_acquired_variable('center_motor_coordinates', np.array([0, 0, 0]), dtype=np.float32)
-        self._create_acquired_variable('center_scan_angle_x_y', np.array([0, 0]), dtype=np.float32)
         self._create_acquired_variable('macro_image', np.zeros([128, 128]), dtype=np.uint8)
         self._create_acquired_variable('image_file_path', '../test/test_image.tif')
         self._create_acquired_variable('current_zoom', np.array([0]), dtype=np.int)

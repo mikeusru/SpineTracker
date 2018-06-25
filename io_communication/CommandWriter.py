@@ -32,7 +32,7 @@ class CommandWriter:
     def get_scan_angle_range_reference(self):
         self.write_command('getScanAngleRangeReference')
 
-    def get_current_position(self):
+    def get_current_motor_position(self):
         self.write_command('getCurrentPosition')
 
     def set_scan_shift(self, scan_shift_fast, scan_shift_slow):

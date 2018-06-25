@@ -1,6 +1,7 @@
 import os
 import numpy as np
 
+
 class CommandReader:
     def __init__(self, settings, instructions_in_queue, instructions_received):
         self.instructions_in_queue = instructions_in_queue
@@ -8,8 +9,12 @@ class CommandReader:
         self.received_flags = {}
         self.file_path = settings.get('input_file')
         self.settings = settings
+        self.session = None
         if not os.path.isfile(self.file_path):
             open(self.file_path, 'a').close()
+
+    def bind_session(self, session):
+        self.session = session
 
     def read_new_commands(self, *args):
         content = self._read_file()
@@ -62,7 +67,7 @@ class CommandReader:
 
         command, args = get_command_and_args(line)
 
-        #TODO: There's definitely some design pattern to make this better
+        # TODO: There's definitely some design pattern to make this better
         if command == 'stagemovedone':
             check_num_args(args, 3, 3)
             x, y, z = [float(args[xyz]) for xyz in [0, 1, 2]]
@@ -77,7 +82,7 @@ class CommandReader:
         elif command == 'currentposition':
             check_num_args(args, 3, 3)
             x, y, z = [float(args[xyz]) for xyz in [0, 1, 2]]
-            self.settings.set('current_motor_coordinates', [x, y, z])
+            self.session.state.current_coordinates.set_motor_coordinates(x, y, z)
             self.received_flags['current_positions'] = True
         elif command == 'uncagingdone':
             check_num_args(args, 0, 0)
@@ -93,15 +98,15 @@ class CommandReader:
             self.received_flags['zoom'] = True
         elif command == 'scananglexy':
             check_num_args(args, 2, 2)
-            self.settings.set('current_scan_angle_x_y', np.array([float(args[0]), float(args[1])]))
+            self.session.state.current_coordinates.set_scan_angle_x_y(args[0], args[1])
             self.received_flags['scan_angle_x_y'] = True
         elif command == 'scananglemultiplier':
             check_num_args(args, 2, 2)
-            self.settings.set('scan_angle_multiplier',np.array([float(args[0]), float(args[1])]))
+            self.settings.set('scan_angle_multiplier', np.array([float(args[0]), float(args[1])]))
             self.received_flags['scanAngleMultiplier'] = True
         elif command == 'scananglerangereference':
             check_num_args(args, 2, 2)
-            self.settings.set('scan_angle_range_reference',np.array([float(args[0]), float(args[1])]))
+            self.settings.set('scan_angle_range_reference', np.array([float(args[0]), float(args[1])]))
             self.received_flags['scanAngleRangeReference'] = True
         elif command == 'zslicenum':
             check_num_args(args, 1, 1)
@@ -118,8 +123,7 @@ class CommandReader:
         # self.controller.print_status('Waiting for {0}'.format(flag))
         print('Waiting for {0}'.format(flag))
         while True:
-            #TODO: change this so the gui updates but somehow without passing the controller? i dunno...
-            self.controller.update()
+            self.session.prevent_freezing_during_loops()
             if self.received_flags[flag]:
                 # self.controller.print_status('{0} received'.format(flag))
                 print('{0} received'.format(flag))

@@ -41,7 +41,7 @@ class ScrolledCanvas(tk.Frame):
             sbarH.pack(side=tk.BOTTOM, fill=tk.X)
             
             canv.pack(side=tk.LEFT, expand=tk.YES, fill=tk.BOTH)
-            self.im=Image.open("../test/macroImage.tif")
+            self.im=Image.open("../test/macro_image.tif")
             self.im = self.im.resize((2000,2000))
             width,height=self.im.size
             canv.config(scrollregion=(0,0,width,height))

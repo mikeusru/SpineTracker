@@ -17,23 +17,23 @@ matplotlib.use("TkAgg")
 class PositionsPage(ttk.Frame):
     name = 'Positions'
 
-    def __init__(self, parent, controller):
+    def __init__(self, parent, session):
         ttk.Frame.__init__(self, parent)
         self.gui = dict()
         self.bind("<Visibility>", self.on_visibility)
-        self.controller = controller
+        self.session = session
 
         self.selected_pos_id = None
         self.draggable_circle = None
-        settings = self.controller.settings
+        settings = self.session.settings
         # GUIs
         self.gui['popup'] = tk.Menu(self, tearoff=0)
         self.gui['popup'].add_command(label="Move To Position",
-                                      command=lambda: self.controller.move_to_pos_id(pos_id=self.selected_pos_id))
+                                      command=lambda: self.session.move_to_pos_id(pos_id=self.selected_pos_id))
         self.gui['popup'].add_command(label="Update XYZ",
-                                      command=lambda: self.controller.update_position(self.selected_pos_id))
+                                      command=lambda: self.session.update_position(self.selected_pos_id))
         self.gui['popup'].add_command(label="Delete",
-                                      command=lambda: self.controller.remove_position(self.selected_pos_id))
+                                      command=lambda: self.session.remove_position(self.selected_pos_id))
 
         self.gui['frame_for_buttons'] = ttk.Frame(self)
         self.gui['frame_for_buttons'].grid(column=0, row=0, sticky='nw')
@@ -42,18 +42,18 @@ class PositionsPage(ttk.Frame):
         self.gui['frame_for_graphics'] = ttk.Frame(self)
         self.gui['frame_for_graphics'].grid(column=1, row=0, sticky='nsew')
         self.gui['button_add_position'] = ttk.Button(self.gui['frame_for_buttons'], text="Add current position",
-                                                     command=lambda: controller.create_new_position(self))
+                                                     command=lambda: session.create_new_position(self))
         self.gui['button_add_position'].grid(row=0, column=0, padx=10, pady=10, sticky='wn')
         self.gui['button_clear_positions'] = ttk.Button(self.gui['frame_for_buttons'], text="Clear All Positions",
-                                                        command=lambda: controller.clear_positions(self))
+                                                        command=lambda: session.clear_positions(self))
         self.gui['button_clear_positions'].grid(row=1, column=0, padx=10,
                                                 pady=10, sticky='wn')
         self.gui['button_macro_view'] = ttk.Button(self.gui['frame_for_buttons'], text="Macro View",
-                                                   command=lambda: controller.build_macro_window())
+                                                   command=lambda: session.build_macro_window())
         self.gui['button_macro_view'].grid(row=2, column=0, padx=10,
                                            pady=10, sticky='wn')
         self.gui['button_align_positions'] = ttk.Button(self.gui['frame_for_buttons'], text="Align All To Reference",
-                                                        command=lambda: controller.align_all_positions_to_refs())
+                                                        command=lambda: session.align_all_positions_to_refs())
         self.gui['button_align_positions'].grid(row=3, column=0, padx=10,
                                                 pady=10, sticky='wn')
 
@@ -93,7 +93,7 @@ class PositionsPage(ttk.Frame):
         self.create_positions_table(self.gui['positions_table_frame'])
 
         # create canvas for previewing reference images
-        self.gui['ref_images_fig'] = Figure(figsize=(4, 2), dpi=controller.settings.get('fig_dpi'))
+        self.gui['ref_images_fig'] = Figure(figsize=(4, 2), dpi=session.settings.get('fig_dpi'))
         self.gui['ref_images_fig'].subplots_adjust(left=0, right=1, bottom=0, top=1, wspace=0.02, hspace=0)
         self.gui['canvas_preview_ref_images'] = FigureCanvasTkAgg(self.gui['ref_images_fig'],
                                                                   self.gui['frame_for_graphics'])
@@ -134,7 +134,7 @@ class PositionsPage(ttk.Frame):
         tree.configure(yscrollcommand=scroll.set)
 
     def preview_position_locations(self):
-        positions = self.controller.positions
+        positions = self.session.positions
         ax = self.gui['position_preview_axis']
         w = 8
         h = 8
@@ -149,20 +149,20 @@ class PositionsPage(ttk.Frame):
             zz = np.append(zz, positions[pos_id]['z'])
 
         if len(positions) > 0:
-            vmin = zz.min() - 1
-            vmax = zz.max() + 1
+            v_min = zz.min() - 1
+            v_max = zz.max() + 1
         else:
-            vmin = -100
-            vmax = 100
+            v_min = -100
+            v_max = 100
 
         pos_labels = list(positions.keys())
-        cmap = matplotlib.cm.jet
-        norm = matplotlib.colors.Normalize(vmin=vmin, vmax=vmax)
+        c_map = matplotlib.cm.jet
+        norm = matplotlib.colors.Normalize(vmin=v_min, vmax=v_max)
         for x, y, z, p in zip(xx, yy, zz, pos_labels):
             ax.add_patch(patches.Rectangle(xy=(x, y), width=w, height=h,
-                                           facecolor=cmap(norm(z))))
+                                           facecolor=c_map(norm(z))))
             ax.annotate(str(p), xy=(x, y), xytext=(x + w, y + h))
-        cb1 = colorbar.ColorbarBase(ax=self.gui['colorbar_axis'], cmap=cmap, norm=norm)
+        cb1 = colorbar.ColorbarBase(ax=self.gui['colorbar_axis'], cmap=c_map, norm=norm)
         cb1.set_label('Z (µm)')
         ax.set_ylabel('Y (µm)')
         ax.set_xlabel('X (µm)')
@@ -182,7 +182,7 @@ class PositionsPage(ttk.Frame):
 
     def on_visibility(self, event):
         fit_fig_to_canvas(self.gui['f_positions'], self.gui['canvas_positions'],
-                          self.controller.settings.get('fig_dpi'))
+                          self.session.settings.get('fig_dpi'))
         self.redraw_position_table()
         self.gui['canvas_preview_ref_images'].draw_idle()
 
@@ -209,7 +209,7 @@ class PositionsPage(ttk.Frame):
         self.select_position_in_graph(pos_id)
 
     def select_position_in_graph(self, pos_id):
-        positions = self.controller.positions
+        positions = self.session.positions
         ax = self.gui['position_preview_axis']
         x = positions[pos_id]['x']
         y = positions[pos_id]['y']
@@ -223,18 +223,18 @@ class PositionsPage(ttk.Frame):
     def redraw_position_table(self):
         for i in self.gui['tree'].get_children():
             self.gui['tree'].delete(i)
-        for pos_id in self.controller.positions:
-            x = self.controller.positions[pos_id]['x']
-            y = self.controller.positions[pos_id]['y']
-            z = self.controller.positions[pos_id]['z']
+        for pos_id in self.session.positions:
+            x = self.session.positions[pos_id]['x']
+            y = self.session.positions[pos_id]['y']
+            z = self.session.positions[pos_id]['z']
             self.gui['tree'].insert("", pos_id, text="Position {0}".format(pos_id),
                                     values=(x, y, z))
         self.preview_position_locations()
         self.gui['canvas_preview_ref_images'].draw_idle()
 
     def draw_ref_images(self, pos_id):
-        refs = [self.controller.positions[pos_id].get('ref_img', np.zeros((128, 128), dtype=np.uint8)),
-                self.controller.positions[pos_id].get('ref_img_zoomout', np.zeros((128, 128), dtype=np.uint8))]
+        refs = [self.session.positions[pos_id].get('ref_img', np.zeros((128, 128), dtype=np.uint8)),
+                self.session.positions[pos_id].get('ref_img_zoomout', np.zeros((128, 128), dtype=np.uint8))]
         for ax, r in zip(self.gui['ref_images_axes'], refs):
             ax.clear()
             ax.axis('off')
@@ -244,11 +244,11 @@ class PositionsPage(ttk.Frame):
         self.gui['canvas_preview_ref_images'].draw_idle()
 
     def draw_roi(self, pos_id, ax):
-        if self.controller.settings.get('uncaging_roi_toggle'):
+        if self.session.settings.get('uncaging_roi_toggle'):
             ax_width = abs(np.diff(ax.get_xlim()).item())
-            x, y = self.controller.positions[pos_id]['roi_x_y']
-            circ = patches.Circle((x, y), radius=ax_width / 20, fill=False, linewidth=ax_width / 20, edgecolor='r')
-            ax.add_patch(circ)
-            dc = DraggableCircle(self, self.controller.positions[pos_id], circ)
+            x, y = self.session.positions[pos_id]['roi_x_y']
+            circle = patches.Circle((x, y), radius=ax_width / 20, fill=False, linewidth=ax_width / 20, edgecolor='r')
+            ax.add_patch(circle)
+            dc = DraggableCircle(self, self.session.positions[pos_id], circle)
             dc.connect()
             self.draggable_circle = dc

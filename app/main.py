@@ -6,6 +6,7 @@ from queue import Queue
 from scipy import ndimage
 from skimage import io, transform
 
+from app.Coordinates import Coordinates
 from app.PositionsManager import PositionsManager
 from app.Timeline import Timeline
 from app.guis import MainGuiBuilder
@@ -20,8 +21,12 @@ import numpy as np
 import copy
 import datetime as dt
 import sys
+from PIL import Image
+
+from utilities.math_helpers import contrast_stretch
 
 
+# TODO: Split up instantiation and loading stuff in
 class SpineTracker:
 
     def __init__(self, *args, **kwargs):
@@ -40,6 +45,8 @@ class SpineTracker:
         initialize_init_directory(self.settings.get('init_directory'))
         self.log_file = open('log.txt', 'w')
         self.gui.bind_session(self.session)
+        self.positions.bind_session(self.session)
+        self.communication.bind_session(self.session)
 
     def initialize_settings(self):
         settings = SettingsManager(self)
@@ -66,6 +73,23 @@ class SpineTracker:
         self.gui.mainloop()
 
 
+class State:
+    def __init__(self, session):
+        self.session = session
+        self.settings = session.settings
+        self.step_running = False
+        self.imaging_active = False
+        self.current_pos_id = 1
+        self.current_coordinates = Coordinates(self.settings)
+        self.center_coordinates = Coordinates(self.settings)
+        self.current_image = AcquiredImage(self.settings)
+        self.ref_image = ReferenceImage(self.settings)
+        self.ref_image_zoomed_out = ReferenceImage(self.settings)
+        self.macro_image = MacroImage(self.settings)
+        self.position_timers = {}
+        self.queue_run = None
+
+
 class Session:
 
     def __init__(self, settings, positions, communication, timeline):
@@ -75,15 +99,7 @@ class Session:
         self.timeline = timeline
         self.communication = communication
         self.timer_steps_queue = TimerStepsQueue()
-        self.step_running = False
-        self.imaging_active = False
-        self.current_pos_id = 1
-        self.current_image = AcquiredImage(settings)
-        self.ref_image = ReferenceImage(settings)
-        self.ref_image_zoomed_out = ReferenceImage(settings)
-        self.macro_image = MacroImage(settings)
-        self.position_timers = {}
-        self.queue_run = None
+        self.state = State(self)
 
     def bind_guis(self, gui):
         self.gui = gui
@@ -99,19 +115,21 @@ class Session:
 
     def load_image(self, image_type='standard'):
         if image_type == 'standard':
-            self.current_image.zoom = self.settings.get('imaging_zoom')
-            self.current_image.load()
+            self.state.current_image.zoom = self.settings.get('imaging_zoom')
+            self.state.current_image.load()
         elif image_type == 'zoomed_out':
-            self.current_image.zoom = self.settings.get('reference_zoom')
-            self.current_image.load()
+            self.state.current_image.zoom = self.settings.get('reference_zoom')
+            self.state.current_image.load()
         elif image_type == 'reference':
-            self.ref_image.load()
+            self.state.ref_image.load()
         elif image_type == 'reference_zoomed_out':
-            self.ref_image_zoomed_out.load()
+            self.state.ref_image_zoomed_out.load()
         elif image_type == 'macro':
-            self.macro_image.load()
+            self.state.macro_image.load()
+            self.state.macro_image.set_image_contrast()
+            self.state.macro_image.create_pil_image()
         else:
-            pass
+            print("WRONG IMAGE TYPE")
         # TODO: Throw error if it's some other kind of image
         if not image_type == 'macro':
             self.gui.reset_figure_for_af_images()
@@ -120,49 +138,49 @@ class Session:
         if zoom is None:
             zoom = self.settings.get('imaging_zoom')
         if pos_id is None:
-            pos_id = self.current_pos_id
-        reference_max_projection = self.get_ref_image(zoom)
-        self.current_image.calc_x_y_z_drift(reference_max_projection)
-        self.positions[pos_id]['x'] -= self.current_image.drift_x_y_z.x_um
-        self.positions[pos_id]['y'] += self.current_image.drift_x_y_z.y_um
-        self.positions[pos_id]['z'] += self.current_image.drift_x_y_z.z_um
-        self.gui.show_drift_info(image_stack=self.current_image, pos_id=pos_id)
-        self.positions.record_drift_history(self.current_image)
+            pos_id = self.state.current_pos_id
+        reference_max_projection = self.get_ref_image(zoom, pos_id)
+        self.state.current_image.calc_x_y_z_drift(reference_max_projection)
+        self.positions[pos_id]['x'] -= self.state.current_image.drift_x_y_z.x_um
+        self.positions[pos_id]['y'] += self.state.current_image.drift_x_y_z.y_um
+        self.positions[pos_id]['z'] += self.state.current_image.drift_x_y_z.z_um
+        self.gui.show_drift_info(image_stack=self.state.current_image, pos_id=pos_id)
+        self.positions.record_drift_history(self.state.current_image)
         self.positions.backup_positions()
 
-    def get_ref_image(self, zoom):
+    def get_ref_image(self, zoom, pos_id):
         if zoom == self.settings.get('reference_zoom'):
-            reference_max_projection = self.ref_image_zoomed_out.get_max_projection()
+            reference_max_projection = self.positions.get_image(pos_id, zoomed_out=True).get_max_projection()
         else:
-            reference_max_projection = self.ref_image.get_max_projection()
+            reference_max_projection = self.positions.get_image(pos_id, zoomed_out=False).get_max_projection()
         return reference_max_projection
 
     def add_step_to_queue(self, step, pos_id):
         self.timer_steps_queue.add_step(step, pos_id)
 
     def run_steps_from_queue_when_appropriate(self):
-        while self.current_image:
+        while self.state.current_image:
             self.prevent_freezing_during_loops()
-            if self.step_running:
+            if self.state.step_running:
                 continue
             if self.timer_steps_queue.empty():
                 continue
-            self.step_running = True
+            self.state.step_running = True
             self.timer_steps_queue.load_next_step()
             self.run_current_step()
 
     def run_current_step(self):
         single_step = self.timer_steps_queue.current_step
         pos_id = single_step.get('pos_id')
-        self.current_pos_id = pos_id
+        self.state.current_pos_id = pos_id
         if single_step['imaging_or_uncaging'] == 'Image':
             self.image_at_pos_id(pos_id)
-            self.step_running = False
+            self.state.step_running = False
             self.load_image()
             self.correct_xyz_drift(pos_id)
         elif single_step['imaging_or_uncaging'] == 'Uncage':
             self.uncage_at_pos_id(pos_id)
-            self.step_running = False
+            self.state.step_running = False
 
     def prevent_freezing_during_loops(self):
         self.gui.update()
@@ -201,7 +219,7 @@ class Session:
         if take_new_refs:
             self.collect_new_reference_images()
             self.communication.get_current_position()
-        self.positions.create_new_pos(self.ref_image, self.ref_image_zoomed_out)
+        self.positions.create_new_pos(self.state.ref_image, self.state.ref_image_zoomed_out)
         self.gui.update_positions_table()
         self.positions.backup_positions()
 
@@ -228,6 +246,11 @@ class Session:
         self.communication.grab_stack()
         self.load_image('reference')
 
+    def collect_new_macro_image(self):
+        self.communication.set_macro_imaging_conditions()
+        self.communication.grab_stack()
+        self.load_image('macro')
+
     def move_to_pos_id(self, pos_id):
         x, y, z = [self.positions[pos_id][key] for key in ['x', 'y', 'z']]
         self.communication.move_stage(x, y, z)
@@ -246,22 +269,22 @@ class Session:
     def start_imaging(self):
         self.communication.get_scan_props()
         self.communication.set_normal_imaging_conditions()
-        self.position_timers = {}
+        self.state.position_timers = {}
         self.start_expt_log()
         self.timer_steps_queue.clear_timers()
         individual_steps = self.timeline.get_steps_for_queue()
         for pos_id in individual_steps:
-            self.position_timers[pos_id] = PositionTimer(self, individual_steps[pos_id],
+            self.state.position_timers[pos_id] = PositionTimer(self, individual_steps[pos_id],
                                                          self.add_step_to_queue, pos_id)
-        self.imaging_active = True
-        self.queue_run = threading.Thread(target=self.run_steps_from_queue_when_appropriate)
-        self.queue_run.daemon = True
-        self.queue_run.start()
+        self.state.imaging_active = True
+        self.state.queue_run = threading.Thread(target=self.run_steps_from_queue_when_appropriate)
+        self.state.queue_run.daemon = True
+        self.state.queue_run.start()
 
     def stop_imaging(self):
-        for pos_id in self.position_timers:
-            self.position_timers[pos_id].stop()
-        self.imaging_active = False
+        for pos_id in self.state.position_timers:
+            self.state.position_timers[pos_id].stop()
+        self.state.imaging_active = False
 
 
 class TimerStepsQueue(Queue):
@@ -354,6 +377,18 @@ class MacroImage(AcquiredImage):
         super(MacroImage, self).__init__(settings)
         self.is_macro = True
         self.zoom = settings.get('macro_zoom')
+        self.pil_image = None
+
+    def set_image_contrast(self):
+        self.image_stack = np.array([contrast_stretch(img) for img in self.image_stack])
+        self.image_stack = self.image_stack / np.max(self.image_stack) * 255
+
+    def create_pil_image(self):
+        # since PIL doesn't support creating multiframe images, save the image and load it as a workaround for now.
+        image_list = [Image.fromarray(image.astype(np.uint8)) for image in self.image_stack]
+        image_list[0].save("../temp/macro_image.tif", compression="tiff_deflate", save_all=True,
+                           append_images=image_list[1:])
+        self.pil_image = Image.open("../temp/macro_image.tif")
 
 
 # TODO: Add way to convert z_slices to z_um
@@ -427,11 +462,16 @@ class Communication:
 
     def __init__(self, settings):
         self.settings = settings
+        self.session = None
         self.instructions_received = []
         self.instructions_in_queue = Queue()
         self.command_writer = CommandWriter(self.settings)
         self.command_reader = CommandReader(self.settings, self.instructions_in_queue, self.instructions_received)
         self.instructions_listener_thread = self.initialize_instructions_listener_thread()
+
+    def bind_session(self, session):
+        self.session = session
+        self.command_reader.bind_session(session)
 
     def initialize_instructions_listener_thread(self):
         input_file = self.settings.get('input_file')
@@ -445,7 +485,7 @@ class Communication:
 
     def move_stage(self, x=None, y=None, z=None):
         if self.settings.get('park_xy_motor'):
-            x_motor, y_motor, _ = self.settings.get('center_motor_coordinates')
+            x_motor, y_motor, _ = self.session.state.center_coordinates.get_motor_coordinates()
             self.set_scan_shift(x, y)
         else:
             x_motor = x
@@ -485,7 +525,7 @@ class Communication:
         scan_angle_range_reference = np.array(self.settings.get('scan_angle_range_reference'))
         fov = np.array(self.settings['fov_x_y'])
         # convert x and y to relative pixel coordinates
-        x_center, y_center, _ = self.settings.get('center_motor_coordinates')
+        x_center, y_center, _ = self.session.state.center_coordinates.get_motor_coordinates()
         fs_coordinates = np.array([x - x_center, y - y_center])
         fs_normalized = fs_coordinates / fov
         fs_angular = fs_normalized * scan_angle_multiplier * scan_angle_range_reference
@@ -499,7 +539,7 @@ class Communication:
         fov = np.array(self.settings['fov_x_y'])
         fs_angular = np.array([scan_angle_x_y[0], -scan_angle_x_y[1]])
         if x_center is None:
-            x_center, y_center, _ = self.settings.get('center_motor_coordinates')
+            x_center, y_center, _ = self.session.state.center_coordinates.get_motor_coordinates()
         fs_normalized = fs_angular / (scan_angle_multiplier * scan_angle_range_reference)
         fs_coordinates = fs_normalized * fov
         x, y = fs_coordinates + np.array([x_center, y_center])
@@ -560,17 +600,16 @@ class Communication:
     def get_current_position(self):
         flag = 'current_positions'
         self.command_reader.received_flags[flag] = False
-        self.command_writer.get_current_position()
+        self.command_writer.get_current_motor_position()
         self.command_reader.wait_for_received_flag(flag)
-        x, y, z = self.settings.get('current_motor_coordinates')
+        # x, y, z = self.session.current_coordinates.get_motor_coordinates()
         flag = 'scan_angle_x_y'
         self.command_reader.received_flags[flag] = False
         self.command_writer.get_scan_angle_xy()
         self.command_reader.wait_for_received_flag(flag)
-        current_scan_angle_x_y = self.settings.get('current_scan_angle_x_y')
-        x_with_scan_shift, y_with_scan_shift = self.scan_angle_to_xy(current_scan_angle_x_y, x_center=x, y_center=y)
-        self.settings.set('current_combined_coordinates', x_with_scan_shift, y_with_scan_shift, z)
-        return {'x': x_with_scan_shift, 'y': y_with_scan_shift, 'z': z}
+        # current_scan_angle_x_y = self.settings.get('current_scan_angle_x_y')
+        # x_with_scan_shift, y_with_scan_shift = self.scan_angle_to_xy(current_scan_angle_x_y, x_center=x, y_center=y)
+        # self.settings.set('current_combined_coordinates', x_with_scan_shift, y_with_scan_shift, z)
 
 
 if __name__ == "__main__":

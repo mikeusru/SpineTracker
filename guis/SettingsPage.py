@@ -8,13 +8,13 @@ matplotlib.use("TkAgg")
 class SettingsPage(ttk.Frame):
     name = 'Settings'
 
-    def __init__(self, parent, controller):
-        ttk.Frame.__init__(self, parent)
-        self.controller = controller
+    def __init__(self, container, session):
+        ttk.Frame.__init__(self, container)
+        self.session = session
         self.gui = self.define_gui_elements()
 
     def define_gui_elements(self):
-        settings = self.controller.settings
+        settings = self.session.settings
         gui = dict()
         gui['total_image_channels_label'] = tk.Label(self, text="Total Image Channels",
                                                      font=settings.get('large_font'))
@@ -42,7 +42,7 @@ class SettingsPage(ttk.Frame):
         gui['show_uncaging_roi_cb'].grid(row=4, column=0, sticky='nw', pady=10, padx=10)
 
         gui['macro_resolution_label'] = tk.Label(self, text="Macro Imaging Resolution (X,Y pixels)",
-                                                 font=self.controller.settings.get('large_font'))
+                                                 font=self.session.settings.get('large_font'))
         gui['macro_resolution_label'].grid(row=5, column=0, sticky='nw', padx=10, pady=10)
 
         gui['entry_macro_resolution_x'] = ttk.Entry(self, textvariable=settings.get_gui_var(
@@ -54,7 +54,7 @@ class SettingsPage(ttk.Frame):
         gui['entry_macro_resolution_y'].grid(row=5, column=2, padx=10, pady=10, sticky='nw')
 
         gui['normal_resolution_label'] = tk.Label(self, text="Normal Imaging Resolution (X,Y pixels)",
-                                                  font=self.controller.settings.get('large_font'))
+                                                  font=self.session.settings.get('large_font'))
         gui['normal_resolution_label'].grid(row=6, column=0, sticky='nw', padx=10, pady=10)
 
         gui['entry_normal_resolution_x'] = ttk.Entry(self, textvariable=settings.get_gui_var(

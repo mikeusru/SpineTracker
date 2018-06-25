@@ -10,17 +10,28 @@ class PositionsManager:
     def __init__(self, settings):
         self.settings = settings
         self.positions = Positions()
+        self.session = None
+
+    def bind_session(self, session):
+        self.session = session
 
     def load_previous_positions(self):
         file_name = self.settings.get('init_directory') + 'positions.p'
         self.positions.load_positions_from_file(file_name)
+
+    def get_image(self, pos_id, zoomed_out=False):
+        if zoomed_out:
+            ref_img = self.positions[pos_id].get_ref_image_zoomed_out()
+        else:
+            ref_img = self.positions[pos_id].get_ref_image()
+        return ref_img
 
     def get_roi_x_y(self, pos_id):
         roi_x, roi_y = self.positions[pos_id]['roi_x_y']
         return roi_x, roi_y
 
     def create_new_pos(self, ref_image, ref_image_zoomed_out):
-        xyz = self.settings.get('current_combined_coordinates')
+        xyz = self.session.state.current_coordinates.get_combined_coordinates()
         pos_id = self.positions.initialize_new_position()
         self.positions.set_coordinates(pos_id, xyz)
         self.positions[pos_id].set_ref_image(ref_image)
