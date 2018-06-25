@@ -19,6 +19,11 @@ class Timeline:
             timeline_steps = TimelineSteps(self.settings)
         return timeline_steps
 
+    def backup_timeline(self):
+        timeline_steps = self.timeline_steps
+        pickle.dump(timeline_steps,
+                    open(self.settings.get('init_directory') + 'timeline_steps.p', 'wb'))
+
     def build_full_timeline(self):
         if self.check_if_steps_defined():
             self.populate_individual_timelines()

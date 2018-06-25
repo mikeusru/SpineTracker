@@ -1,13 +1,12 @@
 import tkinter as tk
 from tkinter import ttk
-import matplotlib
-import numpy as np
 
-from flow.TimelineStep import TimelineStepBlock, TimelineStepsMini
-from utilities.helper_functions import fit_fig_to_canvas
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import matplotlib
 from matplotlib import patches
-import pickle
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
+from flow.TimelineStep import TimelineStepBlock
+from utilities.helper_functions import fit_fig_to_canvas
 
 matplotlib.use("TkAgg")
 
@@ -65,7 +64,7 @@ class TimelinePage(ttk.Frame):
         tree.heading("p", text="Period (s)")
         tree.heading("d", text="Duration (m)")
         tree.bind("<Button-3>", self.on_timeline_table_right_click)
-        tree.bind("<<TreeviewSelect>>", self.on_timeline_table_select)
+        # tree.bind("<<TreeviewSelect>>", self.on_timeline_table_select)
         tree.grid(row=0, column=0, sticky='nsew')
         scroll = ttk.Scrollbar(tree.master, orient="vertical", command=tree.yview)
         scroll.grid(row=0, column=1, sticky='nse', pady=10)
@@ -137,20 +136,16 @@ class TimelinePage(ttk.Frame):
     def insert_timeline_step(self, ind):
         self.gui['tFrame'].add_step_callback(self.session, ind)
         self.draw_timeline_steps_general()
-        self.backup_timeline()
+        self.session.timeline.backup_timeline()
 
     def delete_timeline_step(self, ind):
-        del self.session.timeline_steps_general[ind]
+        del self.session.timeline.timeline_steps[ind]
         self.draw_timeline_steps_general()
-        self.backup_timeline()
-
-    def on_timeline_table_select(self, event):
-        # This function is ignored because the class that uses this one as a super also has it
-        pass
+        self.session.timeline.backup_timeline()
 
     def draw_timeline_steps_general(self):
         tree = self.gui['timelineTree']
-        timeline_steps_general = self.session.timeline_steps_general
+        timeline_steps_general = self.session.timeline.timeline_steps
         # clear table first
         for i in tree.get_children():
             tree.delete(i)
@@ -167,11 +162,6 @@ class TimelinePage(ttk.Frame):
 
         self.create_timeline_chart()
 
-    def backup_timeline(self):
-        timeline_steps_general = self.session.timeline_steps_general
-        pickle.dump(timeline_steps_general,
-                    open(self.session.settings.get('init_directory') + 'timeline_steps.p', 'wb'))
-
 
 class TimelineStepsFrame(ttk.Frame):
     def __init__(self, container, session):
@@ -184,8 +174,6 @@ class TimelineStepsFrame(ttk.Frame):
     def define_gui_elements(self):
         gui = dict()
         settings = self.session.settings
-        # TODO: Allow users to add custom steps. The step name is the signal which is sent to the imaging program
-        # So like "Custom Step" becomes custom_step and custom_step_done. Ugh this seems hard... hold off for now. This is for version 2.
         gui['label1'] = ttk.Label(self, text='Step Name:', font=self.session.settings.get('large_font'))
         gui['label1'].grid(row=0, column=0, sticky='nw', padx=10, pady=10)
         gui['step_name_entry'] = ttk.Entry(self, width=30,
@@ -258,9 +246,9 @@ class TimelineStepsFrame(ttk.Frame):
         settings.set('step_name', '')
         settings.set('period', '')
         settings.set('duration', '')
-        cont.frames[TimelinePage].backup_timeline()
+        self.session.timeline.backup_timeline()
 
-    def image_in_from_frame(self, *args):
+    def image_in_from_frame(self):
         var = self.session.settings.get('image_or_uncage')
         if var == "Image":
             self.gui['place_holder_frame'].pack(side='left', anchor='w')
@@ -270,7 +258,7 @@ class TimelineStepsFrame(ttk.Frame):
             self.session.settings.set('exclusive', True)
 
 
-class ColorChart():
+class ColorChart:
     def __init__(self):
         super(ColorChart, self).__init__()
         self.uncaging = 'red'
