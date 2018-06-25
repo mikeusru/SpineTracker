@@ -3,18 +3,15 @@ import numpy as np
 
 
 class CommandReader:
-    def __init__(self, settings, instructions_in_queue, instructions_received):
+    def __init__(self, session, instructions_in_queue, instructions_received):
+        self.session = session
+        self.settings = session.settings
         self.instructions_in_queue = instructions_in_queue
         self.instructions_received = instructions_received
         self.received_flags = {}
-        self.file_path = settings.get('input_file')
-        self.settings = settings
-        self.session = None
+        self.file_path = self.settings.get('input_file')
         if not os.path.isfile(self.file_path):
             open(self.file_path, 'a').close()
-
-    def bind_session(self, session):
-        self.session = session
 
     def read_new_commands(self, *args):
         content = self._read_file()

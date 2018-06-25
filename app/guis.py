@@ -15,18 +15,24 @@ from tkinter import ttk
 class MainGuiBuilder(tk.Tk):
 
     def __init__(self, session):
-        self.settings = session.settings
         self.session = session
+        self.settings = None
         tk.Tk.__init__(self)
         tk.Tk.iconbitmap(self, default="../images/crabIco.ico")  # icon doesn't work
         tk.Tk.wm_title(self, "SpineTracker")
         tk.Tk.geometry(self, newGeometry='1000x600+200+200')
         self.container = ttk.Notebook(self)
         self.container.pack(side="top", fill="both", expand=True)
+        self.protocol("WM_DELETE_WINDOW", self.run_on_exit)
+        self.frames = None
+        self.windows = None
+        self.shared_figs = None
+
+    def build_guis(self):
         self.frames = self.build_frames()
         self.windows = self.build_windows()
         self.shared_figs = self.build_shared_figs()
-        self.protocol("WM_DELETE_WINDOW", self.run_on_exit)
+        self.settings = self.session.settings
 
     def run_on_exit(self):
         print('quitting')

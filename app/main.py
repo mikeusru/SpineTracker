@@ -1,13 +1,17 @@
+import copy
+import datetime as dt
 import os
-import pickle
+import sys
 import threading
 from queue import Queue
 
+import numpy as np
+from PIL import Image
 from scipy import ndimage
 from skimage import io, transform
 
 from app.Coordinates import Coordinates
-from app.PositionsManager import PositionsManager
+from app.Positions import Positions
 from app.Timeline import Timeline
 from app.guis import MainGuiBuilder
 from app.settings import SettingsManager, CommandLineInterpreter
@@ -17,60 +21,7 @@ from io_communication.CommandReader import CommandReader
 from io_communication.CommandWriter import CommandWriter
 from io_communication.file_listeners import InstructionThread
 from utilities.helper_functions import initialize_init_directory
-import numpy as np
-import copy
-import datetime as dt
-import sys
-from PIL import Image
-
 from utilities.math_helpers import contrast_stretch
-
-
-# TODO: Split up instantiation and loading stuff in
-class SpineTracker:
-
-    def __init__(self, *args, **kwargs):
-        self.args = args
-        self.settings = self.initialize_settings()
-        self.command_line_interpreter = self.initialize_command_line_interpreter()
-        self.communication = self.initialize_communication()
-        self.positions = self.initialize_positions()
-        self.timeline = Timeline(self.settings, self.positions)
-        self.session = Session(self.settings,
-                               self.positions,
-                               self.communication,
-                               self.timeline)
-        self.gui = self.initialize_guis()
-        # TODO: This should go somewhere else...
-        initialize_init_directory(self.settings.get('init_directory'))
-        self.log_file = open('log.txt', 'w')
-        self.gui.bind_session(self.session)
-        self.positions.bind_session(self.session)
-        self.communication.bind_session(self.session)
-
-    def initialize_settings(self):
-        settings = SettingsManager(self)
-        settings.initialize_settings()
-        return settings
-
-    def initialize_guis(self):
-        return MainGuiBuilder(self.session)
-
-    def initialize_command_line_interpreter(self):
-        command_line_interpreter = CommandLineInterpreter(self.settings, self.args)
-        command_line_interpreter.interpret()
-        return command_line_interpreter
-
-    def initialize_communication(self):
-        return Communication(self.settings)
-
-    def initialize_positions(self):
-        positions = PositionsManager(self.settings)
-        positions.load_previous_positions()
-        return positions
-
-    def mainloop(self):
-        self.gui.mainloop()
 
 
 class State:
@@ -90,16 +41,51 @@ class State:
         self.queue_run = None
 
 
-class Session:
+class SpineTracker:
 
-    def __init__(self, settings, positions, communication, timeline):
-        self.settings = settings
-        self.gui = None
-        self.positions = positions
-        self.timeline = timeline
-        self.communication = communication
+    def __init__(self, *args):
+        self.gui = MainGuiBuilder(self)
+        self.settings = self.initialize_settings()
+        self.args = args
+        self.command_line_interpreter = self.initialize_command_line_interpreter()
+        self.communication = self.initialize_communication()
+        self.positions = self.initialize_positions()
+        self.timeline = Timeline(self)
+        self.gui.build_guis()
         self.timer_steps_queue = TimerStepsQueue()
         self.state = State(self)
+        self.gui = self.initialize_guis()
+        # TODO: This should go somewhere else...
+        initialize_init_directory(self.settings.get('init_directory'))
+        self.log_file = open('log.txt', 'w')
+
+        # self.gui.bind_session(self.session)
+        # self.positions.bind_session(self.session)
+        # self.communication.bind_session(self.session)
+
+    def initialize_settings(self):
+        settings = SettingsManager(self.gui)
+        # settings.initialize_settings()
+        return settings
+
+    def initialize_guis(self):
+        return MainGuiBuilder(self)
+
+    def initialize_command_line_interpreter(self):
+        command_line_interpreter = CommandLineInterpreter(self.settings, self.args)
+        command_line_interpreter.interpret()
+        return command_line_interpreter
+
+    def initialize_communication(self):
+        return Communication(self)
+
+    def initialize_positions(self):
+        positions = Positions(self)
+        positions.load_previous_positions()
+        return positions
+
+    def mainloop(self):
+        self.gui.mainloop()
 
     def bind_guis(self, gui):
         self.gui = gui
@@ -117,22 +103,23 @@ class Session:
         if image_type == 'standard':
             self.state.current_image.zoom = self.settings.get('imaging_zoom')
             self.state.current_image.load()
+            self.gui.reset_figure_for_af_images(self.state.current_image)
         elif image_type == 'zoomed_out':
             self.state.current_image.zoom = self.settings.get('reference_zoom')
             self.state.current_image.load()
+            self.gui.reset_figure_for_af_images(self.state.current_image)
         elif image_type == 'reference':
             self.state.ref_image.load()
+            self.gui.reset_figure_for_af_images(self.state.ref_image)
         elif image_type == 'reference_zoomed_out':
             self.state.ref_image_zoomed_out.load()
+            self.gui.reset_figure_for_af_images(self.state.ref_image_zoomed_out)
         elif image_type == 'macro':
             self.state.macro_image.load()
             self.state.macro_image.set_image_contrast()
             self.state.macro_image.create_pil_image()
         else:
             print("WRONG IMAGE TYPE")
-        # TODO: Throw error if it's some other kind of image
-        if not image_type == 'macro':
-            self.gui.reset_figure_for_af_images()
 
     def correct_xyz_drift(self, pos_id=None, zoom=None):
         if zoom is None:
@@ -141,11 +128,9 @@ class Session:
             pos_id = self.state.current_pos_id
         reference_max_projection = self.get_ref_image(zoom, pos_id)
         self.state.current_image.calc_x_y_z_drift(reference_max_projection)
-        self.positions[pos_id]['x'] -= self.state.current_image.drift_x_y_z.x_um
-        self.positions[pos_id]['y'] += self.state.current_image.drift_x_y_z.y_um
-        self.positions[pos_id]['z'] += self.state.current_image.drift_x_y_z.z_um
-        self.gui.show_drift_info(image_stack=self.state.current_image, pos_id=pos_id)
-        self.positions.record_drift_history(self.state.current_image)
+        self.positions.update_coordinates_for_drift(pos_id, self.state.current_image.drift_x_y_z)
+        self.gui.show_drift_info(self.state.current_image, pos_id)
+        self.positions.record_drift_history_of_acquired_image(self.state.current_image)
         self.positions.backup_positions()
 
     def get_ref_image(self, zoom, pos_id):
@@ -233,7 +218,8 @@ class Session:
         self.positions.backup_positions()
 
     def update_position(self, pos_id):
-        xyz = self.communication.get_current_position()
+        self.communication.get_current_position()
+        xyz = self.state.current_coordinates.get_combined_coordinates()
         self.positions[pos_id].set_coordinates(xyz)
         self.gui.update_positions_table()
         self.positions.backup_positions()
@@ -275,7 +261,7 @@ class Session:
         individual_steps = self.timeline.get_steps_for_queue()
         for pos_id in individual_steps:
             self.state.position_timers[pos_id] = PositionTimer(self, individual_steps[pos_id],
-                                                         self.add_step_to_queue, pos_id)
+                                                               self.add_step_to_queue, pos_id)
         self.state.imaging_active = True
         self.state.queue_run = threading.Thread(target=self.run_steps_from_queue_when_appropriate)
         self.state.queue_run.daemon = True
@@ -384,7 +370,7 @@ class MacroImage(AcquiredImage):
         self.image_stack = self.image_stack / np.max(self.image_stack) * 255
 
     def create_pil_image(self):
-        # since PIL doesn't support creating multiframe images, save the image and load it as a workaround for now.
+        # since PIL doesn't support creating multi-frame images, save the image and load it as a workaround for now.
         image_list = [Image.fromarray(image.astype(np.uint8)) for image in self.image_stack]
         image_list[0].save("../temp/macro_image.tif", compression="tiff_deflate", save_all=True,
                            append_images=image_list[1:])
@@ -415,7 +401,8 @@ class DriftXYZ:
         self.z_slices = drift_z
         self.focus_list = focus_list
 
-    def measure_focus(self, image):
+    @staticmethod
+    def measure_focus(image):
         # Gaussian derivative (Geusebroek2000)
         w_size = 15
         nn = np.floor(w_size / 2)
@@ -460,18 +447,15 @@ class DriftXYZ:
 
 class Communication:
 
-    def __init__(self, settings):
-        self.settings = settings
+    def __init__(self, session):
+        self.session = session
+        self.settings = session.settings
         self.session = None
         self.instructions_received = []
         self.instructions_in_queue = Queue()
         self.command_writer = CommandWriter(self.settings)
-        self.command_reader = CommandReader(self.settings, self.instructions_in_queue, self.instructions_received)
+        self.command_reader = CommandReader(self.session, self.instructions_in_queue, self.instructions_received)
         self.instructions_listener_thread = self.initialize_instructions_listener_thread()
-
-    def bind_session(self, session):
-        self.session = session
-        self.command_reader.bind_session(session)
 
     def initialize_instructions_listener_thread(self):
         input_file = self.settings.get('input_file')
@@ -602,14 +586,10 @@ class Communication:
         self.command_reader.received_flags[flag] = False
         self.command_writer.get_current_motor_position()
         self.command_reader.wait_for_received_flag(flag)
-        # x, y, z = self.session.current_coordinates.get_motor_coordinates()
         flag = 'scan_angle_x_y'
         self.command_reader.received_flags[flag] = False
         self.command_writer.get_scan_angle_xy()
         self.command_reader.wait_for_received_flag(flag)
-        # current_scan_angle_x_y = self.settings.get('current_scan_angle_x_y')
-        # x_with_scan_shift, y_with_scan_shift = self.scan_angle_to_xy(current_scan_angle_x_y, x_center=x, y_center=y)
-        # self.settings.set('current_combined_coordinates', x_with_scan_shift, y_with_scan_shift, z)
 
 
 if __name__ == "__main__":

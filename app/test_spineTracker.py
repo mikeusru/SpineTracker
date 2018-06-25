@@ -1,16 +1,14 @@
-import unittest
-
-import numpy as np
-
-from utilities.math_helpers import round_math, blank_to_none, none_to_blank, compute_drift
+from unittest import TestCase
 
 
-class TestMath(unittest.TestCase):
+class TestSpineTracker(TestCase):
 
     @classmethod
     def setUpClass(cls):
         """runs once before all tests"""
         print('setupClass')
+        from app.main import SpineTracker
+        cls.app = SpineTracker()
 
     @classmethod
     def tearDownClass(cls):
@@ -25,9 +23,5 @@ class TestMath(unittest.TestCase):
         """runs code after every test"""
         pass
 
-    def test_set(self):
-        pass
-
-
-if __name__ == '__main__':
-    unittest.main()
+    def test_mainloop(self):
+        self.app.mainloop()

@@ -14,11 +14,11 @@ class SettingsManager:
 
     def __init__(self, container):
         self.container = container
-        # self.settings_dto = SettingsDTO(container)
+        self.settings_dto = SettingsDTO(container)
         self.set_default_traces()
 
-    def initialize_settings(self):
-        self.settings_dto = SettingsDTO(self.container)
+    # def initialize_settings(self):
+    #     self.settings_dto = SettingsDTO(self.container)
 
     def set_default_traces(self):
         for name, setting in self.settings_dto.items():
@@ -144,7 +144,7 @@ class SettingsDTO(dict):
         self._create_variable(name, gui_var=None, saved=False, default=default, callback=None, dtype=dtype)
 
     def _create_gui_variable(self, name, gui_var, saved, default, callback=None, dtype=None):
-        gui_var = gui_var(self.container, name=name)
+        gui_var = gui_var(master=self.container, name=name)
         self._create_variable(name, gui_var, saved, default, callback, dtype)
 
     def _create_variable(self, name,

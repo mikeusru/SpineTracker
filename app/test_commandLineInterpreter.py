@@ -1,11 +1,7 @@
-import unittest
-
-import numpy as np
-
-from utilities.math_helpers import round_math, blank_to_none, none_to_blank, compute_drift
+from unittest import TestCase
 
 
-class TestMath(unittest.TestCase):
+class TestCommandLineInterpreter(TestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -25,9 +21,9 @@ class TestMath(unittest.TestCase):
         """runs code after every test"""
         pass
 
-    def test_set(self):
-        pass
+    def test_interpret(self):
+        self.assertTrue(1==1)
 
+    def test__set_setting(self):
+        self.assertTrue(1==1)
 
-if __name__ == '__main__':
-    unittest.main()

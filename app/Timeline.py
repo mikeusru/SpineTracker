@@ -5,9 +5,10 @@ import os
 
 class Timeline:
 
-    def __init__(self, settings, positions):
-        self.settings = settings
-        self.positions = positions
+    def __init__(self, session):
+        self.session = session
+        self.settings = session.settings
+        self.positions = session.positions
         self.timeline_steps = self.initialize_timeline_steps()
         self.ordered_timelines_by_positions = AllPositionTimelines(settings)
 
