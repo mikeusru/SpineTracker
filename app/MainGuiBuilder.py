@@ -2,7 +2,6 @@
 @author: smirnovm
 """
 from matplotlib.figure import Figure
-
 from guis.MacroWindow import MacroWindow
 from guis.PositionsPage import PositionsPage
 from guis.SettingsPage import SettingsPage

@@ -5,7 +5,7 @@ import matplotlib
 from matplotlib import patches
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
-from flow.TimelineStep import TimelineStepBlock
+from app.Timeline import TimelineStepBlock
 from utilities.helper_functions import fit_fig_to_canvas
 
 matplotlib.use("TkAgg")
@@ -183,10 +183,10 @@ class TimelineStepsFrame(ttk.Frame):
         gui['place_holder_frame'].grid(row=1, column=1, columnspan=1, sticky='nw', pady=10)
         gui['place_holder_frame'] = ttk.Frame(gui['place_holder_frame'])
         gui['place_holder_frame'].pack(side='left', anchor='w')
-        gui['radio_button1'] = ttk.Radiobutton(self, text='Image',
-                                               variable=settings.get_gui_var('image_or_uncage'),
-                                               value='Image')
-        gui['radio_button1'].grid(row=1, column=0, sticky='nw', pady=10, padx=10)
+        gui['image_radio_button'] = ttk.Radiobutton(self, text='Image',
+                                                    variable=settings.get_gui_var('image_or_uncage'),
+                                                    value='Image')
+        gui['image_radio_button'].grid(row=1, column=0, sticky='nw', pady=10, padx=10)
         gui['period_label1'] = ttk.Label(gui['place_holder_frame'], text='  Period: ',
                                          font=self.session.settings.get('large_font'))
         gui['period_label1'].pack(anchor='w', side='left')
@@ -205,10 +205,10 @@ class TimelineStepsFrame(ttk.Frame):
         gui['duration_label2'] = ttk.Label(gui['place_holder_frame'], text='min',
                                            font=self.session.settings.get('large_font'))
         gui['duration_label2'].pack(anchor='w', side='left')
-        gui['radio_button2'] = ttk.Radiobutton(self, text='Uncage',
-                                               variable=settings.get_gui_var('image_or_uncage'),
-                                               value='Uncage')
-        gui['radio_button2'].grid(row=2, column=0, sticky='nw', padx=10, pady=3)
+        gui['uncage_radio_button'] = ttk.Radiobutton(self, text='Uncage',
+                                                     variable=settings.get_gui_var('image_or_uncage'),
+                                                     value='Uncage')
+        gui['uncage_radio_button'].grid(row=2, column=0, sticky='nw', padx=10, pady=3)
         gui['exclusive_checkbutton'] = ttk.Checkbutton(self, text='Exclusive',
                                                        variable=settings.get_gui_var('exclusive'))
         gui['exclusive_checkbutton'].grid(row=2, column=1, sticky='nw', padx=10, pady=3)

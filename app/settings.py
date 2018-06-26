@@ -6,7 +6,7 @@ import numpy as np
 import sys
 
 from app.Coordinates import Coordinates
-from utilities.math_helpers import blank_to_none, none_to_blank
+from utilities.math_helpers import blank_to_none, none_to_blank, blank_to_zero
 
 
 # TODO: Check if container has to be the giu for creating gui vars, or if it can just be the main app
@@ -17,17 +17,20 @@ class SettingsManager:
         self.settings_dto = SettingsDTO(container)
 
     def initialize_gui_callbacks(self):
-        self.settings_dto.initialize_callbacks()
         self.set_default_callbacks()
 
     def set_default_callbacks(self):
         for name, setting in self.settings_dto.items():
             if setting.needs_default_trace():
-                setting.set_trace(self.default_trace)
+                setting.set_trace(self.default_callback)
 
-    def default_trace(self, *args):
+    def default_callback(self, *args):
         name = args[0]
         self.update_value(name)
+        if name == 'stagger':
+            self.container.update_timeline_chart()
+        elif name == 'image_or_uncage':
+            self.container.switch_between_image_and_uncage_guis()
 
     def update_value(self, name):
         self.settings_dto[name].update_value_from_gui()
@@ -135,13 +138,6 @@ class SettingsDTO(dict):
         self._create_acquired_variable('z_slice_num', np.array([0]), dtype=np.int)
         self._create_acquired_variable('x_y_resolution', np.array([0]), dtype=np.int)
 
-    def initialize_callbacks(self):
-        self._add_callback('stagger', callback=self.container.update_timeline_chart)
-        self._add_callback('image_or_uncage', callback=self.container.switch_between_image_and_uncage_guis)
-
-    def _add_callback(self, name, callback):
-        self[name].set_trace(callback)
-
     def _create_entered_variable(self, name, default):
         self._create_variable(name, gui_var=None, saved=False, default=default, callback=None, dtype=None)
 
@@ -181,7 +177,7 @@ class Setting:
 
     def _update_dtype(self):
         if self.dtype is not None:
-            self.value = blank_to_none(self.value)
+            self.value = blank_to_zero(self.value)
             if self.value is not None:
                 self.value = np.array(self.value, dtype=self.dtype)
 

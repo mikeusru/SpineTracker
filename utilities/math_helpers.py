@@ -3,6 +3,7 @@ from scipy import ndimage
 import numpy as np
 from skimage import exposure
 
+
 def round_math(n, n_digits=0):
     part = n * 10 ** n_digits
     delta = part - int(part)
@@ -27,6 +28,14 @@ def blank_to_none(var):
     else:
         return var
 
+
+def blank_to_zero(var):
+    if isinstance(var, str) and (var == ""):
+        return 0
+    else:
+        return var
+
+
 def none_to_blank(var):
     if var is None:
         return ""
@@ -40,8 +49,6 @@ def none_to_blank(var):
 #     else:
 #         y = float(x)
 #     return y
-
-
 
 
 # output is directional shift [x,y] in pixels. based on Sugar et al (2014) paper

@@ -15,18 +15,20 @@ class Timeline:
     def initialize_timeline_steps(self):
         file_name = self.settings.get('init_directory') + 'timeline_steps.p'
         try:
+            timeline_steps = TimelineSteps(self.settings)
             if os.path.isfile(file_name):
-                timeline_steps = pickle.load(open(file_name, 'rb'))
-            else:
-                timeline_steps = TimelineSteps(self.settings)
+                timeline_steps_list = pickle.load(open(file_name, 'rb'))
+                for step in timeline_steps_list:
+                    timeline_steps.add_step(step)
+
         except AttributeError as err:
             print(f'Unable to load {file_name}: {err}')
             timeline_steps = TimelineSteps(self.settings)
         return timeline_steps
 
     def backup_timeline(self):
-        timeline_steps = self.timeline_steps
-        pickle.dump(timeline_steps,
+        timeline_steps_list = [step for step in self.timeline_steps]
+        pickle.dump(timeline_steps_list,
                     open(self.settings.get('init_directory') + 'timeline_steps.p', 'wb'))
 
     def build_full_timeline(self):
