@@ -2,11 +2,10 @@ import tkinter as tk
 from tkinter import ttk
 import matplotlib
 import numpy as np
-from PIL import Image, ImageTk, ImageMath, ImageOps
+from PIL import ImageTk, ImageMath
 from skimage import transform
 
-from guis.PositionsPage import PositionsPage
-from utilities.math_helpers import round_math, contrast_stretch
+from utilities.math_helpers import round_math
 
 matplotlib.use("TkAgg")
 

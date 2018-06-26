@@ -15,12 +15,12 @@ class SettingsManager:
     def __init__(self, container):
         self.container = container
         self.settings_dto = SettingsDTO(container)
-        self.set_default_traces()
 
-    # def initialize_settings(self):
-    #     self.settings_dto = SettingsDTO(self.container)
+    def initialize_gui_callbacks(self):
+        self.settings_dto.initialize_callbacks()
+        self.set_default_callbacks()
 
-    def set_default_traces(self):
+    def set_default_callbacks(self):
         for name, setting in self.settings_dto.items():
             if setting.needs_default_trace():
                 setting.set_trace(self.default_trace)
@@ -99,9 +99,11 @@ class SettingsDTO(dict):
         self._create_command_line_variable('simulation', False)
         self._create_command_line_variable('verbose', False)
 
-        # Settings set in guis
-        self._create_gui_variable('stagger', tk.StringVar, True, 5,
-                                  callback=self.container.update_timeline_chart, dtype=np.int)
+        self.initialize_gui_variables()
+        self.initialize_acquired_variables()
+
+    def initialize_gui_variables(self):
+        self._create_gui_variable('stagger', tk.StringVar, True, 5, dtype=np.int)
         self._create_gui_variable('drift_correction_channel', tk.StringVar, True, 1, dtype=np.int)
         self._create_gui_variable('total_channels', tk.StringVar, True, 2, dtype=np.int)
         self._create_gui_variable('imaging_zoom', tk.StringVar, True, 30, dtype=np.int)
@@ -116,14 +118,13 @@ class SettingsDTO(dict):
         self._create_gui_variable('macro_zoom', tk.StringVar, True, 1, dtype=np.int)
         self._create_gui_variable('macro_z_slices', tk.StringVar, True, 10, dtype=np.int)
         self._create_gui_variable('uncaging_roi_toggle', tk.BooleanVar, True, False)
-        self._create_gui_variable('image_or_uncage', tk.StringVar, False, 'Image',
-                                  callback=self.container.switch_between_image_and_uncage_guis)
+        self._create_gui_variable('image_or_uncage', tk.StringVar, False, 'Image')
         self._create_gui_variable('exclusive', tk.BooleanVar, False, False)
         self._create_gui_variable('duration', tk.StringVar, False, 5, dtype=np.int)
         self._create_gui_variable('period', tk.StringVar, False, 60, dtype=np.int)
         self._create_gui_variable('step_name', tk.StringVar, False, "StepName")
 
-        # Settings gotten from imaging program
+    def initialize_acquired_variables(self):
         self._create_acquired_variable('fov_x_y', np.array([250, 250]), dtype=np.float32)
         self._create_acquired_variable('scan_angle_multiplier', np.array([1, 1]), dtype=np.float32)
         self._create_acquired_variable('scan_angle_range_reference', np.array([15, 15]), dtype=np.float32)
@@ -133,6 +134,13 @@ class SettingsDTO(dict):
         self._create_acquired_variable('current_zoom', np.array([0]), dtype=np.int)
         self._create_acquired_variable('z_slice_num', np.array([0]), dtype=np.int)
         self._create_acquired_variable('x_y_resolution', np.array([0]), dtype=np.int)
+
+    def initialize_callbacks(self):
+        self._add_callback('stagger', callback=self.container.update_timeline_chart)
+        self._add_callback('image_or_uncage', callback=self.container.switch_between_image_and_uncage_guis)
+
+    def _add_callback(self, name, callback):
+        self[name].set_trace(callback)
 
     def _create_entered_variable(self, name, default):
         self._create_variable(name, gui_var=None, saved=False, default=default, callback=None, dtype=None)
@@ -214,20 +222,21 @@ class CommandLineInterpreter:
     def interpret(self):
         args = self.args
         if args is not None:
-            args = args[0]
-            try:
-                options, remainder = getopt.getopt(args, 'sv', ['simulation', 'verbose'])
-            except getopt.GetoptError:
-                print('Error - incorrect input format')
-                print('correct Format: main.py -v -s')
-                sys.exit(2)
-            for opt, val in options:
-                if opt in ('-s', '--simulation'):
-                    print('simulation mode on')
-                    self._set_setting('simulation', True)
-                elif opt in ('-v', '--verbose'):
-                    print('verbose mode on')
-                    self._set_setting('verbose', True)
+            args = args[0][0]
+            if len(args) != 0:
+                try:
+                    options, remainder = getopt.getopt(args, 'sv', ['simulation', 'verbose'])
+                except getopt.GetoptError:
+                    print('Error - incorrect input format')
+                    print('correct Format: main.py -v -s')
+                    sys.exit(2)
+                for opt, val in options:
+                    if opt in ('-s', '--simulation'):
+                        print('simulation mode on')
+                        self._set_setting('simulation', True)
+                    elif opt in ('-v', '--verbose'):
+                        print('verbose mode on')
+                        self._set_setting('verbose', True)
 
     def _set_setting(self, name, value):
         self.settings_manager.set(name, value)

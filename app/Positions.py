@@ -10,7 +10,6 @@ class Positions(dict):
     def __init__(self, session):
         super(Positions, self).__init__()
         self.settings = session.settings
-        self.positions = Positions()
         self.session = session
 
     def get_image(self, pos_id, zoomed_out=False):
@@ -76,6 +75,7 @@ class Positions(dict):
         self[pos_id]['x'] -= drift_x_y_z.x_um
         self[pos_id]['y'] += drift_x_y_z.y_um
         self[pos_id]['z'] += drift_x_y_z.z_um
+
 
 class Position:
     def __init__(self):

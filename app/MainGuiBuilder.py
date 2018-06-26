@@ -6,21 +6,22 @@ from matplotlib.figure import Figure
 from guis.MacroWindow import MacroWindow
 from guis.PositionsPage import PositionsPage
 from guis.SettingsPage import SettingsPage
-from guis.StartPage import StartPage
-from guis.TimelinePage import TimelinePage
 import tkinter as tk
 from tkinter import ttk
+
+from guis.StartPage import StartPage
+from guis.TimelinePage import TimelinePage
 
 
 class MainGuiBuilder(tk.Tk):
 
     def __init__(self, session):
-        self.session = session
-        self.settings = None
         tk.Tk.__init__(self)
         tk.Tk.iconbitmap(self, default="../images/crabIco.ico")  # icon doesn't work
         tk.Tk.wm_title(self, "SpineTracker")
         tk.Tk.geometry(self, newGeometry='1000x600+200+200')
+        self.session = session
+        self.settings = None
         self.container = ttk.Notebook(self)
         self.container.pack(side="top", fill="both", expand=True)
         self.protocol("WM_DELETE_WINDOW", self.run_on_exit)
@@ -29,10 +30,9 @@ class MainGuiBuilder(tk.Tk):
         self.shared_figs = None
 
     def build_guis(self):
-        self.frames = self.build_frames()
-        self.windows = self.build_windows()
-        self.shared_figs = self.build_shared_figs()
         self.settings = self.session.settings
+        self.shared_figs = self.build_shared_figs()
+        self.frames = self.build_frames()
 
     def run_on_exit(self):
         print('quitting')
@@ -51,8 +51,7 @@ class MainGuiBuilder(tk.Tk):
         return frames
 
     def build_macro_window(self):
-        windows = {MacroWindow: MacroWindow(self)}
-        return windows
+        self.windows = {MacroWindow: MacroWindow(self)}
 
     def build_shared_figs(self):
         fig_dpi = self.settings.get('fig_dpi')
@@ -84,6 +83,12 @@ class MainGuiBuilder(tk.Tk):
 
     def update_positions_table(self):
         self.frames[PositionsPage].redraw_position_table()
+
+    def update_timeline_chart(self, *args):
+        self.frames[TimelinePage].create_timeline_chart()
+
+    def switch_between_image_and_uncage_guis(self, *args):
+        self.frames[TimelinePage].gui['tFrame'].image_in_from_frame()
 
 
 class SharedFigs(dict):

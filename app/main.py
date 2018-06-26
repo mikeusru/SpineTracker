@@ -13,14 +13,12 @@ from skimage import io, transform
 from app.Coordinates import Coordinates
 from app.Positions import Positions
 from app.Timeline import Timeline
-from app.guis import MainGuiBuilder
+from app.MainGuiBuilder import MainGuiBuilder
 from app.settings import SettingsManager, CommandLineInterpreter
 from flow.PositionTimer import PositionTimer
-from guis import TimelinePage
 from io_communication.CommandReader import CommandReader
 from io_communication.CommandWriter import CommandWriter
 from io_communication.file_listeners import InstructionThread
-from utilities.helper_functions import initialize_init_directory
 from utilities.math_helpers import contrast_stretch
 
 
@@ -45,7 +43,7 @@ class SpineTracker:
 
     def __init__(self, *args):
         self.gui = MainGuiBuilder(self)
-        self.settings = self.initialize_settings()
+        self.settings = SettingsManager(self.gui)
         self.args = args
         self.command_line_interpreter = self.initialize_command_line_interpreter()
         self.communication = self.initialize_communication()
@@ -54,22 +52,16 @@ class SpineTracker:
         self.gui.build_guis()
         self.timer_steps_queue = TimerStepsQueue()
         self.state = State(self)
-        self.gui = self.initialize_guis()
+        self.settings.initialize_gui_callbacks()
         # TODO: This should go somewhere else...
-        initialize_init_directory(self.settings.get('init_directory'))
+        self.initialize_init_directory()
         self.log_file = open('log.txt', 'w')
 
-        # self.gui.bind_session(self.session)
-        # self.positions.bind_session(self.session)
-        # self.communication.bind_session(self.session)
-
-    def initialize_settings(self):
-        settings = SettingsManager(self.gui)
-        # settings.initialize_settings()
-        return settings
-
-    def initialize_guis(self):
-        return MainGuiBuilder(self)
+    def initialize_init_directory(self):
+        init_directory = self.settings.get('init_directory')
+        directory = os.path.dirname(init_directory)
+        if not os.path.exists(directory):
+            os.mkdir(directory)
 
     def initialize_command_line_interpreter(self):
         command_line_interpreter = CommandLineInterpreter(self.settings, self.args)
@@ -86,9 +78,6 @@ class SpineTracker:
 
     def mainloop(self):
         self.gui.mainloop()
-
-    def bind_guis(self, gui):
-        self.gui = gui
 
     def start_expt_log(self):
         file_path = self.settings.get('experiment_log_file')
@@ -245,12 +234,6 @@ class SpineTracker:
         file_path = self.settings.get('experiment_log_file')
         with open(file_path, "a") as f:
             f.write(line + '\n')
-
-    def update_timeline_chart(self, *args):
-        self.gui.frames[TimelinePage].create_timeline_chart()
-
-    def switch_between_image_and_uncage_guis(self, *args):
-        self.gui.frames[TimelinePage].gui['tFrame'].image_in_from_frame()
 
     def start_imaging(self):
         self.communication.get_scan_props()
@@ -450,7 +433,6 @@ class Communication:
     def __init__(self, session):
         self.session = session
         self.settings = session.settings
-        self.session = None
         self.instructions_received = []
         self.instructions_in_queue = Queue()
         self.command_writer = CommandWriter(self.settings)

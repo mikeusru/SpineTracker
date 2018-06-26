@@ -17,8 +17,5 @@ def remove_keymap_conflicts(new_keys_set):
                 keys.remove(key)
 
 
-def initialize_init_directory(init_directory):
-    directory = os.path.dirname(init_directory)
-    if not os.path.exists(directory):
-        os.mkdir(directory)
+
 

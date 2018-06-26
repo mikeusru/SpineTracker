@@ -29,7 +29,7 @@ class TestSettingsManager(TestCase):
         self.settings.initialize_settings()
 
 
-    # def test_set_default_traces(self):
+    # def test_set_default_callbacks(self):
     #     self.fail()
     #
     # def test_default_trace(self):

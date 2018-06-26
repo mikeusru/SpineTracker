@@ -94,7 +94,7 @@ class TimelinePage(ttk.Frame):
             x_range_list = []
             color_list = []
             y_ind += 1
-            for step in timeline.individual_position_timeline_dict[pos_id].timeline_step_individual_list:
+            for step in timeline.ordered_timelines_by_positions[pos_id].timeline_step_individual_list:
                 x_range_list.append((step['start_time'], step['end_time'] - step['start_time']))
                 if not step['exclusive']:
                     color_list.append(color_chart.imaging)
@@ -230,7 +230,7 @@ class TimelineStepsFrame(ttk.Frame):
         gui['place_holder_frame'] = gui['place_holder_frame']
         return gui
 
-    def add_step_callback(self, cont, ind=None):
+    def add_step_callback(self, ind=None, *args):
         # get values
         settings = self.session.settings
         step_name = settings.get('step_name')
@@ -240,7 +240,7 @@ class TimelineStepsFrame(ttk.Frame):
         exclusive = settings.get('exclusive')
         timeline_step = TimelineStepBlock(step_name=step_name, imaging_or_uncaging=imaging_or_uncaging,
                                           exclusive=exclusive, period=period, duration=duration, index=ind)
-        self.session.add_timeline_step(timeline_step)
+        self.session.timeline.add_timeline_step(timeline_step)
         self.container.draw_timeline_steps_general()
         # reset values
         settings.set('step_name', '')

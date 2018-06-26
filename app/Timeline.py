@@ -10,13 +10,17 @@ class Timeline:
         self.settings = session.settings
         self.positions = session.positions
         self.timeline_steps = self.initialize_timeline_steps()
-        self.ordered_timelines_by_positions = AllPositionTimelines(settings)
+        self.ordered_timelines_by_positions = AllPositionTimelines(self.settings)
 
     def initialize_timeline_steps(self):
         file_name = self.settings.get('init_directory') + 'timeline_steps.p'
-        if os.path.isfile(file_name):
-            timeline_steps = pickle.load(open(file_name, 'rb'))
-        else:
+        try:
+            if os.path.isfile(file_name):
+                timeline_steps = pickle.load(open(file_name, 'rb'))
+            else:
+                timeline_steps = TimelineSteps(self.settings)
+        except AttributeError as err:
+            print(f'Unable to load {file_name}: {err}')
             timeline_steps = TimelineSteps(self.settings)
         return timeline_steps
 

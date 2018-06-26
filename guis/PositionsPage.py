@@ -2,7 +2,6 @@ import tkinter as tk
 from tkinter import ttk
 import matplotlib
 import numpy as np
-from guis.SettingsPage import SettingsPage
 from utilities.DraggableCircle import DraggableCircle
 from utilities.helper_functions import fit_fig_to_canvas
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg

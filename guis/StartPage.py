@@ -15,8 +15,8 @@ matplotlib.use("TkAgg")
 class StartPage(ttk.Frame):
     name = 'Main'
 
-    def __init__(self, parent, session):
-        ttk.Frame.__init__(self, parent)
+    def __init__(self, container, session):
+        ttk.Frame.__init__(self, container)
         self.session = session
         self.settings = session.settings
         self.bind("<Visibility>", self.on_visibility)
@@ -46,13 +46,13 @@ class StartPage(ttk.Frame):
         gui['canvas_af'].get_tk_widget().config(borderwidth=1, background='gray', highlightcolor='gray',
                                                 highlightbackground='gray')
         gui['canvas_af'].get_tk_widget().grid(row=1, column=0, padx=10, pady=10, sticky='nsew')
-        gui['canvas_timeline'] = FigureCanvasTkAgg(self.session.gui.shared_figs['timeline_figure'],
+        gui['canvas_timeline'] = FigureCanvasTkAgg(session.gui.shared_figs['timeline_figure'],
                                                    gui['frame_for_canvases'])
         gui['canvas_timeline'].show()
         gui['canvas_timeline'].get_tk_widget().config(borderwidth=1, background='gray', highlightcolor='gray',
                                                       highlightbackground='gray')
         gui['canvas_timeline'].get_tk_widget().grid(row=0, column=0, padx=10, pady=10, sticky='nsew')
-        gui['canvas_positions'] = FigureCanvasTkAgg(self.session.gui.shared_figs['f_positions'],
+        gui['canvas_positions'] = FigureCanvasTkAgg(session.gui.shared_figs['f_positions'],
                                                     gui['frame_for_canvases'])
         gui['canvas_positions'].show()
         gui['canvas_positions'].get_tk_widget().config(borderwidth=1, background='gray', highlightcolor='gray',
