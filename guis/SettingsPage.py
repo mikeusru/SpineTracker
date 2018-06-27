@@ -64,4 +64,35 @@ class SettingsPage(ttk.Frame):
         gui['entry_normal_resolution_y'] = ttk.Entry(self, textvariable=settings.get_gui_var(
             'normal_resolution_y'))
         gui['entry_normal_resolution_y'].grid(row=6, column=2, padx=10, pady=10, sticky='nw')
+        gui['set_fov_manually_cb'] = ttk.Checkbutton(self, text="Manually Set Field of View",
+                                                     variable=settings.get_gui_var(
+                                                         'manual_fov_toggle'))
+        gui['set_fov_manually_cb'].grid(row=7, column=0, sticky='nw', pady=10, padx=10)
+        gui['fov_size_label'] = tk.Label(self, text="Field of View (X,Y µm)",
+                                         font=self.session.settings.get('large_font'))
+        gui['fov_size_label'].grid(row=8, column=0, sticky='nw', padx=10, pady=10)
+
+        gui['entry_fov_x'] = ttk.Entry(self, textvariable=settings.get_gui_var(
+            'fov_x'))
+
+        gui['entry_fov_x'].grid(row=8, column=1, padx=10, pady=10, sticky='nw')
+        gui['entry_fov_y'] = ttk.Entry(self, textvariable=settings.get_gui_var(
+            'fov_y'))
+        gui['entry_fov_y'].grid(row=8, column=2, padx=10, pady=10, sticky='nw')
+
         return gui
+
+    def toggle_fov_mode(self):
+        var = self.session.settings.get('manual_fov_toggle')
+        if var:
+            self.enable_fov_entry()
+        else:
+            self.disable_fov_entry()
+
+    def disable_fov_entry(self):
+        self.gui['entry_fov_x'].configure(state='disable')
+        self.gui['entry_fov_y'].configure(state='disable')
+
+    def enable_fov_entry(self):
+        self.gui['entry_fov_x'].configure(state='enable')
+        self.gui['entry_fov_y'].configure(state='enable')

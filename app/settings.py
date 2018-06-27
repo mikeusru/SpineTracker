@@ -1,12 +1,12 @@
 import getopt
 import os
 import pickle
-import tkinter as tk
-import numpy as np
 import sys
+import tkinter as tk
 
-from app.Coordinates import Coordinates
-from utilities.math_helpers import blank_to_none, none_to_blank, blank_to_zero
+import numpy as np
+
+from utilities.math_helpers import none_to_blank, blank_to_zero
 
 
 # TODO: Check if container has to be the giu for creating gui vars, or if it can just be the main app
@@ -31,6 +31,8 @@ class SettingsManager:
             self.container.update_timeline_chart()
         elif name == 'image_or_uncage':
             self.container.switch_between_image_and_uncage_guis()
+        elif name == 'manual_fov_toggle':
+            self.container.toggle_manual_fov_entering()
 
     def update_value(self, name):
         self.settings_dto[name].update_value_from_gui()
@@ -121,6 +123,9 @@ class SettingsDTO(dict):
         self._create_gui_variable('macro_zoom', tk.StringVar, True, 1, dtype=np.int)
         self._create_gui_variable('macro_z_slices', tk.StringVar, True, 10, dtype=np.int)
         self._create_gui_variable('uncaging_roi_toggle', tk.BooleanVar, True, False)
+        self._create_gui_variable('manual_fov_toggle', tk.BooleanVar, True, True)
+        self._create_gui_variable('fov_x', tk.StringVar, True, 250, dtype=np.int)
+        self._create_gui_variable('fov_y', tk.StringVar, True, 250, dtype=np.int)
         self._create_gui_variable('image_or_uncage', tk.StringVar, False, 'Image')
         self._create_gui_variable('exclusive', tk.BooleanVar, False, False)
         self._create_gui_variable('duration', tk.StringVar, False, 5, dtype=np.int)
@@ -179,7 +184,11 @@ class Setting:
         if self.dtype is not None:
             self.value = blank_to_zero(self.value)
             if self.value is not None:
-                self.value = np.array(self.value, dtype=self.dtype)
+                try:
+                    self.value = np.array(self.value, dtype=self.dtype)
+                except ValueError as err:
+                    self.value = np.array(0, dtype=self.dtype)
+                    print(err)
 
     def set(self, value):
         self.value = value

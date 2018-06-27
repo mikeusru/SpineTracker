@@ -5,21 +5,14 @@ import sys
 import threading
 from queue import Queue
 
-import numpy as np
-from PIL import Image
-from scipy import ndimage
-from skimage import io, transform
-
+from app.AcquiredImage import AcquiredImage, ReferenceImage, MacroImage
+from app.Communication import Communication
 from app.Coordinates import Coordinates
+from app.MainGuiBuilder import MainGuiBuilder
 from app.Positions import Positions
 from app.Timeline import Timeline
-from app.MainGuiBuilder import MainGuiBuilder
 from app.settings import SettingsManager, CommandLineInterpreter
 from flow.PositionTimer import PositionTimer
-from io_communication.CommandReader import CommandReader
-from io_communication.CommandWriter import CommandWriter
-from io_communication.file_listeners import InstructionThread
-from utilities.math_helpers import contrast_stretch
 
 
 class State:
@@ -46,16 +39,23 @@ class SpineTracker:
         self.settings = SettingsManager(self.gui)
         self.args = args
         self.command_line_interpreter = self.initialize_command_line_interpreter()
-        self.communication = self.initialize_communication()
+        self.communication = Communication(self)
         self.positions = self.initialize_positions()
         self.timeline = Timeline(self)
         self.gui.build_guis()
         self.timer_steps_queue = TimerStepsQueue()
         self.state = State(self)
         self.settings.initialize_gui_callbacks()
-        # TODO: This should go somewhere else...
         self.initialize_init_directory()
         self.log_file = open('log.txt', 'w')
+
+    def exit(self):
+        print('quitting')
+        self.communication.instructions_listener_thread.stop()
+        print('Instruction listener closed')
+        self.log_file.close()
+        self.gui.destroy()
+        print('goodbye')
 
     def initialize_init_directory(self):
         init_directory = self.settings.get('init_directory')
@@ -67,9 +67,6 @@ class SpineTracker:
         command_line_interpreter = CommandLineInterpreter(self.settings, self.args)
         command_line_interpreter.interpret()
         return command_line_interpreter
-
-    def initialize_communication(self):
-        return Communication(self)
 
     def initialize_positions(self):
         positions = Positions(self)
@@ -286,292 +283,6 @@ class TimerStepsQueue(Queue):
     def clear_timers(self):
         with self.mutex:
             self.queue.clear()
-
-
-class AcquiredImage:
-
-    def __init__(self, settings):
-        self.settings = settings
-        self.image_stack = np.array([])
-        self.is_macro = False
-        self.is_reference = False
-        self.zoom = settings.get('current_zoom')
-        self.pos_id = 1
-        self.drift_x_y_z = DriftXYZ()
-
-    def load(self):
-        image_file_path = self.settings.get('image_file_path')
-        total_chan = int(self.settings.get('total_channels'))
-        drift_chan = int(self.settings.get('drift_correction_channel'))
-        image_stack = io.imread(image_file_path)
-        image_stack = image_stack[np.arange(drift_chan - 1, len(image_stack), total_chan)]
-        self.image_stack = image_stack
-
-    def calc_x_y_z_drift(self, reference_max_projection):
-        self.drift_x_y_z.compute_drift_z(self.image_stack)
-        self.calc_x_y_drift(reference_max_projection)
-
-    def get_max_projection(self):
-        return np.max(self.image_stack.copy(), axis=0)
-
-    def calc_x_y_drift(self, reference_max_projection):
-        image_max_projection = self.get_max_projection()
-        reference_resized = transform.resize(reference_max_projection, image_max_projection.shape)
-        fov_x_y = self.settings.get('fov_x_y')
-        self.drift_x_y_z.compute_drift_x_y(reference_resized, image_max_projection)
-        self.drift_x_y_z.scale_x_y_drift_to_image(fov_x_y, self.zoom, image_max_projection.shape)
-
-    def get_shape(self):
-        return self.image_stack.shape
-
-
-class ReferenceImage(AcquiredImage):
-
-    def __init__(self, settings):
-        super(ReferenceImage, self).__init__(settings)
-        self.is_reference = True
-
-
-class ReferenceImageZoomedOut(AcquiredImage):
-
-    def __init__(self, settings):
-        super(ReferenceImageZoomedOut, self).__init__(settings)
-        self.is_reference = True
-        self.zoom = settings.get('reference_zoom')
-
-
-class MacroImage(AcquiredImage):
-
-    def __init__(self, settings):
-        super(MacroImage, self).__init__(settings)
-        self.is_macro = True
-        self.zoom = settings.get('macro_zoom')
-        self.pil_image = None
-
-    def set_image_contrast(self):
-        self.image_stack = np.array([contrast_stretch(img) for img in self.image_stack])
-        self.image_stack = self.image_stack / np.max(self.image_stack) * 255
-
-    def create_pil_image(self):
-        # since PIL doesn't support creating multi-frame images, save the image and load it as a workaround for now.
-        image_list = [Image.fromarray(image.astype(np.uint8)) for image in self.image_stack]
-        image_list[0].save("../temp/macro_image.tif", compression="tiff_deflate", save_all=True,
-                           append_images=image_list[1:])
-        self.pil_image = Image.open("../temp/macro_image.tif")
-
-
-# TODO: Add way to convert z_slices to z_um
-class DriftXYZ:
-
-    def __init__(self):
-        self.x_pixels = 0
-        self.x_um = 0
-        self.y_pixels = 0
-        self.y_um = 0
-        self.z_slices = 0
-        self.z_um = 0
-        self.focus_list = np.array([])
-
-    def copy(self):
-        return copy.deepcopy(self)
-
-    def compute_drift_z(self, image_stack):
-        focus_list = []
-        for image_slice in image_stack:
-            focus_list.append(self.measure_focus(image_slice))
-        focus_list = np.array(focus_list)
-        drift_z = focus_list.argmax().item() - np.floor(len(image_stack) / 2)
-        self.z_slices = drift_z
-        self.focus_list = focus_list
-
-    @staticmethod
-    def measure_focus(image):
-        # Gaussian derivative (Geusebroek2000)
-        w_size = 15
-        nn = np.floor(w_size / 2)
-        sig = nn / 2.5
-        r = np.arange(-nn.astype(int), nn.astype(int) + 1)
-        x, y = np.meshgrid(r, r)
-        gg = np.exp(-(x ** 2 + y ** 2) / (2 * sig ** 2)) / (2 * np.pi * sig)
-        gx = -x * gg / (sig ** 2)
-        gx = gx / np.sum(gx, 1)
-        gy = -y * gg / (sig ** 2)
-        gy = gy / np.sum(gy)
-        ry = ndimage.convolve(image.astype(float), gx, mode='nearest')
-        rx = ndimage.convolve(image.astype(float), gy, mode='nearest')
-        f_m = rx ** 2 + ry ** 2
-        f_m = np.mean(f_m)
-        return f_m
-
-    def compute_drift_x_y(self, img_ref, img):
-        h, w = img_ref.shape
-        fft_ref = np.fft.fft2(img_ref)
-        fft_img = np.fft.fft2(img)
-        center_y = h / 2
-        center_x = w / 2
-        prod = fft_ref * np.conj(fft_img)
-        cc = np.fft.ifft2(prod)
-        max_y, max_x = np.nonzero(np.fft.fftshift(cc) == np.max(cc))
-        shift_y = max_y - center_y
-        shift_x = max_x - center_x
-        # Checks to see if there is an ambiguity problem with FFT because of the
-        # periodic boundary in FFT (not sure why or if this is necessary but I'm
-        # keeping it around for now)
-        if np.abs(shift_y) > h / 2:
-            shift_y = shift_y - np.sign(shift_y) * h
-        if np.abs(shift_x) > h / 2:
-            shift_x = shift_x - np.sign(shift_x) * w
-        self.x_pixels = shift_x
-        self.y_pixels = shift_y
-
-    def scale_x_y_drift_to_image(self, fov_x_y, zoom, image_shape):
-        self.x_um, self.y_um = np.array([self.x_pixels, self.y_pixels]) / image_shape * fov_x_y / zoom
-
-
-class Communication:
-
-    def __init__(self, session):
-        self.session = session
-        self.settings = session.settings
-        self.instructions_received = []
-        self.instructions_in_queue = Queue()
-        self.command_writer = CommandWriter(self.settings)
-        self.command_reader = CommandReader(self.session, self.instructions_in_queue, self.instructions_received)
-        self.instructions_listener_thread = self.initialize_instructions_listener_thread()
-
-    def initialize_instructions_listener_thread(self):
-        input_file = self.settings.get('input_file')
-        path, filename = os.path.split(input_file)
-        read_function = self.command_reader.read_new_commands
-        with self.instructions_in_queue.mutex:
-            self.instructions_in_queue.queue.clear()
-            instructions_listener_thread = InstructionThread(self, path, filename, read_function)
-            instructions_listener_thread.start()
-        return instructions_listener_thread
-
-    def move_stage(self, x=None, y=None, z=None):
-        if self.settings.get('park_xy_motor'):
-            x_motor, y_motor, _ = self.session.state.center_coordinates.get_motor_coordinates()
-            self.set_scan_shift(x, y)
-        else:
-            x_motor = x
-            y_motor = y
-        flag = 'stage_move_done'
-        self.command_reader.received_flags[flag] = False
-        self.command_writer.move_stage(x_motor, y_motor, z)
-        self.command_reader.wait_for_received_flag(flag)
-
-    def grab_stack(self):
-        flag = 'grab_one_stack_done'
-        self.command_reader.received_flags[flag] = False
-        self.command_writer.grab_one_stack()
-        self.command_reader.wait_for_received_flag(flag)
-
-    def uncage(self, roi_x, roi_y):
-        flag = 'uncaging_done'
-        self.command_reader.received_flags[flag] = False
-        self.command_writer.do_uncaging(roi_x, roi_y)
-        self.command_reader.wait_for_received_flag(flag)
-
-    def set_scan_shift(self, x, y):
-        scan_shift_fast, scan_shift_slow = self.xy_to_scan_angle(x, y)
-        flag = 'scan_angle_x_y'
-        self.command_reader.received_flags[flag] = False
-        self.command_writer.set_scan_shift(scan_shift_fast, scan_shift_slow)
-        self.command_reader.wait_for_received_flag(flag)
-
-    def set_z_slice_num(self, z_slice_num):
-        flag = 'z_slice_num'
-        self.command_reader.received_flags[flag] = False
-        self.command_writer.set_z_slice_num(z_slice_num)
-        self.command_reader.wait_for_received_flag(flag)
-
-    def xy_to_scan_angle(self, x, y):
-        scan_angle_multiplier = np.array(self.settings.get('scan_angle_multiplier'))
-        scan_angle_range_reference = np.array(self.settings.get('scan_angle_range_reference'))
-        fov = np.array(self.settings['fov_x_y'])
-        # convert x and y to relative pixel coordinates
-        x_center, y_center, _ = self.session.state.center_coordinates.get_motor_coordinates()
-        fs_coordinates = np.array([x - x_center, y - y_center])
-        fs_normalized = fs_coordinates / fov
-        fs_angular = fs_normalized * scan_angle_multiplier * scan_angle_range_reference
-        scan_shift_fast, scan_shift_slow = fs_angular
-        # TODO: Add setting to invert scan shift. Or just tune it automatically.
-        return scan_shift_fast, -scan_shift_slow
-
-    def scan_angle_to_xy(self, scan_angle_x_y, x_center=None, y_center=None):
-        scan_angle_multiplier = np.array(self.settings.get('scan_angle_multiplier'))
-        scan_angle_range_reference = np.array(self.settings.get('scan_angle_range_reference'))
-        fov = np.array(self.settings['fov_x_y'])
-        fs_angular = np.array([scan_angle_x_y[0], -scan_angle_x_y[1]])
-        if x_center is None:
-            x_center, y_center, _ = self.session.state.center_coordinates.get_motor_coordinates()
-        fs_normalized = fs_angular / (scan_angle_multiplier * scan_angle_range_reference)
-        fs_coordinates = fs_normalized * fov
-        x, y = fs_coordinates + np.array([x_center, y_center])
-        return x, y
-
-    def get_scan_props(self):
-        flag = 'scanAngleMultiplier'
-        self.command_reader.received_flags[flag] = False
-        self.command_writer.get_scan_angle_multiplier()
-        self.command_reader.wait_for_received_flag(flag)
-
-        flag = 'scanAngleRangeReference'
-        self.command_reader.received_flags[flag] = False
-        self.command_writer.get_scan_angle_range_reference()
-        self.command_reader.wait_for_received_flag(flag)
-
-    def set_zoom(self, zoom):
-        flag = 'zoom'
-        self.command_reader.received_flags[flag] = False
-        self.command_writer.set_zoom(zoom)
-        self.command_reader.wait_for_received_flag(flag)
-        self.settings.set('current_zoom', zoom)
-
-    def set_resolution(self, x_resolution, y_resolution):
-        flag = 'x_y_resolution'
-        self.command_reader.received_flags[flag] = False
-        self.command_writer.set_x_y_resolution(x_resolution, y_resolution)
-        self.command_reader.wait_for_received_flag(flag)
-
-    def set_macro_imaging_conditions(self):
-        zoom = self.settings.get('macro_zoom')
-        x_resolution = self.settings.get('macro_resolution_x')
-        y_resolution = self.settings.get('macro_resolution_y')
-        z_slice_num = self.settings.get('macro_z_slices')
-        self.set_zoom(zoom)
-        self.set_resolution(x_resolution, y_resolution)
-        self.set_z_slice_num(z_slice_num)
-
-    def set_normal_imaging_conditions(self):
-        zoom = self.settings.get('imaging_zoom')
-        x_resolution = self.settings.get('normal_resolution_x')
-        y_resolution = self.settings.get('normal_resolution_y')
-        z_slice_num = self.settings.get('imaging_slices')
-        self.set_zoom(zoom)
-        self.set_resolution(x_resolution, y_resolution)
-        self.set_z_slice_num(z_slice_num)
-
-    def set_reference_imaging_conditions(self):
-        zoom = self.settings.get('reference_zoom')
-        x_resolution = self.settings.get('normal_resolution_x')
-        y_resolution = self.settings.get('normal_resolution_y')
-        z_slice_num = self.settings.get('reference_slices')
-        self.set_zoom(zoom)
-        self.set_resolution(x_resolution, y_resolution)
-        self.set_z_slice_num(z_slice_num)
-
-    # TODO: Coordinates should be in their own class, combining motor and scan angle together.
-    def get_current_position(self):
-        flag = 'current_positions'
-        self.command_reader.received_flags[flag] = False
-        self.command_writer.get_current_motor_position()
-        self.command_reader.wait_for_received_flag(flag)
-        flag = 'scan_angle_x_y'
-        self.command_reader.received_flags[flag] = False
-        self.command_writer.get_scan_angle_xy()
-        self.command_reader.wait_for_received_flag(flag)
 
 
 if __name__ == "__main__":

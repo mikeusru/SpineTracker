@@ -88,7 +88,7 @@ class DraggableCircle:
         # turn off the circ animation property and reset the background
         self.circ.set_animated(False)
         self.background = None
-        self.position['roi_x_y'] = np.array(self.circ.center)
+        self.position.set_roi_x_y(np.array(self.circ.center))
         self.master.controller.backup_positions()
         # redraw the full figure
         self.circ.figure.canvas.draw_idle()

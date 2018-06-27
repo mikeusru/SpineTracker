@@ -34,12 +34,7 @@ class MainGuiBuilder(tk.Tk):
         self.frames = self.build_frames()
 
     def run_on_exit(self):
-        print('quitting')
-        self.ins_thread.stop()
-        print('Instruction listener closed')
-        self.log_file.close()
-        self.destroy()
-        print('goodbye')
+        self.session.exit()
 
     def build_frames(self):
         frames = {}
@@ -88,6 +83,9 @@ class MainGuiBuilder(tk.Tk):
 
     def switch_between_image_and_uncage_guis(self, *args):
         self.frames[TimelinePage].gui['tFrame'].image_in_from_frame()
+
+    def toggle_manual_fov_entering(self, *args):
+        self.frames[SettingsPage].toggle_fov_mode()
 
 
 class SharedFigs(dict):

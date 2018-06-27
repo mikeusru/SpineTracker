@@ -232,12 +232,11 @@ class PositionsPage(ttk.Frame):
         self.gui['canvas_preview_ref_images'].draw_idle()
 
     def draw_ref_images(self, pos_id):
-        refs = [self.session.positions[pos_id].get('ref_img', np.zeros((128, 128), dtype=np.uint8)),
-                self.session.positions[pos_id].get('ref_img_zoomout', np.zeros((128, 128), dtype=np.uint8))]
+        refs = [self.session.positions.get_image(pos_id, zoomed_out=False),
+                self.session.positions.get_image(pos_id, zoomed_out=True)]
         for ax, r in zip(self.gui['ref_images_axes'], refs):
             ax.clear()
             ax.axis('off')
-            print(r.shape)
             ax.imshow(r)
         self.draw_roi(pos_id, self.gui['ref_images_axes'][0])
         self.gui['canvas_preview_ref_images'].draw_idle()
@@ -245,7 +244,7 @@ class PositionsPage(ttk.Frame):
     def draw_roi(self, pos_id, ax):
         if self.session.settings.get('uncaging_roi_toggle'):
             ax_width = abs(np.diff(ax.get_xlim()).item())
-            x, y = self.session.positions[pos_id]['roi_x_y']
+            x, y = self.session.positions.get_roi_x_y(pos_id)
             circle = patches.Circle((x, y), radius=ax_width / 20, fill=False, linewidth=ax_width / 20, edgecolor='r')
             ax.add_patch(circle)
             dc = DraggableCircle(self, self.session.positions[pos_id], circle)

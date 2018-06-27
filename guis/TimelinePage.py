@@ -240,6 +240,9 @@ class TimelineStepsFrame(ttk.Frame):
         exclusive = settings.get('exclusive')
         timeline_step = TimelineStepBlock(step_name=step_name, imaging_or_uncaging=imaging_or_uncaging,
                                           exclusive=exclusive, period=period, duration=duration, index=ind)
+        if not timeline_step.is_valid():
+            print('Warning - Period and Duration must both be >0 for Imaging Steps')
+            return
         self.session.timeline.add_timeline_step(timeline_step)
         self.container.draw_timeline_steps_general()
         # reset values
