@@ -51,7 +51,7 @@ class SettingsManager:
             print('Variable {} does not exist. Declare all variables first in SettingsDTO'.format(name))
 
     def get(self, name):
-        return self.settings_dto[name].value
+        return self.settings_dto[name].get_value()
 
     def get_gui_var(self, name):
         return self.settings_dto[name].gui_var
@@ -136,10 +136,9 @@ class SettingsDTO(dict):
         self._create_acquired_variable('fov_x_y', np.array([250, 250]), dtype=np.float32)
         self._create_acquired_variable('scan_angle_multiplier', np.array([1, 1]), dtype=np.float32)
         self._create_acquired_variable('scan_angle_range_reference', np.array([15, 15]), dtype=np.float32)
-        self._create_acquired_variable('current_zoom', None, dtype=np.int)
         self._create_acquired_variable('macro_image', np.zeros([128, 128]), dtype=np.uint8)
         self._create_acquired_variable('image_file_path', '../test/test_image.tif')
-        self._create_acquired_variable('current_zoom', np.array([0]), dtype=np.int)
+        self._create_acquired_variable('current_zoom', 1, dtype=np.int)
         self._create_acquired_variable('z_slice_num', np.array([0]), dtype=np.int)
         self._create_acquired_variable('x_y_resolution', np.array([0]), dtype=np.int)
 
@@ -168,7 +167,7 @@ class SettingsDTO(dict):
 class Setting:
 
     def __init__(self, name, gui_var, saved, default, callback=None, dtype=None):
-        self.setting = name
+        self.name = name
         self.gui_var = gui_var
         self.saved = saved
         self.default = default
@@ -185,7 +184,7 @@ class Setting:
             self.value = blank_to_zero(self.value)
             if self.value is not None:
                 try:
-                    self.value = np.array(self.value, dtype=self.dtype)
+                    self.value = np.array([self.value], dtype=self.dtype)
                 except ValueError as err:
                     self.value = np.array(0, dtype=self.dtype)
                     print(err)
@@ -195,10 +194,16 @@ class Setting:
         self._update_dtype()
         self.update_gui()
 
+    def get_value(self):
+        val = self.value
+        if (type(self.value) is np.ndarray) and (len(self.value) == 1):
+            val = self.value.item(0)
+        return val
+
     def update_gui(self):
         if self.gui_var is not None:
             # print('var: {}, value: {}'.format(self.gui_var, self.value))
-            value = none_to_blank(self.value)
+            value = none_to_blank(self.get_value())
             self.gui_var.set(value)
 
     def set_trace(self, callback=None):

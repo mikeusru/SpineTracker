@@ -24,10 +24,10 @@ class State:
         self.current_pos_id = 1
         self.current_coordinates = Coordinates(self.settings)
         self.center_coordinates = Coordinates(self.settings)
-        self.current_image = AcquiredImage(self.settings)
-        self.ref_image = ReferenceImage(self.settings)
-        self.ref_image_zoomed_out = ReferenceImage(self.settings)
-        self.macro_image = MacroImage(self.settings)
+        self.current_image = AcquiredImage()
+        self.ref_image = ReferenceImage()
+        self.ref_image_zoomed_out = ReferenceImage()
+        self.macro_image = MacroImage()
         self.position_timers = {}
         self.queue_run = None
 
@@ -87,6 +87,9 @@ class SpineTracker:
 
     def start_expt_log(self):
         file_path = self.settings.get('experiment_log_file')
+        directory = os.path.dirname(file_path)
+        if not os.path.exists(directory):
+            os.mkdir(directory)
         open(file_path, 'a').close()
 
     def write_to_expt_log(self, line):
@@ -97,20 +100,20 @@ class SpineTracker:
     def load_image(self, image_type='standard'):
         if image_type == 'standard':
             self.state.current_image.zoom = self.settings.get('imaging_zoom')
-            self.state.current_image.load()
+            self.state.current_image.load(self.settings)
             self.gui.reset_figure_for_af_images(self.state.current_image)
         elif image_type == 'zoomed_out':
             self.state.current_image.zoom = self.settings.get('reference_zoom')
-            self.state.current_image.load()
+            self.state.current_image.load(self.settings)
             self.gui.reset_figure_for_af_images(self.state.current_image)
         elif image_type == 'reference':
-            self.state.ref_image.load()
+            self.state.ref_image.load(self.settings)
             self.gui.reset_figure_for_af_images(self.state.ref_image)
         elif image_type == 'reference_zoomed_out':
-            self.state.ref_image_zoomed_out.load()
+            self.state.ref_image_zoomed_out.load(self.settings)
             self.gui.reset_figure_for_af_images(self.state.ref_image_zoomed_out)
         elif image_type == 'macro':
-            self.state.macro_image.load()
+            self.state.macro_image.load(self.settings)
             self.state.macro_image.set_image_contrast()
             self.state.macro_image.create_pil_image()
         else:
@@ -233,7 +236,7 @@ class SpineTracker:
         self.load_image('macro')
 
     def move_to_pos_id(self, pos_id):
-        x, y, z = [self.positions[pos_id][key] for key in ['x', 'y', 'z']]
+        x, y, z = [self.positions.get_coordinates(pos_id)[key] for key in ['x', 'y', 'z']]
         self.communication.move_stage(x, y, z)
 
     def write_to_log(self, line):

@@ -8,13 +8,16 @@ Created on Fri Jan 12 11:01:40 2018
 # draggable Circle with the animation blit techniques; see
 # http://www.scipy.org/Cookbook/Matplotlib/Animations
 import numpy as np
-#import matplotlib.pyplot as plt
+
+
+# import matplotlib.pyplot as plt
 
 
 class DraggableCircle:
     lock = None  # only one can be animated at a time
-    def __init__(self, master, position, circ):
-        self.master = master
+
+    def __init__(self, session, position, circ):
+        self.session = session
         self.position = position
         self.circ = circ
         self.press = None
@@ -36,7 +39,7 @@ class DraggableCircle:
         if DraggableCircle.lock is not None: return
         contains, attrd = self.circ.contains(event)
         if not contains: return
-#        print('event contains', self.circ.center)
+        #        print('event contains', self.circ.center)
         x0, y0 = self.circ.center
         self.press = x0, y0, event.xdata, event.ydata
         DraggableCircle.lock = self
@@ -62,10 +65,10 @@ class DraggableCircle:
         x0, y0, xpress, ypress = self.press
         dx = event.xdata - xpress
         dy = event.ydata - ypress
-        
-        new_x,new_y = x0+dx, y0+dy
-        self.circ.center = (new_x,new_y)
-        
+
+        new_x, new_y = x0 + dx, y0 + dy
+        self.circ.center = (new_x, new_y)
+
         canvas = self.circ.figure.canvas
         axes = self.circ.axes
         # restore the background region
@@ -89,7 +92,7 @@ class DraggableCircle:
         self.circ.set_animated(False)
         self.background = None
         self.position.set_roi_x_y(np.array(self.circ.center))
-        self.master.controller.backup_positions()
+        self.session.positions.backup_positions()
         # redraw the full figure
         self.circ.figure.canvas.draw_idle()
 
@@ -99,13 +102,13 @@ class DraggableCircle:
         self.circ.figure.canvas.mpl_disconnect(self.cidrelease)
         self.circ.figure.canvas.mpl_disconnect(self.cidmotion)
 
-#fig = plt.figure()
-#ax = fig.add_subplot(111)
-#rects = ax.bar(range(10), 20*np.random.rand(10))
-#drs = []
-#for rect in rects:
+# fig = plt.figure()
+# ax = fig.add_subplot(111)
+# rects = ax.bar(range(10), 20*np.random.rand(10))
+# drs = []
+# for rect in rects:
 #    dr = DraggableRectangle(rect)
 #    dr.connect()
 #    drs.append(dr)
 #
-#plt.show()
+# plt.show()

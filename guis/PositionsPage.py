@@ -233,10 +233,10 @@ class PositionsPage(ttk.Frame):
     def draw_ref_images(self, pos_id):
         refs = [self.session.positions.get_image(pos_id, zoomed_out=False),
                 self.session.positions.get_image(pos_id, zoomed_out=True)]
-        for ax, r in zip(self.gui['ref_images_axes'], refs):
+        for ax, ref_image in zip(self.gui['ref_images_axes'], refs):
             ax.clear()
             ax.axis('off')
-            ax.imshow(r)
+            ax.imshow(ref_image.get_max_projection())
         self.draw_roi(pos_id, self.gui['ref_images_axes'][0])
         self.gui['canvas_preview_ref_images'].draw_idle()
 
@@ -246,6 +246,6 @@ class PositionsPage(ttk.Frame):
             x, y = self.session.positions.get_roi_x_y(pos_id)
             circle = patches.Circle((x, y), radius=ax_width / 20, fill=False, linewidth=ax_width / 20, edgecolor='r')
             ax.add_patch(circle)
-            dc = DraggableCircle(self, self.session.positions[pos_id], circle)
+            dc = DraggableCircle(self.session, self.session.positions[pos_id], circle)
             dc.connect()
             self.draggable_circle = dc

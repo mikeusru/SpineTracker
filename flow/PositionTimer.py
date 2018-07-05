@@ -11,11 +11,11 @@ class PositionTimer(object):
         self.args = args
         self.kwargs = kwargs
         self.is_running = False
-        self.stepCount = 0
+        self.step_count = 0
 
-        self.runTimes = []
+        self.run_times = []
         for step in self.steps:
-            self.runTimes.append(step['start_time'])
+            self.run_times.append(step['start_time'])
 
         self.start()
 
@@ -26,18 +26,18 @@ class PositionTimer(object):
 
     def start(self):
         if not self.is_running:
-            if self.stepCount >= len(self.runTimes):
+            if self.step_count >= len(self.run_times):
                 return
-            if self.stepCount == 0:
+            if self.step_count == 0:
                 prev_time = 0
             else:
-                prev_time = self.runTimes[self.stepCount - 1]
-            interval = self.runTimes[self.stepCount] - prev_time
-            step_count = self.stepCount
-            self.stepCount += 1
+                prev_time = self.run_times[self.step_count - 1]
+            interval = self.run_times[self.step_count] - prev_time
+            step_count = self.step_count
+            self.step_count += 1
             # for now, interval is store in minutes. probably a good idea to change it to seconds.
             interval = interval * 60
-            self.session.print_status('\nTimer Interval = {0}'.format(interval))
+            print('\nTimer Interval = {0}'.format(interval))
             self._timer = threading.Timer(interval, self._run, args=[step_count])
             self._timer.start()
             self.is_running = True

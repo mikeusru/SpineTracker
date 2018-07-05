@@ -8,11 +8,11 @@ class DriftXYZ:
 
     def __init__(self):
         self.x_pixels = 0
-        self.x_um = 0
+        self.x_um = 0.0
         self.y_pixels = 0
-        self.y_um = 0
+        self.y_um = 0.0
         self.z_slices = 0
-        self.z_um = 0
+        self.z_um = 0.0
         self.focus_list = np.array([])
 
     def copy(self):
@@ -64,8 +64,9 @@ class DriftXYZ:
             shift_y = shift_y - np.sign(shift_y) * h
         if np.abs(shift_x) > h / 2:
             shift_x = shift_x - np.sign(shift_x) * w
-        self.x_pixels = shift_x
-        self.y_pixels = shift_y
+        self.x_pixels = shift_x.item()
+        self.y_pixels = shift_y.item()
 
     def scale_x_y_drift_to_image(self, fov_x_y, zoom, image_shape):
-        self.x_um, self.y_um = np.array([self.x_pixels, self.y_pixels]) / image_shape * fov_x_y / zoom
+        x_y_um = np.squeeze(np.array([self.x_pixels, self.y_pixels])) / image_shape * fov_x_y / zoom
+        self.x_um, self.y_um = x_y_um

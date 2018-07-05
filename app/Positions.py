@@ -51,10 +51,13 @@ class Positions(dict):
 
     def load_previous_positions(self):
         file_name = self.settings.get('init_directory') + 'positions.p'
-        if os.path.isfile(file_name):
-            positions_dict = pickle.load(open(file_name, 'rb'))
-            for pos_id, position in positions_dict.items():
-                self[pos_id] = position
+        try:
+            if os.path.isfile(file_name):
+                positions_dict = pickle.load(open(file_name, 'rb'))
+                for pos_id, position in positions_dict.items():
+                    self[pos_id] = position
+        except EOFError as err:
+            print(f'Error loading positions: {err}')
 
     def initialize_new_position(self):
         pos_id = self._get_next_pos_id()

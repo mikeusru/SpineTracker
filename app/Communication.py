@@ -69,8 +69,8 @@ class Communication:
         scan_angle_range_reference = np.array(self.settings.get('scan_angle_range_reference'))
         fov = np.array(self.settings.get('fov_x_y'))
         # convert x and y to relative pixel coordinates
-        x_center, y_center, _ = self.session.state.center_coordinates.get_motor_coordinates()
-        fs_coordinates = np.array([x - x_center, y - y_center])
+        xyz_center = self.session.state.center_coordinates.get_motor_coordinates()
+        fs_coordinates = np.array([x - xyz_center['x'], y - xyz_center['y']])
         fs_normalized = fs_coordinates / fov
         fs_angular = fs_normalized * scan_angle_multiplier * scan_angle_range_reference
         scan_shift_fast, scan_shift_slow = fs_angular

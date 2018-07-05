@@ -68,7 +68,7 @@ class Timeline:
         return total_pos_num
 
     def get_steps_for_queue(self):
-        steps_for_queue = self.ordered_timelines_by_positions.get_ordered_mini_steps()
+        steps_for_queue = self.ordered_timelines_by_positions.get_timeline_step_individual_list()
         return steps_for_queue
 
 
@@ -148,11 +148,11 @@ class AllPositionTimelines(dict):
                 break
         return done_building
 
-    def get_ordered_mini_steps(self):
-        ordered_mini_steps_by_position = {}
+    def get_timeline_step_individual_list(self):
+        ordered_timeline_step_individual_list_by_position= {}
         for pos_id, individual_position_timeline in self.items():
-            ordered_mini_steps_by_position[pos_id] = individual_position_timeline.mini_steps
-        return ordered_mini_steps_by_position
+            ordered_timeline_step_individual_list_by_position[pos_id] = individual_position_timeline.timeline_step_individual_list
+        return ordered_timeline_step_individual_list_by_position
 
 
 class IndividualPositionTimeline(dict):
@@ -166,7 +166,6 @@ class IndividualPositionTimeline(dict):
         self.total_time = 0
         self.pos_count = pos_count
         self.start_end_time_array = []
-        self.mini_steps = []
         self.timeline_step_individual_list = []
         self.min_start_time = 0
         self.step_building_index = 0
