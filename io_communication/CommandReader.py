@@ -87,7 +87,7 @@ class CommandReader:
         elif command == 'fovXY_um':
             check_num_args(args, 2, 2)
             fov_x_y = np.array([float(args[XY]) for XY in [0, 1]])
-            self.settings['fov_x_y'] = fov_x_y
+            self.settings.set('fov_x_y', fov_x_y)
             self.received_flags['fovXY'] = True
         elif command == 'zoom':
             check_num_args(args, 1, 1)
@@ -95,7 +95,7 @@ class CommandReader:
             self.received_flags['zoom'] = True
         elif command == 'scananglexy':
             check_num_args(args, 2, 2)
-            self.session.state.current_coordinates.set_scan_angle_x_y(args[0], args[1])
+            self.session.state.current_coordinates.set_scan_angles_x_y(args[0], args[1])
             self.received_flags['scan_angle_x_y'] = True
         elif command == 'scananglemultiplier':
             check_num_args(args, 2, 2)

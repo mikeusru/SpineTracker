@@ -38,7 +38,7 @@ class Coordinates:
     def scan_angle_to_um(self):
         scan_angle_multiplier = self.settings.get('scan_angle_multiplier')
         scan_angle_range_reference = self.settings.get('scan_angle_range_reference')
-        fov = self.settings['fov_x_y']
+        fov = self.settings.get('fov_x_y')
         fs_angular = np.array([self.scan_angle_x, -self.scan_angle_y])
         fs_normalized = fs_angular / (scan_angle_multiplier * scan_angle_range_reference)
         fs_coordinates = fs_normalized * fov

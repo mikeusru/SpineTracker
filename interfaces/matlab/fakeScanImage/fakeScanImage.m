@@ -14,6 +14,9 @@ state.init.scanAngularRangeReferenceSlow = 15;
 state.motor.lastPositionRead = [0,0,0];
 state.acq.scanShiftFast = 0;
 state.acq.scanShiftSlow = 0;
+state.acq.pixelsPerLine = 128;
+state.acq.linesPerFrame = 128;
+state.files.fullFileName = [p,'\..\..\..\test\test_image'];
 
 createDummyGui;
 createDummyRois;

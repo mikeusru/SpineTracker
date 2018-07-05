@@ -31,6 +31,15 @@ class State:
         self.position_timers = {}
         self.queue_run = None
 
+    def clear_position_timers(self):
+        self.position_timers = {}
+
+    def initialize_position_timers(self, individual_steps):
+        self.clear_position_timers()
+        for pos_id in individual_steps:
+            self.position_timers[pos_id] = PositionTimer(self, individual_steps[pos_id],
+                                                         self.session.add_step_to_queue, pos_id)
+
 
 class SpineTracker:
 
@@ -194,7 +203,7 @@ class SpineTracker:
         self.gui.update_positions_table()
         self.positions.backup_positions()
 
-    def clear_positions(self):
+    def clear_positions(self, *args):
         self.positions.clear()
         self.gui.update_positions_table()
 
@@ -235,13 +244,10 @@ class SpineTracker:
     def start_imaging(self):
         self.communication.get_scan_props()
         self.communication.set_normal_imaging_conditions()
-        self.state.position_timers = {}
         self.start_expt_log()
         self.timer_steps_queue.clear_timers()
         individual_steps = self.timeline.get_steps_for_queue()
-        for pos_id in individual_steps:
-            self.state.position_timers[pos_id] = PositionTimer(self, individual_steps[pos_id],
-                                                               self.add_step_to_queue, pos_id)
+        self.state.initialize_position_timers(individual_steps)
         self.state.imaging_active = True
         self.state.queue_run = threading.Thread(target=self.run_steps_from_queue_when_appropriate)
         self.state.queue_run.daemon = True

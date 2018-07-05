@@ -29,7 +29,7 @@ if strcmp(start_stop,'reset')
 end
 
 if nargin<2
-    reader_function = @eventhandlerChanged_DUMMY;
+    reader_function = @eventhandlerChanged_Scanimage_3_8;
 end
 
 spineTracker.allCommands = {}; %initialize cell list of commands

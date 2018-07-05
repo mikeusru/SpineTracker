@@ -87,7 +87,7 @@ class MacroWindow(tk.Toplevel):
 
     def add_position_on_image_click(self, x, y, z):
         # translate to normal coordinates
-        fov_x, fov_y = np.array(self.session.settings['fov_x_y']) / float(self.session.settings.get('macro_zoom'))
+        fov_x, fov_y = np.array(self.session.settings.get('fov_x_y')) / float(self.session.settings.get('macro_zoom'))
         # xy currently originate from top left of image.
         # translate them to coordinate plane directionality.
         # also, make them originate from center

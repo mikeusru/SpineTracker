@@ -67,7 +67,7 @@ class Communication:
     def xy_to_scan_angle(self, x, y):
         scan_angle_multiplier = np.array(self.settings.get('scan_angle_multiplier'))
         scan_angle_range_reference = np.array(self.settings.get('scan_angle_range_reference'))
-        fov = np.array(self.settings['fov_x_y'])
+        fov = np.array(self.settings.get('fov_x_y'))
         # convert x and y to relative pixel coordinates
         x_center, y_center, _ = self.session.state.center_coordinates.get_motor_coordinates()
         fs_coordinates = np.array([x - x_center, y - y_center])
@@ -80,7 +80,7 @@ class Communication:
     def scan_angle_to_xy(self, scan_angle_x_y, x_center=None, y_center=None):
         scan_angle_multiplier = np.array(self.settings.get('scan_angle_multiplier'))
         scan_angle_range_reference = np.array(self.settings.get('scan_angle_range_reference'))
-        fov = np.array(self.settings['fov_x_y'])
+        fov = np.array(self.settings.get('fov_x_y'))
         fs_angular = np.array([scan_angle_x_y[0], -scan_angle_x_y[1]])
         if x_center is None:
             x_center, y_center, _ = self.session.state.center_coordinates.get_motor_coordinates()

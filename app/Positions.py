@@ -71,10 +71,14 @@ class Positions(dict):
     def set_coordinates(self, pos_id, xyz):
         self[pos_id].set_coordinates(xyz)
 
+    def get_coordinates(self, pos_id):
+        xyz = self[pos_id].coordinates
+        return xyz
+
     def update_coordinates_for_drift(self, pos_id, drift_x_y_z):
-        self[pos_id]['x'] -= drift_x_y_z.x_um
-        self[pos_id]['y'] += drift_x_y_z.y_um
-        self[pos_id]['z'] += drift_x_y_z.z_um
+        self[pos_id].coordinates['x'] -= drift_x_y_z.x_um
+        self[pos_id].coordinates['y'] += drift_x_y_z.y_um
+        self[pos_id].coordinates['z'] += drift_x_y_z.z_um
 
 
 class Position:
