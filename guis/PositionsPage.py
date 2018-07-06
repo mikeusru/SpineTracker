@@ -48,7 +48,7 @@ class PositionsPage(ttk.Frame):
         self.gui['button_clear_positions'].grid(row=1, column=0, padx=10,
                                                 pady=10, sticky='wn')
         self.gui['button_macro_view'] = ttk.Button(self.gui['frame_for_buttons'], text="Macro View",
-                                                   command=lambda: session.build_macro_window())
+                                                   command=lambda: session.gui.build_macro_window())
         self.gui['button_macro_view'].grid(row=2, column=0, padx=10,
                                            pady=10, sticky='wn')
         self.gui['button_align_positions'] = ttk.Button(self.gui['frame_for_buttons'], text="Align All To Reference",
@@ -212,7 +212,7 @@ class PositionsPage(ttk.Frame):
         positions = self.session.positions
         ax = self.gui['position_preview_axis']
         xyz = positions.get_coordinates(pos_id)
-        x,y = [xyz[key] for key in ['x','y']]
+        x, y = [xyz[key] for key in ['x', 'y']]
         arrow_props = dict(facecolor='black')
         for annotation in ax.texts:
             if annotation.arrow_patch:
@@ -225,8 +225,9 @@ class PositionsPage(ttk.Frame):
             self.gui['tree'].delete(i)
         for pos_id in self.session.positions:
             xyz = self.session.positions.get_coordinates(pos_id)
+            x, y, z = [f'{xyz[key]:.1f}' for key in ['x', 'y', 'z']]
             self.gui['tree'].insert("", pos_id, text="Position {0}".format(pos_id),
-                                    values=(xyz['x'], xyz['y'], xyz['z']))
+                                    values=(x, y, z))
         self.preview_position_locations()
         self.gui['canvas_preview_ref_images'].draw_idle()
 

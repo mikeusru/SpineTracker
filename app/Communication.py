@@ -29,7 +29,8 @@ class Communication:
 
     def move_stage(self, x=None, y=None, z=None):
         if self.settings.get('park_xy_motor'):
-            x_motor, y_motor, _ = self.session.state.center_coordinates.get_motor_coordinates()
+            xyz = self.session.state.center_coordinates.get_motor()
+            x_motor, y_motor = xyz['x'], xyz['y']
             self.set_scan_shift(x, y)
         else:
             x_motor = x
@@ -67,11 +68,11 @@ class Communication:
     def xy_to_scan_angle(self, x, y):
         scan_angle_multiplier = np.array(self.settings.get('scan_angle_multiplier'))
         scan_angle_range_reference = np.array(self.settings.get('scan_angle_range_reference'))
-        fov = np.array(self.settings.get('fov_x_y'))
+        fov_x_y = np.squeeze(np.array([self.settings.get('fov_x'),self.settings.get('fov_y')]))
         # convert x and y to relative pixel coordinates
-        xyz_center = self.session.state.center_coordinates.get_motor_coordinates()
+        xyz_center = self.session.state.center_coordinates.get_motor()
         fs_coordinates = np.array([x - xyz_center['x'], y - xyz_center['y']])
-        fs_normalized = fs_coordinates / fov
+        fs_normalized = fs_coordinates / fov_x_y
         fs_angular = fs_normalized * scan_angle_multiplier * scan_angle_range_reference
         scan_shift_fast, scan_shift_slow = fs_angular
         # TODO: Add setting to invert scan shift. Or just tune it automatically.
@@ -80,12 +81,13 @@ class Communication:
     def scan_angle_to_xy(self, scan_angle_x_y, x_center=None, y_center=None):
         scan_angle_multiplier = np.array(self.settings.get('scan_angle_multiplier'))
         scan_angle_range_reference = np.array(self.settings.get('scan_angle_range_reference'))
-        fov = np.array(self.settings.get('fov_x_y'))
+        fov_x_y = np.squeeze(np.array([self.settings.get('fov_x'),self.settings.get('fov_y')]))
         fs_angular = np.array([scan_angle_x_y[0], -scan_angle_x_y[1]])
         if x_center is None:
-            x_center, y_center, _ = self.session.state.center_coordinates.get_motor_coordinates()
+            xyz = self.session.state.center_coordinates.get_motor()
+            x_center, y_center = xyz['x'], xyz['y']
         fs_normalized = fs_angular / (scan_angle_multiplier * scan_angle_range_reference)
-        fs_coordinates = fs_normalized * fov
+        fs_coordinates = fs_normalized * fov_x_y
         x, y = fs_coordinates + np.array([x_center, y_center])
         return x, y
 

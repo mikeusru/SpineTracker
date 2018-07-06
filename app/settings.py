@@ -15,6 +15,7 @@ class SettingsManager:
     def __init__(self, container):
         self.container = container
         self.settings_dto = SettingsDTO(container)
+        self.load_settings()
 
     def initialize_gui_callbacks(self):
         self.set_default_callbacks()
@@ -33,6 +34,8 @@ class SettingsManager:
             self.container.switch_between_image_and_uncage_guis()
         elif name == 'manual_fov_toggle':
             self.container.toggle_manual_fov_entering()
+        if self.setting_is_saved(name):
+            self.save_settings()
 
     def update_value(self, name):
         self.settings_dto[name].update_value_from_gui()
@@ -60,18 +63,19 @@ class SettingsManager:
         if os.path.isfile(self._get_file_name()):
             settings_dict = pickle.load(open(self._get_file_name(), 'rb'))
             self.update_with_loaded_dict(settings_dict)
-            # self.settings_dto.update(settings_dict)
 
     def update_with_loaded_dict(self, settings_dict):
-        for name, setting in settings_dict.items:
-            value = setting.value
+        for name, value in settings_dict.items():
             self.set(name, value)
+
+    def setting_is_saved(self, name):
+        return self.settings_dto[name].saved
 
     def save_settings(self):
         settings_dict = {}
         for name, setting in self.settings_dto.items():
             if setting.saved:
-                settings_dict.update({name: setting})
+                settings_dict.update({name: setting.value})
         pickle.dump(settings_dict, open(self._get_file_name(), 'wb'))
 
     def _get_file_name(self):

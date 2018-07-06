@@ -79,15 +79,15 @@ class CommandReader:
         elif command == 'currentposition':
             check_num_args(args, 3, 3)
             x, y, z = [float(args[xyz]) for xyz in [0, 1, 2]]
-            self.session.state.current_coordinates.set_motor_coordinates(x, y, z)
+            self.session.state.current_coordinates.set_motor(x, y, z)
             self.received_flags['current_positions'] = True
         elif command == 'uncagingdone':
             check_num_args(args, 0, 0)
             self.received_flags['uncaging_done'] = True
         elif command == 'fovXY_um':
             check_num_args(args, 2, 2)
-            fov_x_y = np.array([float(args[XY]) for XY in [0, 1]])
-            self.settings.set('fov_x_y', fov_x_y)
+            self.settings.set('fov_x', args[0])
+            self.settings.set('fov_y', args[1])
             self.received_flags['fovXY'] = True
         elif command == 'zoom':
             check_num_args(args, 1, 1)

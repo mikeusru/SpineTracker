@@ -45,7 +45,7 @@ class MainGuiBuilder(tk.Tk):
         return frames
 
     def build_macro_window(self):
-        self.windows = {MacroWindow: MacroWindow(self)}
+        self.windows = {MacroWindow: MacroWindow(self.session)}
 
     def build_shared_figs(self):
         fig_dpi = self.settings.get('fig_dpi')

@@ -217,7 +217,7 @@ class SpineTracker:
 
     def update_position(self, pos_id):
         self.communication.get_current_position()
-        xyz = self.state.current_coordinates.get_combined_coordinates()
+        xyz = self.state.current_coordinates.get_combined()
         self.positions[pos_id].set_coordinates(xyz)
         self.gui.update_positions_table()
         self.positions.backup_positions()

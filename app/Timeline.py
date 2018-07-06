@@ -241,9 +241,9 @@ class TimelineStepBlock(dict):
     def __init__(self, step_name, imaging_or_uncaging, exclusive, period=60, duration=1,
                  start_time=None, end_time=None, index=None, pos_id=None):
         super(TimelineStepBlock, self).__init__()
-        if duration is None:
+        if (duration is None) or (duration == 0):
             duration = 1
-        if period is None:
+        if (period is None) or (period == 0):
             period = duration * 60
         self['step_name'] = step_name
         self['imaging_or_uncaging'] = imaging_or_uncaging

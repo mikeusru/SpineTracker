@@ -17,14 +17,15 @@ class MacroWindow(tk.Toplevel):
         self.title("Macro View")
         self.geometry(newGeometry='700x800+200+200')
         self.gui = self.define_gui_elements()
-        settings = self.session.settings
+        self.settings = self.session.settings
         self.slice_index = 0
         self.data = dict()
         self.image = None
 
     def define_gui_elements(self):
         settings = self.session.settings
-        gui = dict(frame_canvas=ttk.Frame(self))
+        gui = dict()
+        gui['frame_canvas'] = ttk.Frame(self)
         gui['scrollingCanvas'] = ScrolledCanvas(gui['frame_canvas'], self, self.session)
         gui['scale_z'] = tk.Scale(gui['frame_canvas'], orient=tk.VERTICAL)
         gui['frame_buttons'] = ttk.Frame(self)
@@ -70,12 +71,12 @@ class MacroWindow(tk.Toplevel):
         # TODO: Loading this image doesn't always work. Figure out why... Sometimes, it loads the old image.
         # TODO: open this image automatically when macro window is launched
         self.session.communication.get_current_position()
-        x, y, z = self.session.state.get_combined_coordinates()
-        self.session.state.center_coordinates.set_motor_coordinates(x, y, z)
+        xyz = self.session.state.current_coordinates.get_combined()
+        self.session.state.center_coordinates.set_motor(xyz['x'], xyz['y'], xyz['z'])
+        self.image = self.session.state.macro_image.pil_image
         self.multi_slice_viewer()
 
     def multi_slice_viewer(self):
-
         self.gui['scale_z'].config(command=self.scale_callback, from_=0, to=self.image.n_frames - 1)
         self.slice_index = self.image.n_frames // 2
         self.gui['scale_z'].set(self.slice_index)
@@ -87,11 +88,12 @@ class MacroWindow(tk.Toplevel):
 
     def add_position_on_image_click(self, x, y, z):
         # translate to normal coordinates
-        fov_x, fov_y = np.array(self.session.settings.get('fov_x_y')) / float(self.session.settings.get('macro_zoom'))
+        fov_x, fov_y = np.array([self.session.settings.get('fov_x'), self.session.settings.get('fov_y')]) / float(
+            self.session.settings.get('macro_zoom'))
         # xy currently originate from top left of image.
         # translate them to coordinate plane directionality.
         # also, make them originate from center
-        xyz_center = self.session.state.center_coordinates.get_motor_coordinates()
+        xyz_center = self.session.state.center_coordinates.get_motor()
         xyz_clicked = {'x': x, 'y': y, 'z': z}
         x = x - .5
         y = -y + .5
@@ -101,65 +103,66 @@ class MacroWindow(tk.Toplevel):
         z = z + xyz_center['z'] - self.image.n_frames / 2
         # add coordinates to position table
         print('x, y, z = {0}, {1}, {2}'.format(x, y, z))
+        self.session.state.current_coordinates.set_scan_angles_x_y(0, 0)
+        self.session.state.current_coordinates.set_motor(x, y, z)
         self.get_ref_images_from_macro(xyz_clicked)
         self.session.create_new_position(take_new_refs=False)
 
     def get_ref_images_from_macro(self, xyz_clicked):
+        image_ref = self.get_ref_image_from_macro(xyz_clicked)
+        image_ref_zoomed_out = self.get_zoomed_out_ref_image_from_macro(xyz_clicked)
+        self.session.state.ref_image.set_stack(image_ref)
+        self.session.state.ref_image_zoomed_out.set_stack(image_ref_zoomed_out)
+
+    def get_ref_image_from_macro(self, xyz_clicked):
+        zoom = float(self.session.settings.get('imaging_zoom'))
+        slice_count = self.session.settings.get('imaging_slices')
+        slice_index = self.get_slice_index(slice_count)
+        pixel_index_x_y = self.identify_image_pixel_indices(xyz_clicked, zoom)
+        image_ref = self.build_reference_image(slice_index, pixel_index_x_y)
+        return image_ref
+
+    def get_zoomed_out_ref_image_from_macro(self, xyz_clicked):
+        zoom = float(self.session.settings.get('reference_zoom'))
+        slice_count = int(self.session.settings.get('reference_slices'))
+        slice_index = self.get_slice_index(slice_count)
+        pixel_index_x_y = self.identify_image_pixel_indices(xyz_clicked, zoom)
+        image_ref_zoomed_out = self.build_reference_image(slice_index, pixel_index_x_y)
+        return image_ref_zoomed_out
+
+    def get_slice_index(self, slice_count):
+        current_slice_index = self.slice_index
+        slice_index = np.array(range(int(max(round_math(current_slice_index - slice_count / 2), 0)),
+                                     int(min(round_math(current_slice_index + slice_count / 2),
+                                             self.image.n_frames - 1))))
+        return slice_index
+
+    def identify_image_pixel_indices(self, xyz_clicked, zoom):
         macro_zoom = float(self.session.settings.get('macro_zoom'))
-        imaging_zoom = float(self.session.settings.get('imaging_zoom'))
-        ref_zoom = float(self.session.settings.get('reference_zoom'))
-        imaging_slices = int(self.session.settings.get('imaging_slices'))
-        ref_slices = int(self.session.settings.get('reference_slices'))
-        resolution_x = float(self.session.settings.get('normal_resolution_x'))
-        resolution_y = float(self.session.settings.get('normal_resolution_y'))
-
-        frame = self.slice_index
-        imaging_slices_ind = np.array(range(int(max(round_math(frame - imaging_slices / 2), 0)),
-                                            int(min(round_math(frame + imaging_slices / 2), self.image.n_frames - 1))))
-        ref_slices_ind = np.array(range(int(max(round_math(frame - ref_slices / 2), 0)),
-                                        int(min(round_math(frame + ref_slices / 2), self.image.n_frames - 1))))
-
         height, width = self.image.size
-        box_x_imaging = width / imaging_zoom * macro_zoom
-        box_y_imaging = height / imaging_zoom * macro_zoom
-        box_x_ref = width / ref_zoom * macro_zoom
-        box_y_ref = height / ref_zoom * macro_zoom
+        box_x = width / zoom * macro_zoom
+        box_y = height / zoom * macro_zoom
         x_clicked_pixel = width * xyz_clicked['x']
         y_clicked_pixel = height * xyz_clicked['y']
-        x_index_imaging = np.s_[int(max(round_math(x_clicked_pixel - box_x_imaging / 2), 0)): int(
-            round_math(x_clicked_pixel + box_x_imaging / 2))]
-        y_index_imaging = np.s_[int(max(round_math(y_clicked_pixel - box_y_imaging / 2), 0)): int(
-            round_math(y_clicked_pixel + box_y_imaging / 2))]
-        x_index_ref = np.s_[
-                      int(max(round_math(x_clicked_pixel - box_x_ref / 2), 0)): int(
-                          round_math(x_clicked_pixel + box_x_ref / 2))]
-        y_index_ref = np.s_[
-                      int(max(round_math(y_clicked_pixel - box_y_ref / 2), 0)): int(
-                          round_math(y_clicked_pixel + box_y_ref / 2))]
+        x_index = np.s_[int(max(round_math(x_clicked_pixel - box_x / 2), 0)): int(
+            round_math(x_clicked_pixel + box_x / 2))]
+        y_index = np.s_[int(max(round_math(y_clicked_pixel - box_y / 2), 0)): int(
+            round_math(y_clicked_pixel + box_y / 2))]
+        return x_index, y_index
 
-        #        image = np.array(self.image.size)
-        # get maximum projection of image
-        # image = np.array(self.image)
-        image = self.session.settings.get('macro_image')  # use original image
-        print('image shape: {}'.format(image.shape))
-        # image = np.array(self.image)
-        image_imaging_max = np.max(image[imaging_slices_ind, y_index_imaging, x_index_imaging], axis=0)
-        image_ref_max = np.max(image[ref_slices_ind, y_index_ref, x_index_ref], axis=0)
-        # for i in imaging_slices_ind:
-        #     self.image.seek(i)
-        #     image = np.array(self.image)
-        #     image_imaging_max = np.max(np.dstack([image[y_index_imaging, x_index_imaging], image_imaging_max]), axis=2)
-        # for i in ref_slices_ind:
-        #     self.image.seek(i)
-        #     image = np.array(self.image)
-        #     image_ref_max = np.max(np.dstack([image[y_index_ref, x_index_ref], image_ref_max]), axis=2)
-        image_imaging_max = transform.resize(image_imaging_max, (resolution_x, resolution_y))
-        image_ref_max = transform.resize(image_ref_max, (resolution_x, resolution_y))
-        #        image_ref = image[yIndex_ref,xIndex_ref]
+    def build_reference_image(self, slices_index, pixel_index_x_y):
+        x_ind, y_ind = pixel_index_x_y
+        resolution_x = float(self.session.settings.get('normal_resolution_x'))
+        resolution_y = float(self.session.settings.get('normal_resolution_y'))
+        image_stack = self.session.state.macro_image.image_stack  # use original image
+        image_stack_sliced = image_stack[slices_index, y_ind, x_ind]
+        image_stack_resized = self.resize_image_stack(image_stack_sliced, resolution_x, resolution_y)
+        return image_stack_resized
 
-        #        image_imaging = image[yIndex_imaging,xIndex_imaging]
-        #        image_ref = image[yIndex_ref,xIndex_ref]
-        self.data['refImages'] = {'imaging': image_imaging_max, 'ref': image_ref_max}
+    def resize_image_stack(self, image_stack, resolution_x, resolution_y):
+        image_stack_resized = [transform.resize(image, (resolution_x, resolution_y)) for image in image_stack]
+        image_stack_resized = np.array(image_stack_resized)
+        return image_stack_resized
 
 
 class ScrolledCanvas(tk.Frame):

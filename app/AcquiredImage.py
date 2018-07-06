@@ -1,6 +1,7 @@
 from skimage import io, transform
 from PIL import Image
 import numpy as np
+import copy
 
 from app.DriftXYZ import DriftXYZ
 from utilities.math_helpers import contrast_stretch
@@ -21,12 +22,15 @@ class AcquiredImage:
         self.pos_id = 1
         self.drift_x_y_z = DriftXYZ()
 
+    def copy(self):
+        return copy.deepcopy(self)
+
     def load(self, settings):
         self.set_zoom(settings)
         self.image_file_path = settings.get('image_file_path')
         self.total_chan = int(settings.get('total_channels'))
         self.drift_chan = int(settings.get('drift_correction_channel'))
-        self.fov_x_y = settings.get('fov_x_y')
+        self.fov_x_y = np.squeeze(np.array([settings.get('fov_x'), settings.get('fov_y')]))
         image_stack = io.imread(self.image_file_path)
         image_stack = image_stack[np.arange(self.drift_chan - 1, len(image_stack), self.total_chan)]
         self.image_stack = image_stack
@@ -54,6 +58,9 @@ class AcquiredImage:
 
     def get_shape(self):
         return self.image_stack.shape
+
+    def set_stack(self, image_stack):
+        self.image_stack = image_stack
 
 
 class ReferenceImage(AcquiredImage):

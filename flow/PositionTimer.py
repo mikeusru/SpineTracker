@@ -37,7 +37,7 @@ class PositionTimer(object):
             self.step_count += 1
             # for now, interval is store in minutes. probably a good idea to change it to seconds.
             interval = interval * 60
-            print('\nTimer Interval = {0}'.format(interval))
+            print(f'\nTimer Interval = {round(interval)}s')
             self._timer = threading.Timer(interval, self._run, args=[step_count])
             self._timer.start()
             self.is_running = True

@@ -24,7 +24,8 @@ class Positions(dict):
         return roi_x, roi_y
 
     def create_new_pos(self, ref_image, ref_image_zoomed_out):
-        xyz = self.session.state.current_coordinates.get_combined_coordinates()
+        xyz = self.session.state.current_coordinates.get_combined()
+        print(xyz)
         pos_id = self.initialize_new_position()
         self.set_coordinates(pos_id, xyz)
         self[pos_id].set_ref_image(ref_image)
@@ -32,7 +33,8 @@ class Positions(dict):
         self[pos_id].set_default_roi_pos()
 
     def clear(self):
-        for pos_id in self:
+        keys = [pos_id for pos_id in self]
+        for pos_id in keys:
             self.remove(pos_id)
 
     def remove(self, pos_id):
@@ -97,10 +99,10 @@ class Position:
         self.coordinates.update(xyz)
 
     def set_ref_image(self, ref_image):
-        self.ref_image = ref_image
+        self.ref_image = ref_image.copy()
 
     def set_ref_image_zoomed_out(self, ref_image_zoomed_out):
-        self.ref_image_zoomed_out = ref_image_zoomed_out
+        self.ref_image_zoomed_out = ref_image_zoomed_out.copy()
 
     def set_roi_x_y(self, roi_x_y):
         self.roi_x_y = roi_x_y
