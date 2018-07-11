@@ -145,6 +145,7 @@ class SettingsDTO(dict):
         self._create_acquired_variable('current_zoom', 1, dtype=np.int)
         self._create_acquired_variable('z_slice_num', np.array([0]), dtype=np.int)
         self._create_acquired_variable('x_y_resolution', np.array([0]), dtype=np.int)
+        self._create_acquired_variable('training_data_path', '../test')
 
     def _create_entered_variable(self, name, default):
         self._create_variable(name, gui_var=None, saved=False, default=default, callback=None, dtype=None)

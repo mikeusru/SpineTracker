@@ -42,19 +42,19 @@ class StartPage(ttk.Frame):
         gui['figure_af_images'].subplots_adjust(left=0, right=1, bottom=0, wspace=0.02, hspace=0)
         gui['axes_af_images'] = [gui['figure_af_images'].add_subplot(1, 1, 1)]
         gui['canvas_af'] = FigureCanvasTkAgg(gui['figure_af_images'], gui['frame_for_canvases'])
-        gui['canvas_af'].show()
+        gui['canvas_af'].draw()
         gui['canvas_af'].get_tk_widget().config(borderwidth=1, background='gray', highlightcolor='gray',
                                                 highlightbackground='gray')
         gui['canvas_af'].get_tk_widget().grid(row=1, column=0, padx=10, pady=10, sticky='nsew')
         gui['canvas_timeline'] = FigureCanvasTkAgg(session.gui.shared_figs['timeline_figure'],
                                                    gui['frame_for_canvases'])
-        gui['canvas_timeline'].show()
+        gui['canvas_timeline'].draw()
         gui['canvas_timeline'].get_tk_widget().config(borderwidth=1, background='gray', highlightcolor='gray',
                                                       highlightbackground='gray')
         gui['canvas_timeline'].get_tk_widget().grid(row=0, column=0, padx=10, pady=10, sticky='nsew')
         gui['canvas_positions'] = FigureCanvasTkAgg(session.gui.shared_figs['f_positions'],
                                                     gui['frame_for_canvases'])
-        gui['canvas_positions'].show()
+        gui['canvas_positions'].draw()
         gui['canvas_positions'].get_tk_widget().config(borderwidth=1, background='gray', highlightcolor='gray',
                                                        highlightbackground='gray')
         gui['canvas_positions'].get_tk_widget().grid(row=0, column=1, rowspan=2, padx=10, pady=10, sticky='nsew')

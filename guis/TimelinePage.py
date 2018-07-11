@@ -35,7 +35,7 @@ class TimelinePage(ttk.Frame):
                                                       background='gray',
                                                       highlightcolor='gray',
                                                       highlightbackground='gray')
-        gui['canvas_timeline'].show()
+        gui['canvas_timeline'].draw()
         gui['canvas_timeline'].get_tk_widget().grid(row=2, column=0, columnspan=2,
                                                     padx=10, pady=10, sticky='nsew')
         gui['timelineTableFrame'] = ttk.Frame(self)

@@ -99,7 +99,7 @@ class PositionsPage(ttk.Frame):
         self.gui['canvas_preview_ref_images'].get_tk_widget().config(borderwidth=1, background='gray',
                                                                      highlightcolor='gray',
                                                                      highlightbackground='gray')
-        self.gui['canvas_preview_ref_images'].show()
+        self.gui['canvas_preview_ref_images'].draw()
         self.gui['canvas_preview_ref_images'].get_tk_widget().grid(row=1, column=0, padx=10, sticky='nsew')
         self.gui['ref_images_axes'] = []
         for i in range(2):
@@ -107,7 +107,7 @@ class PositionsPage(ttk.Frame):
         # relative positions figure
         self.gui['f_positions'] = self.session.gui.shared_figs['f_positions']
         self.gui['canvas_positions'] = FigureCanvasTkAgg(self.gui['f_positions'], self.gui['frame_for_graphics'])
-        self.gui['canvas_positions'].show()
+        self.gui['canvas_positions'].draw()
         self.gui['canvas_positions'].get_tk_widget().config(borderwidth=1, background='gray', highlightcolor='gray',
                                                             highlightbackground='gray')
         self.gui['canvas_positions'].get_tk_widget().grid(row=0, column=2, rowspan=2, padx=10, pady=10, sticky='nsew')

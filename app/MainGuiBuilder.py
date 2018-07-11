@@ -8,6 +8,7 @@ from guis.SettingsPage import SettingsPage
 import tkinter as tk
 from tkinter import ttk
 
+from guis.SpineRecognitionPage import SpineRecognitionPage
 from guis.StartPage import StartPage
 from guis.TimelinePage import TimelinePage
 
@@ -38,7 +39,7 @@ class MainGuiBuilder(tk.Tk):
 
     def build_frames(self):
         frames = {}
-        for F in (StartPage, SettingsPage, PositionsPage, TimelinePage):
+        for F in (StartPage, SettingsPage, PositionsPage, TimelinePage, SpineRecognitionPage):
             frame = F(self.container, self.session)
             frames[F] = frame
             self.container.add(frame, text=F.name)
