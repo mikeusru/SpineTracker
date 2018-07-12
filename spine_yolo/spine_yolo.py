@@ -274,11 +274,13 @@ class SpineYolo(object):
         return training_generator, validation_generator
 
     def draw(self, test_model_path=None, image_set='validation',
-             weights_name='trained_stage_3_best.h5',
+             weights_name=None,
              out_path="output_images", save_all=True):
         """
         Draw bounding boxes on image data
         """
+        if weights_name is None:
+            weights_name = self.get_model_file('best')
 
         if test_model_path is None:
             self.model_body.load_weights(weights_name)
