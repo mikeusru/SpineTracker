@@ -34,6 +34,10 @@ class SettingsManager:
             self.container.switch_between_image_and_uncage_guis()
         elif name == 'manual_fov_toggle':
             self.container.toggle_manual_fov_entering()
+        elif name == 'training_data_path':
+            self.container.show_end_of_path()
+        elif name == 'trained_model_path':
+            self.container.show_end_of_path()
         if self.setting_is_saved(name):
             self.save_settings()
 
@@ -135,6 +139,9 @@ class SettingsDTO(dict):
         self._create_gui_variable('duration', tk.StringVar, False, 5, dtype=np.int)
         self._create_gui_variable('period', tk.StringVar, False, 60, dtype=np.int)
         self._create_gui_variable('step_name', tk.StringVar, False, "StepName")
+        self._create_gui_variable('training_data_path', tk.StringVar, True, '../test')
+        self._create_gui_variable('trained_model_path', tk.StringVar, True,
+                                  'spine_yolo/model_data/trained_stage_3_best.h5')
 
     def initialize_acquired_variables(self):
         self._create_acquired_variable('fov_x_y', np.array([250, 250]), dtype=np.float32)
@@ -145,7 +152,6 @@ class SettingsDTO(dict):
         self._create_acquired_variable('current_zoom', 1, dtype=np.int)
         self._create_acquired_variable('z_slice_num', np.array([0]), dtype=np.int)
         self._create_acquired_variable('x_y_resolution', np.array([0]), dtype=np.int)
-        self._create_acquired_variable('training_data_path', '../test')
 
     def _create_entered_variable(self, name, default):
         self._create_variable(name, gui_var=None, saved=False, default=default, callback=None, dtype=None)

@@ -45,6 +45,13 @@ class SpineYolo(object):
         self.matching_boxes_shape = (13, 13, 5, 5)
         self.model_body = None
         self.model = None
+
+    def set_data_path(self, data_path):
+        self.data_path = os.path.expanduser(data_path)
+        self.file_list = np.load(self.data_path)['file_list']
+        self.partition = self.get_partition()
+
+    def run(self):
         if self.training_on:
             self.train()
             self.draw(image_set='validation',  # assumes training/validation split is 0.9

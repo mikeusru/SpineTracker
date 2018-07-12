@@ -88,6 +88,9 @@ class MainGuiBuilder(tk.Tk):
     def toggle_manual_fov_entering(self, *args):
         self.frames[SettingsPage].toggle_fov_mode()
 
+    def show_end_of_path(self, *args):
+        self.frames[SpineRecognitionPage].put_cursor_at_end_of_path()
+
 
 class SharedFigs(dict):
 
