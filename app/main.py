@@ -13,6 +13,8 @@ from app.Positions import Positions
 from app.Timeline import Timeline
 from app.settings import SettingsManager, CommandLineInterpreter
 from flow.PositionTimer import PositionTimer
+from spine_yolo.spine_yolo import SpineYolo
+from spine_yolo.yolo_argparser import YoloArgparse
 
 
 class State:
@@ -57,6 +59,7 @@ class SpineTracker:
         self.settings.initialize_gui_callbacks()
         self.initialize_init_directory()
         self.log_file = open('log.txt', 'w')
+        self.yolo = SpineYolo(YoloArgparse().parse_args())
 
     def exit(self):
         print('quitting')
@@ -260,6 +263,12 @@ class SpineTracker:
         for pos_id in self.state.position_timers:
             self.state.position_timers[pos_id].stop()
         self.state.imaging_active = False
+
+    def train_yolo_model(self):
+        self.yolo.toggle_training(True)
+        self.yolo.set_data_path(self.settings.get('training_data_path'))
+        self.yolo.set_model_save_path(self.settings.get('new_model_path'))
+        self.yolo.run()
 
 
 class TimerStepsQueue(Queue):

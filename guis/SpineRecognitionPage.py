@@ -7,7 +7,7 @@ matplotlib.use("TkAgg")
 
 
 class SpineRecognitionPage(ttk.Frame):
-    name = 'SpineRecognition'
+    name = 'Spine Recognition'
 
     def __init__(self, container, session):
         ttk.Frame.__init__(self, container)
@@ -17,49 +17,65 @@ class SpineRecognitionPage(ttk.Frame):
     def define_gui_elements(self):
         settings = self.session.settings
         gui = dict()
-        gui['select_training_data_button'] = tk.Button(self, text="Select Training Data",
-                                                       font=settings.get('large_font'),
+        gui['training_data_folder_label'] = tk.Label(self, text="Training Data Folder:",
+                                                     font=settings.get('large_font'))
+        gui['training_data_folder_label'].grid(row=0, column=0, sticky='nw', padx=10, pady=10)
+        gui['select_training_data_button'] = tk.Button(self, text="...",
+                                                       font=settings.get('normal_font'),
                                                        command=self.select_training_data)
-        gui['select_training_data_button'].grid(row=0, column=0, sticky='nw', padx=10, pady=10)
+        gui['select_training_data_button'].grid(row=0, column=2, sticky='nw', padx=10, pady=10)
         gui['training_data_folder_preview_entry'] = ttk.Entry(self,
                                                               width=80,
                                                               textvariable=settings.get_gui_var('training_data_path'),
-                                                              state='readonly',
-                                                              justify='right')
+                                                              state='readonly')
         gui['training_data_folder_preview_entry'].grid(row=0, column=1, padx=10, pady=10, sticky='nw')
-        gui['select_model_button'] = tk.Button(self, text="Select Model",
-                                               font=settings.get('large_font'),
+        gui['model_path_label'] = tk.Label(self, text="Trained Model File:",
+                                           font=settings.get('large_font'))
+        gui['model_path_label'].grid(row=1, column=0, sticky='nw', padx=10, pady=10)
+        gui['select_model_button'] = tk.Button(self, text="...",
+                                               font=settings.get('normal_font'),
                                                command=self.select_model)
-        gui['select_model_button'].grid(row=1, column=0, sticky='nw', padx=10, pady=10)
+        gui['select_model_button'].grid(row=1, column=2, sticky='nw', padx=10, pady=10)
         gui['model_path_entry'] = ttk.Entry(self,
                                             width=80,
                                             textvariable=settings.get_gui_var('trained_model_path'),
-                                            state='readonly',
-                                            justify='right')
+                                            state='readonly')
         gui['model_path_entry'].grid(row=1, column=1, padx=10, pady=10, sticky='nw')
-
+        gui['train_model_button'] = tk.Button(self, text='Train Model',
+                                              font=settings.get('large_font'),
+                                              command=self.train_model)
+        gui['train_model_button'].grid(row=3, column=0, sticky='nw', padx=10, pady=10)
         return gui
 
     def select_training_data(self):
-        path = askdirectory(initialdir="../",
+        path = askdirectory(initialdir=self.session.settings.get('training_data_path'),
                             title="Choose a directory")
-        self.session.settings.set('training_data_path', path)
+        self.set_new_path('training_data_path', path)
 
     def select_model(self):
         path = askopenfilename(initialdir=self.session.settings.get('trained_model_path'),
-                            title="Choose a pre-trained model")
-        self.session.settings.set('trained_model_path', path)
+                               title="Choose a pre-trained model")
+        self.set_new_path('trained_model_path', path)
 
     def put_cursor_at_end_of_path(self):
         self.gui['training_data_folder_preview_entry'].xview_moveto(1)
-        self.gui['current_model_path_entry'].xview_moveto(1)
+        self.gui['model_path_entry'].xview_moveto(1)
 
     def test_model(self):
         pass
 
     def train_model(self):
-        pass
+        self.select_folder_for_newly_trained_model()
+        self.session.train_yolo_model()
+
+    def select_folder_for_newly_trained_model(self):
+        path = askdirectory(initialdir=self.session.settings.get('new_model_path'),
+                            title="Choose a directory for new model")
+        self.set_new_path('training_data_path', path)
 
     def load_model(self):
         pass
 
+    def set_new_path(self, gui_var, path):
+        if len(path) > 0:
+            self.session.settings.set(gui_var, path)

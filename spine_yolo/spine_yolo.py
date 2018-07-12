@@ -1,12 +1,11 @@
 """
 This is a class for training and evaluating yadk2
 """
-import argparse
 import os
 
-from PIL import Image
 import numpy as np
 import tensorflow as tf
+from PIL import Image
 from keras import backend as K
 from keras.callbacks import TensorBoard, ModelCheckpoint, EarlyStopping
 from keras.layers import Input, Lambda, Conv2D
@@ -26,6 +25,13 @@ YOLO_ANCHORS = np.array(
     ((0.57273, 0.677385), (1.87446, 2.06253), (3.33843, 5.47434),
      (7.88282, 3.52778), (9.77052, 9.16828)))
 
+MODEL_FILES = {1: 'trained_stage_1',
+               2: 'trained_stage_2',
+               3: 'trained_stage_3',
+               'best': 'trained_stage_3_best',
+               'latest': 'trained_latest',
+               'testing': 'yolo_spine_model_testing'}
+
 
 class SpineYolo(object):
 
@@ -41,24 +47,36 @@ class SpineYolo(object):
         self.class_names = self.get_classes()
         self.anchors = self.get_anchors()
         self.partition = self.get_partition()
+        self.model_save_path = ''
         self.detectors_mask_shape = (13, 13, 5, 1)
         self.matching_boxes_shape = (13, 13, 5, 5)
         self.model_body = None
         self.model = None
+
+    def get_model_file(self, stage):
+        model_file = MODEL_FILES[stage] + '.h5'
+        file = os.path.join(self.model_save_path, model_file)
+        return file
 
     def set_data_path(self, data_path):
         self.data_path = os.path.expanduser(data_path)
         self.file_list = np.load(self.data_path)['file_list']
         self.partition = self.get_partition()
 
+    def set_model_save_path(self, path):
+        self.model_save_path = path
+
+    def toggle_training(self, do_training):
+        self.training_on = do_training
+
     def run(self):
         if self.training_on:
             self.train()
             self.draw(image_set='validation',  # assumes training/validation split is 0.9
-                      weights_name='trained_stage_3_best.h5',
+                      weights_name=self.get_model_file('best'),
                       save_all=False)
         else:
-            self.draw(test_model_path='model_data//yolo_spine_model_testing.h5',
+            self.draw(test_model_path=self.get_model_file('testing'),
                       image_set='validation',  # assumes training/validation split is 0.9
                       save_all=True)
 
@@ -160,9 +178,9 @@ class SpineYolo(object):
         best weights according to val_loss is saved as trained_stage_3_best.h5
         """
         logging = TensorBoard()
-        checkpoint_final_best = ModelCheckpoint("trained_stage_3_best.h5", monitor='val_loss',
+        checkpoint_final_best = ModelCheckpoint(self.get_model_file('best'), monitor='val_loss',
                                                 save_weights_only=True, save_best_only=True)
-        checkpoint = ModelCheckpoint("trained_checkpoint.h5", monitor='val_loss',
+        checkpoint = ModelCheckpoint(self.get_model_file('latest'), monitor='val_loss',
                                      save_weights_only=True, save_best_only=True)
 
         early_stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=15, verbose=1, mode='auto')
@@ -171,7 +189,7 @@ class SpineYolo(object):
 
         # if starting from scratch, train model with frozen body first
         if self.from_scratch:
-            first_round_weights = 'trained_stage_1.h5'
+            first_round_weights = self.get_model_file(1)
             self.create_model()
             self.model.compile(
                 optimizer='adam', loss={
@@ -193,7 +211,7 @@ class SpineYolo(object):
                                      epochs=5,
                                      callbacks=[logging, checkpoint])
 
-            self.model.save_weights('trained_stage_1.h5')
+            self.model.save_weights(self.get_model_file(1))
             self.draw(image_set='validation', weights_name=first_round_weights,
                       out_path="output_images_stage_1", save_all=False)
 
@@ -221,9 +239,9 @@ class SpineYolo(object):
                                  epochs=30,
                                  callbacks=[logging, checkpoint])
 
-        self.model.save_weights('trained_stage_2.h5')
+        self.model.save_weights(self.get_model_file(2))
 
-        self.draw(image_set='validation', weights_name='trained_stage_2.h5',
+        self.draw(image_set='validation', weights_name=self.get_model_file(2),
                   out_path="output_images_stage_2", save_all=False)
 
         self.model.fit_generator(generator=training_generator,
@@ -233,9 +251,9 @@ class SpineYolo(object):
                                  epochs=30,
                                  callbacks=[logging, checkpoint_final_best, early_stopping])
 
-        self.model.save_weights('trained_stage_3.h5')
-        self.model_body.load_weights('trained_stage_3_best.h5')
-        self.model_body.save('model_data//yolo_spine_model_testing.h5')
+        self.model.save_weights(self.get_model_file(3))
+        self.model_body.load_weights(self.get_model_file('best'))
+        self.model_body.save(self.get_model_file('testing'))
 
     def make_data_generators(self, params):
         if self.overfit_single_image:

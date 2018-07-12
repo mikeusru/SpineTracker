@@ -103,6 +103,7 @@ class SettingsDTO(dict):
         # Settings set here
         self._create_entered_variable('experiment_log_file', '../temp/experiment_log.txt')
         self._create_entered_variable('large_font', ("Verdana", 12))
+        self._create_entered_variable('normal_font', ("Verdana", 10))
         self._create_entered_variable('fig_dpi', 100)
         self._create_entered_variable('init_directory', "../iniFiles/")
         self._create_entered_variable('input_file', "../instructions_input.txt")
@@ -140,6 +141,7 @@ class SettingsDTO(dict):
         self._create_gui_variable('period', tk.StringVar, False, 60, dtype=np.int)
         self._create_gui_variable('step_name', tk.StringVar, False, "StepName")
         self._create_gui_variable('training_data_path', tk.StringVar, True, '../test')
+        self._create_gui_variable('new_model_path', tk.StringVar, True, '../test')
         self._create_gui_variable('trained_model_path', tk.StringVar, True,
                                   'spine_yolo/model_data/trained_stage_3_best.h5')
 
