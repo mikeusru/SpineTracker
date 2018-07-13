@@ -270,6 +270,12 @@ class SpineTracker:
         self.yolo.set_model_save_path(self.settings.get('new_model_path'))
         self.yolo.run()
 
+    def test_yolo_model(self):
+        self.yolo.toggle_training(False)
+        self.yolo.set_data_path(self.settings.get('test_data_path'))
+        self.yolo.set_trained_model_path(self.settings.get('trained_model_path'))
+        self.yolo.run()
+
 
 class TimerStepsQueue(Queue):
 

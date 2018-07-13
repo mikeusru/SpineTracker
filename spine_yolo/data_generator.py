@@ -4,7 +4,7 @@ import keras
 import scipy.ndimage as ndi
 from skimage import transform
 import PIL
-import cv2
+# import cv2
 
 from spine_yolo.spine_preprocessing.spine_preprocessing import process_data
 from spine_yolo.yad2k.models.keras_yolo import preprocess_true_boxes

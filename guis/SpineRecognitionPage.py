@@ -45,6 +45,11 @@ class SpineRecognitionPage(ttk.Frame):
                                               font=settings.get('large_font'),
                                               command=self.train_model)
         gui['train_model_button'].grid(row=3, column=0, sticky='nw', padx=10, pady=10)
+        gui['test_model_button'] = tk.Button(self, text='Test Model',
+                                              font=settings.get('large_font'),
+                                              command=self.test_model)
+        gui['test_model_button'].grid(row=3, column=1, sticky='nw', padx=10, pady=10)
+
         return gui
 
     def select_training_data(self):
@@ -62,7 +67,8 @@ class SpineRecognitionPage(ttk.Frame):
         self.gui['model_path_entry'].xview_moveto(1)
 
     def test_model(self):
-        pass
+        self.select_folder_for_test_data()
+        self.session.test_yolo_model()
 
     def train_model(self):
         self.select_folder_for_newly_trained_model()
@@ -72,6 +78,11 @@ class SpineRecognitionPage(ttk.Frame):
         path = askdirectory(initialdir=self.session.settings.get('new_model_path'),
                             title="Choose a directory for new model")
         self.set_new_path('training_data_path', path)
+
+    def select_folder_for_test_data(self):
+        path = askdirectory(initialdir=self.session.settings.get('test_data_path'),
+                            title="Choose directory with test images")
+        self.set_new_path('test_data_path', path)
 
     def load_model(self):
         pass

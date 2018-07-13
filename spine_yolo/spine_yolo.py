@@ -43,11 +43,12 @@ class SpineYolo(object):
         self.from_scratch = _args.from_scratch == 'on'
         self.training_on = _args.train == 'on'
         self.overfit_single_image = _args.overfit_single_image == 'on'
-        self.file_list = np.load(self.data_path)['file_list']
-        self.class_names = self.get_classes()
-        self.anchors = self.get_anchors()
-        self.partition = self.get_partition()
+        self.file_list = None
+        self.class_names = None
+        self.anchors = None
+        self.partition = None
         self.model_save_path = ''
+        self.trained_model_path = '../test'
         self.detectors_mask_shape = (13, 13, 5, 1)
         self.matching_boxes_shape = (13, 13, 5, 5)
         self.model_body = None
@@ -62,6 +63,12 @@ class SpineYolo(object):
         self.data_path = os.path.expanduser(data_path)
         self.file_list = np.load(self.data_path)['file_list']
         self.partition = self.get_partition()
+        self.class_names = self.get_classes()
+        self.anchors = self.get_anchors()
+        self.partition = self.get_partition()
+
+    def set_trained_model_path(self, path):
+        self.trained_model_path = path
 
     def set_model_save_path(self, path):
         self.model_save_path = path
@@ -76,7 +83,7 @@ class SpineYolo(object):
                       weights_name=self.get_model_file('best'),
                       save_all=False)
         else:
-            self.draw(test_model_path=self.get_model_file('testing'),
+            self.draw(test_model_path=self.trained_model_path,
                       image_set='validation',  # assumes training/validation split is 0.9
                       save_all=True)
 
