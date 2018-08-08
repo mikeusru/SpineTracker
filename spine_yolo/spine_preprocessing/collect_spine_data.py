@@ -8,7 +8,7 @@ from PIL import Image
 from skimage import transform
 
 
-class TrainingDataPreparer:
+class SpineImageDataPreparer:
 
     def __init__(self):
         self.do_sliding_windows = True
@@ -18,7 +18,7 @@ class TrainingDataPreparer:
         self.sliding_window_side = 256
         self.sliding_window_step = 128
         self.initial_directory = '../test'
-        self.save_directory = '../test/save_dir'
+        self.save_directory = '../images/input'
         self.output_file_list = []
         self.dataframe = None
 
@@ -37,8 +37,11 @@ class TrainingDataPreparer:
     def set_initial_directory(self, path):
         self.initial_directory = path
 
-    def set_save_directory(self, path):
-        self.save_directory = path
+    def set_save_directory(self, path=None):
+        if path is not None:
+            self.save_directory = path
+        if not os.path.exists(self.save_directory):
+            os.mkdir(self.save_directory)
 
     def run(self):
         self.create_dataframe()

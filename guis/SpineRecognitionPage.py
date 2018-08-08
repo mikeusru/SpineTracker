@@ -46,8 +46,8 @@ class SpineRecognitionPage(ttk.Frame):
                                               command=self.train_model)
         gui['train_model_button'].grid(row=3, column=0, sticky='nw', padx=10, pady=10)
         gui['test_model_button'] = tk.Button(self, text='Test Model',
-                                              font=settings.get('large_font'),
-                                              command=self.test_model)
+                                             font=settings.get('large_font'),
+                                             command=self.test_model)
         gui['test_model_button'].grid(row=3, column=1, sticky='nw', padx=10, pady=10)
 
         return gui

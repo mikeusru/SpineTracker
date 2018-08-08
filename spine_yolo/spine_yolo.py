@@ -12,6 +12,7 @@ from keras.layers import Input, Lambda, Conv2D
 from keras.models import load_model, Model
 
 from spine_yolo.data_generator import DataGenerator
+from spine_yolo.spine_preprocessing.collect_spine_data import SpineImageDataPreparer
 from spine_yolo.spine_preprocessing.spine_preprocessing import process_data
 from spine_yolo.yad2k.models.keras_yolo import (yolo_body,
                                                 yolo_eval, yolo_head, yolo_loss)
@@ -61,8 +62,8 @@ class SpineYolo(object):
 
     def set_data_path(self, data_path):
         self.data_path = os.path.expanduser(data_path)
+        # TODO: wut?
         self.file_list = np.load(self.data_path)['file_list']
-        self.partition = self.get_partition()
         self.class_names = self.get_classes()
         self.anchors = self.get_anchors()
         self.partition = self.get_partition()
@@ -83,9 +84,18 @@ class SpineYolo(object):
                       weights_name=self.get_model_file('best'),
                       save_all=False)
         else:
+            self.prepare_image_data()
             self.draw(test_model_path=self.trained_model_path,
                       image_set='validation',  # assumes training/validation split is 0.9
                       save_all=True)
+
+    def prepare_image_data(self):
+        spine_data_preparer = SpineImageDataPreparer()
+        spine_data_preparer.set_labeled_state(False)
+        spine_data_preparer.set_initial_directory(self.data_path)
+        spine_data_preparer.set_save_directory()
+        spine_data_preparer.run()
+        self.file_list = spine_data_preparer.output_file_list
 
     def get_partition(self):
         data_len = self.file_list.size
