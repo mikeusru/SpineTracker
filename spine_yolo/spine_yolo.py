@@ -10,6 +10,7 @@ from keras import backend as K
 from keras.callbacks import TensorBoard, ModelCheckpoint, EarlyStopping
 from keras.layers import Input, Lambda, Conv2D
 from keras.models import load_model, Model
+import matplotlib.pyplot as plt
 
 from spine_yolo.data_generator import DataGenerator
 from spine_yolo.spine_preprocessing.collect_spine_data import SpineImageDataPreparer
@@ -94,6 +95,11 @@ class SpineYolo(object):
                 input_image_shape: [image_data.shape[2], image_data.shape[3]],
                 K.learning_phase(): 0
             })
+        image_with_boxes = draw_boxes(image_data[0][0], out_boxes, out_classes,
+                                      self.class_names, out_scores)
+        plt.figure()
+        plt.imshow(image_with_boxes)
+        plt.show()
         print(out_boxes)
         print(out_scores)
         print(out_classes)
