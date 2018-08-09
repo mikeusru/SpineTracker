@@ -33,6 +33,9 @@ MODEL_FILES = {1: 'trained_stage_1',
                'latest': 'trained_latest',
                'testing': 'yolo_spine_model_testing'}
 
+IMAGE_INPUT = Input(shape=(416, 416, 3))
+BOXES_INPUT = Input(shape=(None, 5))
+
 
 class SpineYolo(object):
 
@@ -60,13 +63,9 @@ class SpineYolo(object):
         file = os.path.join(self.model_save_path, model_file)
         return file
 
-    def set_data_path(self, data_path):
+    def set_data_path(self, data_path=None):
         self.data_path = os.path.expanduser(data_path)
-        # TODO: wut?
         self.file_list = np.load(self.data_path)['file_list']
-        self.class_names = self.get_classes()
-        self.anchors = self.get_anchors()
-        self.partition = self.get_partition()
 
     def set_trained_model_path(self, path):
         self.trained_model_path = path
@@ -77,6 +76,28 @@ class SpineYolo(object):
     def toggle_training(self, do_training):
         self.training_on = do_training
 
+    def run_on_single_image(self, image_file):
+        model_path = self.trained_model_path
+        self.set_model_body(model_path)
+        spine_data_preparer = SpineImageDataPreparer()
+        spine_data_preparer.set_labeled_state(False)
+        spine_data_preparer.set_sliding_window_props(False)
+        image = spine_data_preparer.run_on_single_image(image_file)
+        image = [image]
+        image_data = self.reshape_image_data_for_eval(image)
+        boxes, scores, classes, input_image_shape = self.create_yolo_output_variables()
+        sess = K.get_session()
+        out_boxes, out_scores, out_classes = sess.run(
+            [boxes, scores, classes],
+            feed_dict={
+                self.model_body.input: image_data[0],
+                input_image_shape: [image_data.shape[2], image_data.shape[3]],
+                K.learning_phase(): 0
+            })
+        print(out_boxes)
+        print(out_scores)
+        print(out_classes)
+
     def run(self):
         if self.training_on:
             self.train()
@@ -84,42 +105,45 @@ class SpineYolo(object):
                       weights_name=self.get_model_file('best'),
                       save_all=False)
         else:
-            self.prepare_image_data()
             self.draw(test_model_path=self.trained_model_path,
-                      image_set='validation',  # assumes training/validation split is 0.9
-                      save_all=True)
+                      image_set='validation',
+                      save_all=True,
+                      out_path='../spine_yolo/images/out')
 
-    def prepare_image_data(self):
+    def prepare_image_data(self, images_path):
         spine_data_preparer = SpineImageDataPreparer()
         spine_data_preparer.set_labeled_state(False)
-        spine_data_preparer.set_initial_directory(self.data_path)
+        spine_data_preparer.set_initial_directory(images_path)
         spine_data_preparer.set_save_directory()
         spine_data_preparer.run()
         self.file_list = spine_data_preparer.output_file_list
 
-    def get_partition(self):
-        data_len = self.file_list.size
-        partition = dict(train=np.array(range(int(0.9 * data_len))),
-                         validation=np.array(range(int(0.9 * data_len), data_len)))
-        return partition
+    def set_dummy_partition(self):
+        self.set_partition(train_validation_split=0)
 
-    def get_classes(self):
+    def set_partition(self, train_validation_split=0.9):
+        data_len = self.file_list.size
+        partition = dict(train=np.array(range(int(train_validation_split * data_len))),
+                         validation=np.array(range(int(train_validation_split * data_len), data_len)))
+        self.partition = partition
+
+    def set_classes(self):
         """loads the classes"""
         with open(self.classes_path) as f:
             class_names = f.readlines()
         class_names = [c.strip() for c in class_names]
-        return class_names
+        self.class_names = class_names
 
-    def get_anchors(self):
+    def set_anchors(self):
         """loads the anchors from a file"""
         if os.path.isfile(self.anchors_path):
             with open(self.anchors_path) as f:
                 anchors = f.readline()
                 anchors = [float(x) for x in anchors.split(',')]
-                return np.array(anchors).reshape(-1, 2)
+                self.anchors = np.array(anchors).reshape(-1, 2)
         else:
             Warning("Could not open anchors file, using default.")
-            return YOLO_ANCHORS
+            self.anchors = YOLO_ANCHORS
 
     def create_model(self, load_pretrained=True, freeze_body=True):
         """
@@ -140,21 +164,20 @@ class SpineYolo(object):
         """
 
         # Create model input layers.
-        image_input = Input(shape=(416, 416, 3))
-        boxes_input = Input(shape=(None, 5))
+
         detectors_mask_input = Input(shape=self.detectors_mask_shape)
         matching_boxes_input = Input(shape=self.matching_boxes_shape)
 
         # Create model body.
-        yolo_model = yolo_body(image_input, len(self.anchors), len(self.class_names))
+        yolo_model = yolo_body(IMAGE_INPUT, len(self.anchors), len(self.class_names))
         topless_yolo = Model(yolo_model.input, yolo_model.layers[-2].output)
 
         if load_pretrained:
             # Save topless yolo:
-            topless_yolo_path = os.path.join('model_data', 'yolo_topless.h5')
+            topless_yolo_path = os.path.join('..', 'spine_yolo', 'model_data', 'yolo_topless.h5')
             if not os.path.exists(topless_yolo_path):
                 print("CREATING TOPLESS WEIGHTS FILE")
-                yolo_path = os.path.join('model_data', 'yolo.h5')
+                yolo_path = os.path.join('..', 'spine_yolo', 'model_data', 'yolo.h5')
                 self.model_body = load_model(yolo_path)
                 self.model_body = Model(self.model_body.inputs, self.model_body.layers[-2].output)
                 self.model_body.save_weights(topless_yolo_path)
@@ -166,7 +189,7 @@ class SpineYolo(object):
         final_layer = Conv2D(len(self.anchors) * (5 + len(self.class_names)), (1, 1), activation='linear')(
             topless_yolo.output)
 
-        self.model_body = Model(image_input, final_layer)
+        self.model_body = Model(IMAGE_INPUT, final_layer)
 
         # Place model loss on CPU to reduce GPU memory usage.
         with tf.device('/cpu:0'):
@@ -177,11 +200,11 @@ class SpineYolo(object):
                 name='yolo_loss',
                 arguments={'anchors': self.anchors,
                            'num_classes': len(self.class_names)})([
-                self.model_body.output, boxes_input,
+                self.model_body.output, BOXES_INPUT,
                 detectors_mask_input, matching_boxes_input])
 
         self.model = Model(
-            [self.model_body.input, boxes_input, detectors_mask_input,
+            [self.model_body.input, BOXES_INPUT, detectors_mask_input,
              matching_boxes_input], model_loss)
 
     def train(self):
@@ -290,6 +313,16 @@ class SpineYolo(object):
                                              **params)
         return training_generator, validation_generator
 
+    def set_model_body(self, test_model_path, weights_name=None):
+        if test_model_path is None:
+            self.model_body.load_weights(weights_name)
+        else:
+            try:
+                self.model_body = load_model(test_model_path)
+            except ValueError:
+                self.create_model()
+                self.model_body.load_weights(test_model_path)
+
     def draw(self, test_model_path=None, image_set='validation',
              weights_name=None,
              out_path="output_images", save_all=True):
@@ -298,11 +331,7 @@ class SpineYolo(object):
         """
         if weights_name is None:
             weights_name = self.get_model_file('best')
-
-        if test_model_path is None:
-            self.model_body.load_weights(weights_name)
-        else:
-            self.model_body = load_model(test_model_path)
+        self.set_model_body(test_model_path, weights_name)
         if self.overfit_single_image:
             partition_eval = self.partition["train"][[0, 0]]
         else:
@@ -311,20 +340,11 @@ class SpineYolo(object):
         # only annotate 100 images max
         if len(partition_eval) > 100:
             partition_eval = np.random.choice(partition_eval, (100,))
-
         files_to_load = self.file_list[partition_eval]
-        print(files_to_load.shape)
-        image_data = [np.load(file)['image'] for file in files_to_load]
-        image_data = process_data(image_data)
-        image_data = np.array([np.expand_dims(image, axis=0)
-                               for image in image_data])
+        image_data = self.load_images_to_evaluate(files_to_load)
+        image_data = self.reshape_image_data_for_eval(image_data)
 
-        # Create output variables for prediction.
-        yolo_outputs = yolo_head(self.model_body.output, self.anchors, len(self.class_names))
-        input_image_shape = K.placeholder(shape=(2,))
-        boxes, scores, classes = yolo_eval(
-            yolo_outputs, input_image_shape, score_threshold=0.5, iou_threshold=0.5)
-
+        boxes, scores, classes, input_image_shape = self.create_yolo_output_variables()
         # Run prediction images.
         sess = K.get_session()
 
@@ -348,6 +368,25 @@ class SpineYolo(object):
             if save_all or (len(out_boxes) > 0):
                 image = Image.fromarray(image_with_boxes)
                 image.save(os.path.join(out_path, str(i) + '.tif'))
+
+    def create_yolo_output_variables(self):
+        yolo_outputs = yolo_head(self.model_body.output, self.anchors, len(self.class_names))
+        input_image_shape = K.placeholder(shape=(2,))
+        boxes, scores, classes = yolo_eval(
+            yolo_outputs, input_image_shape, score_threshold=0.5, iou_threshold=0.5)
+        return boxes, scores, classes, input_image_shape
+
+    @staticmethod
+    def reshape_image_data_for_eval(image_data):
+        image_data = process_data(image_data)
+        image_data = np.array([np.expand_dims(image, axis=0)
+                               for image in image_data])
+        return image_data
+
+    @staticmethod
+    def load_images_to_evaluate(files_to_load):
+        image_data = [np.load(file)['image'] for file in files_to_load]
+        return image_data
 
 
 if __name__ == '__main__':

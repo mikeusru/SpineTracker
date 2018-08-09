@@ -267,15 +267,27 @@ class SpineTracker:
     def train_yolo_model(self):
         self.yolo.toggle_training(True)
         self.yolo.set_data_path(self.settings.get('training_data_path'))
+        self.yolo.set_classes()
+        self.yolo.set_anchors()
+        self.yolo.set_partition()
         self.yolo.set_model_save_path(self.settings.get('new_model_path'))
         self.yolo.run()
 
     def test_yolo_model(self):
         self.yolo.toggle_training(False)
-        self.yolo.set_data_path(self.settings.get('test_data_path'))
+        self.yolo.prepare_image_data(self.settings.get('test_data_path'))
+        self.yolo.set_classes()
+        self.yolo.set_anchors()
+        self.yolo.set_dummy_partition()
         self.yolo.set_trained_model_path(self.settings.get('trained_model_path'))
         self.yolo.run()
 
+    def test_yolo_on_single_image(self):
+        image_path = self.settings.get('yolo_image_path')
+        self.yolo.set_classes()
+        self.yolo.set_anchors()
+        self.yolo.set_trained_model_path(self.settings.get('trained_model_path'))
+        self.yolo.run_on_single_image(image_path)
 
 class TimerStepsQueue(Queue):
 

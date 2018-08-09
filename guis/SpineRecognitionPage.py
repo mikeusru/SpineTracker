@@ -49,6 +49,10 @@ class SpineRecognitionPage(ttk.Frame):
                                              font=settings.get('large_font'),
                                              command=self.test_model)
         gui['test_model_button'].grid(row=3, column=1, sticky='nw', padx=10, pady=10)
+        gui['run_on_single_image_button'] = tk.Button(self, text='Run On Single Image',
+                                             font=settings.get('large_font'),
+                                             command=self.test_single_image)
+        gui['run_on_single_image_button'].grid(row=4, column=0, sticky='nw', padx=10, pady=10)
 
         return gui
 
@@ -62,6 +66,11 @@ class SpineRecognitionPage(ttk.Frame):
                                title="Choose a pre-trained model")
         self.set_new_path('trained_model_path', path)
 
+    def select_image_file(self):
+        path = askopenfilename(initialdir=self.session.settings.get('trained_model_path'),
+                               title="Choose a pre-trained model")
+        self.session.settings.set('yolo_image_path', path)
+
     def put_cursor_at_end_of_path(self):
         self.gui['training_data_folder_preview_entry'].xview_moveto(1)
         self.gui['model_path_entry'].xview_moveto(1)
@@ -69,6 +78,10 @@ class SpineRecognitionPage(ttk.Frame):
     def test_model(self):
         self.select_folder_for_test_data()
         self.session.test_yolo_model()
+
+    def test_single_image(self):
+        self.select_image_file()
+        self.session.test_yolo_on_single_image()
 
     def train_model(self):
         self.select_folder_for_newly_trained_model()

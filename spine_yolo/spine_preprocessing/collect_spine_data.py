@@ -18,7 +18,7 @@ class SpineImageDataPreparer:
         self.sliding_window_side = 256
         self.sliding_window_step = 128
         self.initial_directory = '../test'
-        self.save_directory = '../images/input'
+        self.save_directory = '../spine_yolo/images/in'
         self.output_file_list = []
         self.dataframe = None
 
@@ -50,6 +50,22 @@ class SpineImageDataPreparer:
         self.rescale_all_data()
         self.convert_all_images_to_float()
         self.save_images_as_sliding_windows()
+
+    def run_on_single_image(self, image_file):
+        self.dataframe = pd.DataFrame({'img_path': [image_file]})
+        self.load_all_data()
+        self.convert_all_images_to_float()
+        if self.do_sliding_windows:
+            sliding_windows_x_shift = []
+            sliding_windows_y_shift = []
+            windows = []
+            for (x, y, window, boxes_in_window) in self.yield_sliding_windows(self.dataframe['images']):
+                sliding_windows_x_shift.append(x)
+                sliding_windows_y_shift.append(y)
+                windows.append(window)
+            return sliding_windows_x_shift, sliding_windows_y_shift, windows
+        else:
+            return self.dataframe['images'][0]
 
     def create_dataframe(self):
         image_files, info_files, bbox_files = self.get_initial_file_lists()
@@ -187,8 +203,14 @@ class SpineImageDataPreparer:
         print('Saving done yay')
 
     def make_and_save_sliding_windows(self, row, image_dir):
-        for (x, y, window, boxes_in_window) in self.yield_sliding_windows(row['images'], row['boxes']):
-            self.save_sliding_window(image_dir, x, y, window, boxes_in_window)
+        if self.labeled:
+            boxes = row['boxes']
+        else:
+            boxes = None
+        for (x, y, window, boxes_in_window) in self.yield_sliding_windows(row['images'], boxes):
+                self.save_sliding_window(image_dir, x, y, window, boxes_in_window)
+
+
 
     def save_images_and_data(self, row, path):
         if self.labeled:
@@ -214,4 +236,5 @@ class SpineImageDataPreparer:
             np.savez(path, image=image, boxes=boxes)
 
     def save_file_list(self):
-        np.savez(os.path.join(self.save_directory, 'file_list.npz'), file_list=np.array(self.output_file_list))
+        self.output_file_list = np.array(self.output_file_list)
+        np.savez(os.path.join(self.save_directory, 'file_list.npz'), file_list=self.output_file_list)
