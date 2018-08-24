@@ -289,6 +289,7 @@ class SpineTracker:
         self.yolo.set_trained_model_path(self.settings.get('trained_model_path'))
         self.yolo.run_on_single_image(image_path)
 
+
 class TimerStepsQueue(Queue):
 
     def __init__(self):
