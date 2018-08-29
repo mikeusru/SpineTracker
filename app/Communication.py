@@ -41,6 +41,7 @@ class Communication:
         self.command_reader.wait_for_received_flag(flag)
 
     def grab_stack(self):
+        self.turn_intensity_image_saving_on()
         flag = 'acquisition_done'
         self.command_reader.received_flags[flag] = False
         self.command_writer.grab_one_stack()
