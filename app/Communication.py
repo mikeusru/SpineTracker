@@ -53,8 +53,8 @@ class Communication:
         self.command_reader.wait_for_received_flag(flag)
 
     def set_scan_shift(self, x, y):
-        scan_shift_fast, scan_shift_slow = self.xy_to_scan_angle(x, y)
-        flag = 'scan_angle_x_y'
+        scan_shift_fast, scan_shift_slow = self.xy_to_scan_voltage(x, y)
+        flag = 'scan_voltage_x_y'
         self.command_reader.received_flags[flag] = False
         self.command_writer.set_scan_shift(scan_shift_fast, scan_shift_slow)
         self.command_reader.wait_for_received_flag(flag)
@@ -65,41 +65,41 @@ class Communication:
         self.command_writer.set_z_slice_num(z_slice_num)
         self.command_reader.wait_for_received_flag(flag)
 
-    def xy_to_scan_angle(self, x, y):
-        scan_angle_multiplier = np.array(self.settings.get('scan_angle_multiplier'))
-        scan_angle_range_reference = np.array(self.settings.get('scan_angle_range_reference'))
+    def xy_to_scan_voltage(self, x, y):
+        scan_voltage_multiplier = np.array(self.settings.get('scan_voltage_multiplier'))
+        scan_voltage_range_reference = np.array(self.settings.get('scan_voltage_range_reference'))
         fov_x_y = np.squeeze(np.array([self.settings.get('fov_x'),self.settings.get('fov_y')]))
         # convert x and y to relative pixel coordinates
         xyz_center = self.session.state.center_coordinates.get_motor()
         fs_coordinates = np.array([x - xyz_center['x'], y - xyz_center['y']])
         fs_normalized = fs_coordinates / fov_x_y
-        fs_angular = fs_normalized * scan_angle_multiplier * scan_angle_range_reference
+        fs_angular = fs_normalized * scan_voltage_multiplier * scan_voltage_range_reference
         scan_shift_fast, scan_shift_slow = fs_angular
         # TODO: Add setting to invert scan shift. Or just tune it automatically.
         return scan_shift_fast, -scan_shift_slow
 
-    def scan_angle_to_xy(self, scan_angle_x_y, x_center=None, y_center=None):
-        scan_angle_multiplier = np.array(self.settings.get('scan_angle_multiplier'))
-        scan_angle_range_reference = np.array(self.settings.get('scan_angle_range_reference'))
+    def scan_voltage_to_xy(self, scan_voltage_x_y, x_center=None, y_center=None):
+        scan_voltage_multiplier = np.array(self.settings.get('scan_voltage_multiplier'))
+        scan_voltage_range_reference = np.array(self.settings.get('scan_voltage_range_reference'))
         fov_x_y = np.squeeze(np.array([self.settings.get('fov_x'),self.settings.get('fov_y')]))
-        fs_angular = np.array([scan_angle_x_y[0], -scan_angle_x_y[1]])
+        fs_angular = np.array([scan_voltage_x_y[0], -scan_voltage_x_y[1]])
         if x_center is None:
             xyz = self.session.state.center_coordinates.get_motor()
             x_center, y_center = xyz['x'], xyz['y']
-        fs_normalized = fs_angular / (scan_angle_multiplier * scan_angle_range_reference)
+        fs_normalized = fs_angular / (scan_voltage_multiplier * scan_voltage_range_reference)
         fs_coordinates = fs_normalized * fov_x_y
         x, y = fs_coordinates + np.array([x_center, y_center])
         return x, y
 
     def get_scan_props(self):
-        flag = 'scanAngleMultiplier'
+        flag = 'scanVoltageMultiplier'
         self.command_reader.received_flags[flag] = False
-        self.command_writer.get_scan_angle_multiplier()
+        self.command_writer.get_scan_voltage_multiplier()
         self.command_reader.wait_for_received_flag(flag)
 
-        flag = 'scanAngleRangeReference'
+        flag = 'scanVoltageRangeReference'
         self.command_reader.received_flags[flag] = False
-        self.command_writer.get_scan_angle_range_reference()
+        self.command_writer.get_scan_voltage_range_reference()
         self.command_reader.wait_for_received_flag(flag)
 
     def set_zoom(self, zoom):
@@ -110,7 +110,7 @@ class Communication:
         self.settings.set('current_zoom', zoom)
 
     def set_resolution(self, x_resolution, y_resolution):
-        flag = 'x_y_resolution'
+        flag = 'ResolutionXY'
         self.command_reader.received_flags[flag] = False
         self.command_writer.set_x_y_resolution(x_resolution, y_resolution)
         self.command_reader.wait_for_received_flag(flag)
@@ -147,7 +147,7 @@ class Communication:
         self.command_reader.received_flags[flag] = False
         self.command_writer.get_current_motor_position()
         self.command_reader.wait_for_received_flag(flag)
-        flag = 'scan_angle_x_y'
+        flag = 'scan_voltage_x_y'
         self.command_reader.received_flags[flag] = False
-        self.command_writer.get_scan_angle_xy()
+        self.command_writer.get_scan_voltage_xy()
         self.command_reader.wait_for_received_flag(flag)

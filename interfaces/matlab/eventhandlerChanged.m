@@ -110,7 +110,7 @@ end
 function grabOneStack()
 % Grab an image stack
 
-% respond with GrabOneStackDone
+% respond with AcquisitionDone
 end
 
 function setZoom(zoom)
@@ -132,7 +132,7 @@ function getCurrentPositions()
 end
 
 function getFOV_xy()
-% request FOV size in µm, in x and y
+% request FOV size in ï¿½m, in x and y
 
 % respond with fov_XY_um
 end

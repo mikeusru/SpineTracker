@@ -143,9 +143,9 @@ end
 
 function grabOneStack()
 % Grab an image stack
-% respond with GrabOneStackDone
+% respond with AcquisitionDone
 pause(.1)
-write_to_SpineTracker('GrabOneStackDone','C:\Users\mikeu\Documents\Python Scripts\SpineTracker\testing\test_image.tif');
+write_to_SpineTracker('AcquisitionDone','C:\Users\mikeu\Documents\Python Scripts\SpineTracker\testing\test_image.tif');
 end
 
 function setZoom(zoom)
@@ -172,7 +172,7 @@ write_to_SpineTracker('CurrentPosition',xyz(1),xyz(2),xyz(3));
 end
 
 function getFOV_xy()
-% request FOV size in µm, in x and y
+% request FOV size in ï¿½m, in x and y
 % this should probably just be set in SpineTracker
 % respond with fov_XY_um
 pause(.1)
@@ -214,13 +214,13 @@ end
 function setXYresolution(x,y)
 global state gh
 % set pixel resolution to image
-% respond with x_y_resolution
-write_to_SpineTracker('x_y_resolution',x,y);
+% respond with ResolutionXY
+write_to_SpineTracker('ResolutionXY',x,y);
 end
 
 function getXYresolution()
 global state gh
 % read pixel resolution to image
-% respond with x_y_resolution
-write_to_SpineTracker('x_y_resolution',128,128);
+% respond with ResolutionXY
+write_to_SpineTracker('ResolutionXY',128,128);
 end

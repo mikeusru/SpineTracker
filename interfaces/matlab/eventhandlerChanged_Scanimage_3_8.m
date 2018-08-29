@@ -114,7 +114,7 @@ while ~isempty(spineTracker.commandQueue)
             z_slice_num = str2double(command(2));
             setZSliceNum(z_slice_num);
         case 'setxyresolution'
-            disp('setXYResolution')
+            disp('SetResolutionXY')
             if checkArgCount([2,2],argCount)
                 continue
             end
@@ -122,7 +122,7 @@ while ~isempty(spineTracker.commandQueue)
             y_res = str2double(command(3));
             setXYresolution(x_res,y_res);
         case 'getxyresolution'
-            disp('getXYResolution')
+            disp('GetResolutionXY')
             if checkArgCount([0,0],argCount)
                 continue
             end
@@ -171,10 +171,10 @@ catch ME
     disp('Warning - waiting for grab didn''t work correctly');
     disp(ME.message);
 end
-% respond with GrabOneStackDone
+% respond with AcquisitionDone
 % should make sure that this filename is taken at the correct time. might
 % need to be done before taking the image
-write_to_SpineTracker('GrabOneStackDone',save_path);
+write_to_SpineTracker('AcquisitionDone',save_path);
 end
 
 function setZoom(zoom)
@@ -309,15 +309,15 @@ set(gh.configurationControls.linesPerFrame, 'String', num2str(linesPerFrame));
 configurationControls('linesPerFrame_Callback',gh.configurationControls.linesPerFrame);
 configurationControls('pbApplyConfig_Callback');
 % genericCallback(gh.configurationControls.linesPerFrame);
-% respond with x_y_resolution
-write_to_SpineTracker('x_y_resolution',state.acq.pixelsPerLine,state.acq.linesPerFrame);
+% respond with ResolutionXY
+write_to_SpineTracker('ResolutionXY',state.acq.pixelsPerLine,state.acq.linesPerFrame);
 end
 
 function getXYresolution()
 global state gh
 
 % read pixel resolution to image
-% respond with x_y_resolution
-write_to_SpineTracker('x_y_resolution',state.acq.pixelsPerLine,state.acq.linesPerFrame);
+% respond with ResolutionXY
+write_to_SpineTracker('ResolutionXY',state.acq.pixelsPerLine,state.acq.linesPerFrame);
 end
 

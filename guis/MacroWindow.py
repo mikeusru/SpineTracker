@@ -103,7 +103,7 @@ class MacroWindow(tk.Toplevel):
         z = z + xyz_center['z'] - self.image.n_frames / 2
         # add coordinates to position table
         print('x, y, z = {0}, {1}, {2}'.format(x, y, z))
-        self.session.state.current_coordinates.set_scan_angles_x_y(0, 0)
+        self.session.state.current_coordinates.set_scan_voltages_x_y(0, 0)
         self.session.state.current_coordinates.set_motor(x, y, z)
         self.get_ref_images_from_macro(xyz_clicked)
         self.session.create_new_position(take_new_refs=False)

@@ -93,7 +93,7 @@ class CommandInterpreter:
         x, y, z = [float(arg) for arg in args]
         # TODO: Grab Stack
         save_path = 'path to tiff which was just saved'
-        self.command_to_spine_tracker.send_command('GrabOneStackDone', save_path)
+        self.command_to_spine_tracker.send_command('AcquisitionDone', save_path)
 
     def set_zoom(self, args):
         zoom = float(args[0])

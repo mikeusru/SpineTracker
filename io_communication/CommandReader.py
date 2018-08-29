@@ -84,7 +84,7 @@ class CommandReader:
         elif command == 'uncagingdone':
             check_num_args(args, 0, 0)
             self.received_flags['uncaging_done'] = True
-        elif command == 'fovXY_um':
+        elif command == 'FovXYum':
             check_num_args(args, 2, 2)
             self.settings.set('fov_x', args[0])
             self.settings.set('fov_y', args[1])
@@ -93,26 +93,26 @@ class CommandReader:
             check_num_args(args, 1, 1)
             self.settings.set('current_zoom', args[0])
             self.received_flags['zoom'] = True
-        elif command == 'scananglexy':
+        elif command == 'scanvoltagexy':
             check_num_args(args, 2, 2)
-            self.session.state.current_coordinates.set_scan_angles_x_y(args[0], args[1])
-            self.received_flags['scan_angle_x_y'] = True
-        elif command == 'scananglemultiplier':
+            self.session.state.current_coordinates.set_scan_voltages_x_y(args[0], args[1])
+            self.received_flags['scan_voltage_x_y'] = True
+        elif command == 'scanvoltagemultiplier':
             check_num_args(args, 2, 2)
-            self.settings.set('scan_angle_multiplier', np.array([float(args[0]), float(args[1])]))
-            self.received_flags['scanAngleMultiplier'] = True
-        elif command == 'scananglerangereference':
+            self.settings.set('scan_voltage_multiplier', np.array([float(args[0]), float(args[1])]))
+            self.received_flags['scanVoltageMultiplier'] = True
+        elif command == 'scanvoltagerangereference':
             check_num_args(args, 2, 2)
-            self.settings.set('scan_angle_range_reference', np.array([float(args[0]), float(args[1])]))
-            self.received_flags['scanAngleRangeReference'] = True
+            self.settings.set('scan_voltage_range_reference', np.array([float(args[0]), float(args[1])]))
+            self.received_flags['scanVoltageRangeReference'] = True
         elif command == 'zslicenum':
             check_num_args(args, 1, 1)
             self.settings.set('z_slice_num', args[0])
             self.received_flags['z_slice_num'] = True
-        elif command == 'x_y_resolution':
+        elif command == 'ResolutionXY':
             check_num_args(args, 2, 2)
-            self.settings.set('x_y_resolution', [args[0], args[1]])
-            self.received_flags['x_y_resolution'] = True
+            self.settings.set('ResolutionXY', [args[0], args[1]])
+            self.received_flags['ResolutionXY'] = True
         else:
             print("COMMAND NOT UNDERSTOOD")
 
