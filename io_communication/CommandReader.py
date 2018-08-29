@@ -78,7 +78,7 @@ class CommandReader:
         elif command == 'intensityfilepath':
             check_num_args(args, 1, 1)
             self.settings.set('image_file_path', args[0])
-            self.received_flags['intensityfilepath'] = True
+            self.received_flags['intensity_file_path'] = True
         elif command == 'currentposition':
             check_num_args(args, 3, 3)
             x, y, z = [float(args[xyz]) for xyz in [0, 1, 2]]
@@ -90,7 +90,7 @@ class CommandReader:
         elif command == 'intensitysaving':
             check_num_args(args, 1, 1)
             #TODO Need to do something with this information... but it's useless for now
-            self.received_flags['intensitysaving'] = True
+            self.received_flags['intensity_saving'] = True
         elif command == 'fovxyum':
             check_num_args(args, 2, 2)
             self.settings.set('fov_x', args[0])
@@ -107,11 +107,11 @@ class CommandReader:
         elif command == 'scanvoltagemultiplier':
             check_num_args(args, 2, 2)
             self.settings.set('scan_voltage_multiplier', np.array([float(args[0]), float(args[1])]))
-            self.received_flags['scanVoltageMultiplier'] = True
+            self.received_flags['scan_voltage_multiplier'] = True
         elif command == 'scanvoltagerangereference':
             check_num_args(args, 2, 2)
             self.settings.set('scan_voltage_range_reference', np.array([float(args[0]), float(args[1])]))
-            self.received_flags['scanVoltageRangeReference'] = True
+            self.received_flags['scan_voltage_range_reference'] = True
         elif command == 'zslicenum':
             check_num_args(args, 1, 1)
             self.settings.set('z_slice_num', args[0])
@@ -119,7 +119,7 @@ class CommandReader:
         elif command == 'resolutionxy':
             check_num_args(args, 2, 2)
             self.settings.set('resolution_x_y', [args[0], args[1]])
-            self.received_flags['resolutionxy'] = True
+            self.received_flags['resolution_x_y'] = True
         else:
             print(f"COMMAND NOT UNDERSTOOD: {command}")
 

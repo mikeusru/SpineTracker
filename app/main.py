@@ -174,6 +174,7 @@ class SpineTracker:
     def image_at_pos_id(self, pos_id):
         self.move_to_pos_id(pos_id)
         self.communication.grab_stack()
+        self.communication.get_intensity_file_path()
         self.record_imaging_to_log(pos_id)
 
     def uncage_at_pos_id(self, pos_id):
@@ -228,14 +229,17 @@ class SpineTracker:
     def collect_new_reference_images(self):
         self.communication.set_reference_imaging_conditions()
         self.communication.grab_stack()
+        self.communication.get_intensity_file_path()
         self.load_image('reference_zoomed_out')
         self.communication.set_normal_imaging_conditions()
         self.communication.grab_stack()
+        self.communication.get_intensity_file_path()
         self.load_image('reference')
 
     def collect_new_macro_image(self):
         self.communication.set_macro_imaging_conditions()
         self.communication.grab_stack()
+        self.communication.get_intensity_file_path()
         self.load_image('macro')
 
     def move_to_pos_id(self, pos_id):
@@ -250,6 +254,7 @@ class SpineTracker:
     def start_imaging(self):
         self.communication.get_scan_props()
         self.communication.set_normal_imaging_conditions()
+        self.communication.turn_intensity_image_saving_on()
         self.start_expt_log()
         self.timer_steps_queue.clear_timers()
         individual_steps = self.timeline.get_steps_for_queue()

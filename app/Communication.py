@@ -23,8 +23,8 @@ class Communication:
         read_function = self.command_reader.read_new_commands
         with self.instructions_in_queue.mutex:
             self.instructions_in_queue.queue.clear()
-            instructions_listener_thread = InstructionThread(self, path, filename, read_function)
-            instructions_listener_thread.start()
+        instructions_listener_thread = InstructionThread(self, path, filename, read_function)
+        instructions_listener_thread.start()
         return instructions_listener_thread
 
     def move_stage(self, x=None, y=None, z=None):
@@ -42,6 +42,12 @@ class Communication:
 
     def grab_stack(self):
         flag = 'acquisition_done'
+        self.command_reader.received_flags[flag] = False
+        self.command_writer.grab_one_stack()
+        self.command_reader.wait_for_received_flag(flag)
+
+    def get_intensity_file_path(self):
+        flag = 'intensity_file_path'
         self.command_reader.received_flags[flag] = False
         self.command_writer.grab_one_stack()
         self.command_reader.wait_for_received_flag(flag)
@@ -92,12 +98,12 @@ class Communication:
         return x, y
 
     def get_scan_props(self):
-        flag = 'scanVoltageMultiplier'
+        flag = 'scan_voltage_multiplier'
         self.command_reader.received_flags[flag] = False
         self.command_writer.get_scan_voltage_multiplier()
         self.command_reader.wait_for_received_flag(flag)
 
-        flag = 'scanVoltageRangeReference'
+        flag = 'scan_voltage_range_reference'
         self.command_reader.received_flags[flag] = False
         self.command_writer.get_scan_voltage_range_reference()
         self.command_reader.wait_for_received_flag(flag)
@@ -110,7 +116,7 @@ class Communication:
         self.settings.set('current_zoom', zoom)
 
     def set_resolution(self, x_resolution, y_resolution):
-        flag = 'resolutionxy'
+        flag = 'resolution_x_y'
         self.command_reader.received_flags[flag] = False
         self.command_writer.set_x_y_resolution(x_resolution, y_resolution)
         self.command_reader.wait_for_received_flag(flag)
@@ -150,4 +156,10 @@ class Communication:
         flag = 'scan_voltage_x_y'
         self.command_reader.received_flags[flag] = False
         self.command_writer.get_scan_voltage_xy()
+        self.command_reader.wait_for_received_flag(flag)
+
+    def turn_intensity_image_saving_on(self):
+        flag = 'intensity_saving'
+        self.command_reader.received_flags[flag] = False
+        self.command_writer.set_intensity_saving(1)
         self.command_reader.wait_for_received_flag(flag)
