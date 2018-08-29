@@ -56,12 +56,12 @@ command = ZSliceNum
 arguments = number of slices
 example: ZSliceNum,10
 
---sent when X,Y Imaging Resolution is requested
+--Sent when intensity file path is requested
 command = IntensityFilePath
 arguments = filepath
 example: IntensityFilePath,c:/imaging/image1.tiff
 
---Sent when intensity file path is requested
+--Sent when imaging resolution is requested
 command = ResolutionXY
 arguments = x,y
 example: ResolutionXY,512,512
@@ -95,7 +95,7 @@ arguments: 1 or 0 (on or off)
 example: SetIntensitySaving,1
 return: IntensitySaving
 
--- Turn intensity file saving on/off--
+-- Get Path of Intensity File--
 command = GetIntensityFilePath
 arguments: None
 example: GetIntensityFilePath
@@ -133,7 +133,7 @@ expected return command: ScanVoltageXY
 
 --Set Galvo Scanning Position
 command = SetScanVoltageXY
-arguments: scanShiftFast,scanShiftSlow
+arguments: x,y
 example: setScanVoltageXY,0.2,-4
 expected return command: ScanVoltageXY
 

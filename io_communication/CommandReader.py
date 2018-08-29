@@ -71,11 +71,14 @@ class CommandReader:
             if self.settings.get('verbose'):
                 print('\nStage Moved to x= {0} , y = {1}, z = {2}\n'.format(x, y, z))
             self.received_flags['stage_move_done'] = True
-        elif command == 'grabonestackdone':
+        elif command == 'acquisitiondone':
             # commands need to be separated by commas, not spaces, otherwise file paths will cause problems
+            check_num_args(args, 0, 0)
+            self.received_flags['acquisition_done'] = True
+        elif command == 'intensityfilepath':
             check_num_args(args, 1, 1)
             self.settings.set('image_file_path', args[0])
-            self.received_flags['grab_one_stack_done'] = True
+            self.received_flags['intensityfilepath'] = True
         elif command == 'currentposition':
             check_num_args(args, 3, 3)
             x, y, z = [float(args[xyz]) for xyz in [0, 1, 2]]
@@ -84,11 +87,15 @@ class CommandReader:
         elif command == 'uncagingdone':
             check_num_args(args, 0, 0)
             self.received_flags['uncaging_done'] = True
-        elif command == 'FovXYum':
+        elif command == 'intensitysaving':
+            check_num_args(args, 1, 1)
+            #TODO Need to do something with this information... but it's useless for now
+            self.received_flags['intensitysaving'] = True
+        elif command == 'fovxyum':
             check_num_args(args, 2, 2)
             self.settings.set('fov_x', args[0])
             self.settings.set('fov_y', args[1])
-            self.received_flags['fovXY'] = True
+            self.received_flags['fovxyum'] = True
         elif command == 'zoom':
             check_num_args(args, 1, 1)
             self.settings.set('current_zoom', args[0])
@@ -109,12 +116,12 @@ class CommandReader:
             check_num_args(args, 1, 1)
             self.settings.set('z_slice_num', args[0])
             self.received_flags['z_slice_num'] = True
-        elif command == 'ResolutionXY':
+        elif command == 'resolutionxy':
             check_num_args(args, 2, 2)
-            self.settings.set('ResolutionXY', [args[0], args[1]])
-            self.received_flags['ResolutionXY'] = True
+            self.settings.set('resolution_x_y', [args[0], args[1]])
+            self.received_flags['resolutionxy'] = True
         else:
-            print("COMMAND NOT UNDERSTOOD")
+            print(f"COMMAND NOT UNDERSTOOD: {command}")
 
     def wait_for_received_flag(self, flag):
         # self.controller.print_status('Waiting for {0}'.format(flag))

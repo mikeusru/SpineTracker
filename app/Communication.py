@@ -41,7 +41,7 @@ class Communication:
         self.command_reader.wait_for_received_flag(flag)
 
     def grab_stack(self):
-        flag = 'grab_one_stack_done'
+        flag = 'acquisition_done'
         self.command_reader.received_flags[flag] = False
         self.command_writer.grab_one_stack()
         self.command_reader.wait_for_received_flag(flag)
@@ -110,7 +110,7 @@ class Communication:
         self.settings.set('current_zoom', zoom)
 
     def set_resolution(self, x_resolution, y_resolution):
-        flag = 'ResolutionXY'
+        flag = 'resolutionxy'
         self.command_reader.received_flags[flag] = False
         self.command_writer.set_x_y_resolution(x_resolution, y_resolution)
         self.command_reader.wait_for_received_flag(flag)

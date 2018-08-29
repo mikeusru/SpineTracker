@@ -9,13 +9,19 @@ class CommandWriter:
             open(self.file_path, 'a').close()
 
     def move_stage(self, x, y, z):
-        self.write_command('moveXYZ', x, y, z)
+        self.write_command('SetMotorPosition', x, y, z)
 
     def grab_one_stack(self):
         self.write_command('StartGrab')
 
     def set_zoom(self, zoom):
-        self.write_command('setZoom', zoom)
+        self.write_command('SetZoom', zoom)
+
+    def set_intensity_saving(self, save_intensity_image_1_or_0):
+        self.write_command('SetIntensitySaving', save_intensity_image_1_or_0)
+
+    def get_intensity_file_path(self):
+        self.write_command('GetIntensityFilePath')
 
     def do_uncaging(self, roi_x, roi_y):
         self.write_command('StartUncaging', roi_x, roi_y)
@@ -33,10 +39,10 @@ class CommandWriter:
         self.write_command('GetScanVoltageRangeReference')
 
     def get_current_motor_position(self):
-        self.write_command('getCurrentPosition')
+        self.write_command('GetCurrentPosition')
 
     def set_scan_shift(self, scan_shift_fast, scan_shift_slow):
-        self.write_command('setScanVoltageXY', scan_shift_fast, scan_shift_slow)
+        self.write_command('SetScanVoltageXY', scan_shift_fast, scan_shift_slow)
 
     def set_z_slice_num(self, z_slice_num):
         self.write_command('SetZSliceNum', z_slice_num)
