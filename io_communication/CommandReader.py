@@ -1,4 +1,6 @@
 import os
+import re
+
 import numpy as np
 
 
@@ -21,8 +23,14 @@ class CommandReader:
     def _read_file(self):
         with open(self.file_path) as file:
             content = file.readlines()
-            content = [line.strip() for line in content]
+            content = [self.remove_spaces(line) for line in content]
             return content
+
+    @staticmethod
+    def remove_spaces(line):
+        line = line.strip()
+        remove_space_after_comma = re.compile('(, )')
+        return remove_space_after_comma.sub(',', line)
 
     def _check_for_new_commands(self, content):
         instructions_length = len(self.instructions_received)
