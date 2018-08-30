@@ -25,15 +25,23 @@ class AcquiredImage:
     def copy(self):
         return copy.deepcopy(self)
 
-    def load(self, settings):
-        self.set_zoom(settings)
-        self.image_file_path = settings.get('image_file_path')
-        self.total_chan = int(settings.get('total_channels'))
-        self.drift_chan = int(settings.get('drift_correction_channel'))
-        self.fov_x_y = np.squeeze(np.array([settings.get('fov_x'), settings.get('fov_y')]))
+    def load(self, settings=None):
+        if settings is not None:
+            self.set_zoom(settings)
+            self.image_file_path = settings.get('image_file_path')
+            self.total_chan = int(settings.get('total_channels'))
+            self.drift_chan = int(settings.get('drift_correction_channel'))
+            self.fov_x_y = np.squeeze(np.array([settings.get('fov_x'), settings.get('fov_y')]))
         image_stack = io.imread(self.image_file_path)
+        image_stack = self.correct_for_3_channel_image_bug(image_stack)
         image_stack = image_stack[np.arange(self.drift_chan - 1, len(image_stack), self.total_chan)]
         self.image_stack = image_stack
+
+    @staticmethod
+    def correct_for_3_channel_image_bug(image_stack):
+        if image_stack.shape[2] == 3:
+            image_stack = np.swapaxes(image_stack, 0, 2)
+        return image_stack
 
     def set_zoom(self, settings):
         if self.is_macro:
