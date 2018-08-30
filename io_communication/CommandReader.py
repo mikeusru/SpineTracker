@@ -25,7 +25,7 @@ class CommandReader:
         self._run_new_commands()
 
     def _read_file(self):
-        with open(self.file_path) as file:
+        with open(self.file_path, 'r') as file:
             content = file.readlines()
             content = [self.remove_spaces(line) for line in content]
             return content
