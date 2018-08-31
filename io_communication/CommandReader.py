@@ -5,18 +5,22 @@ import numpy as np
 
 
 class CommandReader:
-    def __init__(self, session, instructions_in_queue, instructions_received):
+    def __init__(self, session, instructions_in_queue):
         self.session = session
         self.settings = session.settings
         self.instructions_in_queue = instructions_in_queue
-        self.instructions_received = instructions_received
+        self.instructions_received = []
         self.received_flags = {}
         self.file_path = self.settings.get('input_file')
         if not os.path.isfile(self.file_path):
             open(self.file_path, 'a').close()
 
+    def reset(self):
+        self.instructions_received = []
+
     def read_new_commands(self, *args):
         content = self._read_file()
+        self._check_for_reset(content)
         self._check_for_new_commands(content)
         self._run_new_commands()
 
@@ -31,6 +35,10 @@ class CommandReader:
         line = line.strip()
         remove_space_after_comma = re.compile('(, )')
         return remove_space_after_comma.sub(',', line)
+
+    def _check_for_reset(self, content):
+        if len(content < len(self.instructions_received)):
+            self.reset()
 
     def _check_for_new_commands(self, content):
         instructions_length = len(self.instructions_received)
