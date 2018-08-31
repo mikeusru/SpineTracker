@@ -55,12 +55,12 @@ class DriftXYZ:
         prod = fft_ref * np.conj(fft_img)
         cc = np.fft.ifft2(prod)
         max_y, max_x = np.nonzero(np.fft.fftshift(cc) == np.max(cc))
-        shift_y = max_y - center_y
-        shift_x = max_x - center_x
+        shift_y = max_y[0] - center_y
+        shift_x = max_x[0] - center_x
         # Checks to see if there is an ambiguity problem with FFT because of the
         # periodic boundary in FFT (not sure why or if this is necessary but I'm
         # keeping it around for now)
-        if np.abs(shift_y) > h / 2:
+        if np.abs(shift_y).all() > h / 2:
             shift_y = shift_y - np.sign(shift_y) * h
         if np.abs(shift_x) > h / 2:
             shift_x = shift_x - np.sign(shift_x) * w
