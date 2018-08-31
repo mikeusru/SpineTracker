@@ -37,7 +37,7 @@ class CommandReader:
         return remove_space_after_comma.sub(',', line)
 
     def _check_for_reset(self, content):
-        if len(content < len(self.instructions_received)):
+        if len(content) < len(self.instructions_received):
             self.reset()
 
     def _check_for_new_commands(self, content):
