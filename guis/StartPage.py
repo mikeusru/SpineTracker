@@ -58,6 +58,9 @@ class StartPage(ttk.Frame):
         gui['canvas_positions'].get_tk_widget().config(borderwidth=1, background='gray', highlightcolor='gray',
                                                        highlightbackground='gray')
         gui['canvas_positions'].get_tk_widget().grid(row=0, column=1, rowspan=2, padx=10, pady=10, sticky='nsew')
+        gui['communication_log_label'] = tk.Label(self, textvariable=self.settings.get_gui_var('communication_log'),
+                                                  font=session.settings.get('large_font'))
+        gui['communication_log_label'].grid(row=3, column=1, columnspan=2, padx=10, pady=10, sticky='nw')
         return gui
 
     def on_visibility(self, event):

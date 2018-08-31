@@ -91,7 +91,6 @@ class MainGuiBuilder(tk.Tk):
     def show_end_of_path(self, *args):
         self.frames[SpineRecognitionPage].put_cursor_at_end_of_path()
 
-
 class SharedFigs(dict):
 
     def __init__(self, fig_dpi, *args, **kwargs):

@@ -2,9 +2,10 @@ import os
 
 
 class CommandWriter:
-    def __init__(self, settings):
-        self.settings = settings
-        self.file_path = settings.get('output_file')
+    def __init__(self, session):
+        self.session = session
+        self.settings = session.settings
+        self.file_path = self.settings.get('output_file')
         if not os.path.isfile(self.file_path):
             open(self.file_path, 'a').close()
 
@@ -56,6 +57,9 @@ class CommandWriter:
     def write_command(self, *args):
         command = ",".join([str(x) for x in args])
         # self.controller.print_status('\nWriting Command {0}\n'.format(command))
-        print('\nWriting Command {0}\n'.format(command))
+        self.print_line('\nWriting Command {0}\n'.format(command))
         with open(self.file_path, "a") as f:
             f.write('\n' + command)
+
+    def print_line(self, line):
+        self.session.print_to_log(line)

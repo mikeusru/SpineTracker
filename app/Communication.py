@@ -12,7 +12,7 @@ class Communication:
         self.session = session
         self.settings = session.settings
         self.instructions_in_queue = Queue()
-        self.command_writer = CommandWriter(self.settings)
+        self.command_writer = CommandWriter(self.session)
         self.command_reader = CommandReader(self.session, self.instructions_in_queue)
         self.instructions_listener_thread = self.initialize_instructions_listener_thread()
 

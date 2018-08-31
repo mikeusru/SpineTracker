@@ -294,6 +294,11 @@ class SpineTracker:
         self.yolo.set_trained_model_path(self.settings.get('trained_model_path'))
         self.yolo.run_on_single_image(image_path)
 
+    def print_to_log(self, line):
+        print(line)
+        self.write_to_log(line)
+        self.settings.set('communication_log', line)
+
 
 class TimerStepsQueue(Queue):
 
