@@ -91,6 +91,11 @@ class MainGuiBuilder(tk.Tk):
     def show_end_of_path(self, *args):
         self.frames[SpineRecognitionPage].put_cursor_at_end_of_path()
 
+    def indicate_step_on_timeline(self, step):
+        self.frames[TimelinePage].highlight_current_step(step)
+        self.frames[StartPage].update_canvases()
+
+
 class SharedFigs(dict):
 
     def __init__(self, fig_dpi, *args, **kwargs):

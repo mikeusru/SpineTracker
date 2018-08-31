@@ -162,6 +162,24 @@ class TimelinePage(ttk.Frame):
 
         self.create_timeline_chart()
 
+    def highlight_current_step(self, step):
+        self.display_timeline_chart()
+        timeline = self.session.timeline
+        current_pos_id = step.get('pos_id')
+        start_time = step.get('start_time')
+        end_time = step.get('end_time')
+        x_range = (start_time, end_time)
+        y_ind = 0
+        for pos_id in timeline.ordered_timelines_by_positions:
+            if pos_id == current_pos_id:
+                y_range = (y_ind - .4, 0.8)
+                y_ind += 1
+                self.gui['timeline_axis'].broken_barh([x_range],
+                                                      y_range,
+                                                      facecolor=None,
+                                                      edgecolor=self.color_chart.selected_edge,
+                                                      linewidth=2)
+
 
 class TimelineStepsFrame(ttk.Frame):
     def __init__(self, container, session):
@@ -267,3 +285,4 @@ class ColorChart:
         self.uncaging = 'red'
         self.imaging = 'blue'
         self.exclusive_imaging = 'green'
+        self.selected_edge = 'pink'

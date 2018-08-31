@@ -159,6 +159,7 @@ class SpineTracker:
         single_step = self.timer_steps_queue.current_step
         pos_id = single_step.get('pos_id')
         self.state.current_pos_id = pos_id
+        self.gui.indicate_step_on_timeline(single_step)
         if single_step['imaging_or_uncaging'] == 'Image':
             self.image_at_pos_id(pos_id)
             self.state.step_running = False
