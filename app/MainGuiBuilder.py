@@ -57,10 +57,12 @@ class MainGuiBuilder(tk.Tk):
         self.frames[StartPage].create_drift_image_axes(current_image)
 
     def show_drift_numbers(self, drift_x_y_z):
-        self.frames[StartPage].gui['drift_label'].configure(
-            text='Detected drift of {0:.1f}µm in x, {1:.1f}µm in y, and {2:.1} in z'.format(drift_x_y_z.x_um,
-                                                                                            drift_x_y_z.y_um,
-                                                                                            drift_x_y_z.z_um))
+        self.settings.set('drift_label',
+                          'Drift: {0:.1f}µm in x,'
+                          ' {1:.1f}µm in y, and {2:.1} in z'
+                          .format(drift_x_y_z.x_um,
+                                  drift_x_y_z.y_um,
+                                  drift_x_y_z.z_um))
 
     def show_drift_info(self, current_image, pos_id=None):
         self.show_drift_numbers(current_image.drift_x_y_z)

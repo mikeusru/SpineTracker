@@ -33,7 +33,7 @@ class StartPage(ttk.Frame):
         gui['button_end'] = ttk.Button(gui['frame_left_buttons'], text="Stop Imaging",
                                        command=lambda: session.stop_imaging())
         gui['button_end'].grid(row=4, column=0, padx=10, pady=10, sticky='nw')
-        gui['drift_label'] = tk.Label(self, text="drift placeholder",
+        gui['drift_label'] = tk.Label(self, textvariable=self.settings.get_gui_var('drift_label'),
                                       font=session.settings.get('large_font'))
         gui['drift_label'].grid(row=0, column=1, padx=10, pady=10, sticky='nw')
         gui['frame_for_canvases'] = ttk.Frame(self)

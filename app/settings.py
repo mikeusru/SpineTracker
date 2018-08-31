@@ -145,6 +145,7 @@ class SettingsDTO(dict):
         self._create_gui_variable('test_data_path', tk.StringVar, True, '../test')
         self._create_gui_variable('yolo_image_path', tk.StringVar, True, '../test.tif')
         self._create_gui_variable('communication_log', tk.StringVar, False, 'Communication Log...')
+        self._create_gui_variable('drift_label', tk.StringVar, False, 'Drift: ')
         self._create_gui_variable('trained_model_path', tk.StringVar, True,
                                   'spine_yolo/model_data/trained_stage_3_best.h5')
 
