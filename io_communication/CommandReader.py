@@ -27,12 +27,41 @@ class CommandReader:
         self.instructions_in_queue = instructions_in_queue
         self.instructions_received = []
         self.received_flags = {}
+        self.read_settings = {}
+        self.create_read_settings()
         self.file_path = self.settings.get('input_file')
         if not os.path.isfile(self.file_path):
             open(self.file_path, 'a').close()
 
     def reset(self):
         self.instructions_received = []
+
+    def create_read_settings(self):
+        self.new_setting('stagemovedone', 3, 3, None, None)
+        self.new_setting('acquisitiondone', 0, 0, None, None)
+        self.new_setting('intensityfilepath', 1, 1, 'image_file_path', None)
+        self.new_setting('currentposition', 3, 3, None, self.set_current_position)
+        self.new_setting('unagingdone', 0, 0, None, None)
+        self.new_setting('intensitysaving', 1, 1, None, None)
+        self.new_setting('fovxyum', 2, 2, None, None)
+
+    def set_current_position(self, args):
+        x, y, z = args
+        self.session.state.current_coordinates.set_motor(x, y, z)
+
+    def set_fov_x_y_um(self, args):
+        fov_x, fov_y = args
+        self.settings.set('fov_x', fov_x)
+        self.settings.set('fov_y', fov_y)
+
+    def new_setting(self, text_file_command, min_args, max_args, settings_name, received_fxn):
+        new_setting = SingleSettingReader()
+        new_setting.min_args = min_args
+        new_setting.max_args = max_args
+        new_setting.text_file_command = text_file_command
+        new_setting.settings_name = settings_name
+        new_setting.received_fxn = received_fxn
+        self.read_settings[text_file_command] = new_setting
 
     def read_new_commands(self, *args):
         content = self._read_file()
@@ -102,7 +131,7 @@ class CommandReader:
             self.received_flags['intensity_file_path'] = True
         elif command == 'currentposition':
             check_num_args(args, 3, 3)
-            x, y, z = [float(args[xyz]) for xyz in [0, 1, 2]]
+            x, y, z = args
             self.session.state.current_coordinates.set_motor(x, y, z)
             self.received_flags['current_positions'] = True
         elif command == 'uncagingdone':
@@ -189,3 +218,32 @@ class ImagingParamFileHandler:
         for line in self.content:
             param_name, param_values = get_command_and_args(line)
             self.param_dict[param_name] = param_values
+
+    def get(self, param_name):
+        param_value = self.param_dict.get(param_name)
+        return param_value
+
+
+class SingleSettingReader:
+
+    def __init__(self):
+        self.min_args = 0
+        self.max_args = 0
+        self.text_file_command = ''
+        self.settings_name = ''
+        self.received_flag = False
+        self.received_function = None
+        self.received_args = []
+
+    def run_fxn(self):
+        if self.received_function is not None:
+            self.received_function(self.received_args)
+
+    def waiting(self):
+        self.received_flag = False
+
+    def received(self):
+        self.received_flag = True
+
+    def is_done(self):
+        return self.received_flag
