@@ -106,7 +106,7 @@ class MacroWindow(tk.Toplevel):
         self.session.state.current_coordinates.set_scan_voltages_x_y(0, 0)
         self.session.state.current_coordinates.set_motor(x, y, z)
         self.get_ref_images_from_macro(xyz_clicked)
-        self.session.create_new_position(take_new_refs=False)
+        self.session.create_new_position(from_macro_window=True)
 
     def get_ref_images_from_macro(self, xyz_clicked):
         image_ref = self.get_ref_image_from_macro(xyz_clicked)

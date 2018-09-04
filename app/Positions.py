@@ -23,6 +23,24 @@ class Positions(dict):
         roi_x, roi_y = self[pos_id].get_roi_x_y()
         return roi_x, roi_y
 
+    def get_average_coordinate(self):
+        x_list = []
+        y_list = []
+        z_list = []
+        for pos_id in self:
+            xyz = self.get_coordinates(pos_id).get_combined()
+            x_list.append(xyz['x'])
+            y_list.append(xyz['y'])
+            z_list.append(xyz['z'])
+        x_average = np.average(np.array(x_list))
+        y_average = np.average(np.array(y_list))
+        z_average = np.average(np.array(z_list))
+        return dict(x=x_average, y=y_average, z=z_average)
+
+    def update_all_coordinates_relative_to_center(self):
+        for pos_id in self:
+            self[pos_id].coordinates.update_to_center()
+
     def create_new_pos(self, ref_image, ref_image_zoomed_out):
         coordinates = self.session.state.current_coordinates.copy()
         pos_id = self.initialize_new_position()
