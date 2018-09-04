@@ -44,10 +44,21 @@ class CommandReader:
         self.new_setting('unagingdone', 0, 0, None, None)
         self.new_setting('intensitysaving', 1, 1, None, None)
         self.new_setting('fovxyum', 2, 2, None, None)
+        self.new_setting('zoom', 1, 1, 'current_zoom', None)
+        self.new_setting('scanvoltagexy', 2, 2, 'current_zoom', None)
+        # TODO: Make lists load in as numpy or whatever in settings correctly
+        self.new_setting('scanvoltagemultiplier', 2, 2, 'scan_voltage_multiplier', None)
+        self.new_setting('scanvoltagerangereference', 2, 2, 'scan_voltage_range_reference', None)
+        self.new_setting('zslicenum', 1, 1, 'z_slice_num', None)
+        self.new_setting('resolutionxy', 2, 2, 'resolution_x_y', None)
 
     def set_current_position(self, args):
         x, y, z = args
         self.session.state.current_coordinates.set_motor(x, y, z)
+
+    def set_scan_voltages_x_y(self, args):
+        x, y = args
+        self.session.state.current_coordinates.set_scan_voltages_x_y(x, y)
 
     def set_fov_x_y_um(self, args):
         fov_x, fov_y = args
