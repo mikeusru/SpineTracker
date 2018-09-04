@@ -24,8 +24,8 @@ class State:
         self.step_running = False
         self.imaging_active = False
         self.current_pos_id = 1
-        self.current_coordinates = Coordinates(self.settings)
-        self.center_coordinates = Coordinates(self.settings)
+        self.current_coordinates = Coordinates(self.session)
+        self.center_coordinates = Coordinates(self.session)
         self.current_image = AcquiredImage()
         self.ref_image = ReferenceImage()
         self.ref_image_zoomed_out = ReferenceImage()
@@ -244,7 +244,9 @@ class SpineTracker:
 
     def move_to_pos_id(self, pos_id):
         x, y, z = [self.positions.get_coordinates(pos_id)[key] for key in ['x', 'y', 'z']]
-        self.communication.move_stage(x, y, z)
+        # self.communication.move_stage(x, y, z)
+        coordinates.update_to_center()
+        self.communication.move_to_coordinates(coordinates)
 
     def write_to_log(self, line):
         file_path = self.settings.get('experiment_log_file')

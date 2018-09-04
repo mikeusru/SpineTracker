@@ -33,17 +33,16 @@ class Communication:
         self.param_handler.create_listener_thread()
         return self.param_handler.listener_thread()
 
-    def move_stage(self, x=None, y=None, z=None):
-        if self.settings.get('park_xy_motor'):
-            xyz = self.session.state.center_coordinates.get_motor()
-            x_motor, y_motor = xyz['x'], xyz['y']
-            self.set_scan_shift(x, y)
-        else:
-            x_motor = x
-            y_motor = y
+    def move_to_coordinates(self, coordinates):
+        motor_x_y_z = coordinates.get_motor()
+        scan_voltage_x_y = coordinates.get_scan_voltage_x_y()
+        self.move_motor(motor_x_y_z['x', motor_x_y_z['y'], motor_x_y_z['z']])
+        self.set_scan_shift(scan_voltage_x_y['x'], scan_voltage_x_y['y'])
+
+    def move_motor(self, x,y,z):
         response_command = 'stagemovedone'
         self.command_reader.set_response(response_command)
-        self.command_writer.move_stage(x_motor, y_motor, z)
+        self.command_writer.move_stage(x,y,z)
         self.command_reader.wait_for_response(response_command)
 
     def grab_stack(self):
@@ -59,8 +58,7 @@ class Communication:
         self.command_writer.do_uncaging(roi_x, roi_y)
         self.command_reader.wait_for_response(response_command)
 
-    def set_scan_shift(self, x, y):
-        scan_voltage_x, scan_voltage_y = self.xy_to_scan_voltage(x, y)
+    def set_scan_shift(self, scan_voltage_x, scan_voltage_y):
         response_command = 'scanvoltagexy'
         self.command_reader.set_response(response_command)
         self.command_writer.set_scan_shift(scan_voltage_x, scan_voltage_y)
@@ -84,19 +82,6 @@ class Communication:
         scan_shift_x, scan_shift_y = fs_angular
         # TODO: Add setting to invert scan shift. Or just tune it automatically.
         return -scan_shift_x, -scan_shift_y
-
-    def scan_voltage_to_xy(self, scan_voltage_x_y, x_center=None, y_center=None):
-        scan_voltage_multiplier = np.array(self.settings.get('scan_voltage_multiplier'))
-        scan_voltage_range_reference = np.array(self.settings.get('scan_voltage_range_reference'))
-        fov_x_y = np.squeeze(np.array([self.settings.get('fov_x'),self.settings.get('fov_y')]))
-        fs_angular = np.array([-scan_voltage_x_y[0], -scan_voltage_x_y[1]])
-        if x_center is None:
-            xyz = self.session.state.center_coordinates.get_motor()
-            x_center, y_center = xyz['x'], xyz['y']
-        fs_normalized = fs_angular / (scan_voltage_multiplier * scan_voltage_range_reference)
-        fs_coordinates = fs_normalized * fov_x_y
-        x, y = fs_coordinates + np.array([x_center, y_center])
-        return x, y
 
     def set_zoom(self, zoom):
         response_command = 'zoom'

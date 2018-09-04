@@ -2,8 +2,9 @@ import numpy as np
 
 
 class Coordinates:
-    def __init__(self, settings):
-        self.settings = settings
+    def __init__(self, session):
+        self.session = session
+        self.settings = session.settings
         self.motor_x = 0
         self.motor_y = 0
         self.motor_z = 0
@@ -38,8 +39,30 @@ class Coordinates:
     def scan_voltage_to_um(self):
         scan_voltage_multiplier = self.settings.get('scan_voltage_multiplier')
         scan_voltage_range_reference = self.settings.get('scan_voltage_range_reference')
-        fov_x_y = np.squeeze(np.array([self.settings.get('fov_x'),self.settings.get('fov_y')]))
+        fov_x_y = np.squeeze(np.array([self.settings.get('fov_x'), self.settings.get('fov_y')]))
         fs_angular = np.array([self.scan_voltage_x, -self.scan_voltage_y])
         fs_normalized = fs_angular / (scan_voltage_multiplier * scan_voltage_range_reference)
         fs_coordinates = fs_normalized * fov_x_y
         return fs_coordinates
+
+    def x_y_to_scan_voltage(self, x, y):
+        scan_voltage_multiplier = np.array(self.settings.get('scan_voltage_multiplier'))
+        scan_voltage_range_reference = np.array(self.settings.get('scan_voltage_range_reference'))
+        fov_x_y = np.squeeze(np.array([self.settings.get('fov_x'), self.settings.get('fov_y')]))
+        # convert x and y to relative pixel coordinates
+        fs_coordinates = np.array([x - self.motor_x, y - self.motor_y])
+        fs_normalized = fs_coordinates / fov_x_y
+        fs_angular = fs_normalized * scan_voltage_multiplier * scan_voltage_range_reference
+        scan_voltage_x, scan_voltage_y = fs_angular
+        return -scan_voltage_x, -scan_voltage_y
+
+    def update_to_center(self):
+        center_xyz = self.session.state.center_coordinates.get_motor()
+        x_motor, y_motor = center_xyz['x'], center_xyz['y']
+        old_xyz = self.get_combined()
+        old_x = old_xyz['x']
+        old_y = old_xyz['y']
+        self.set_motor(x=x_motor, y=y_motor)
+        scan_voltage_x, scan_voltage_y = self.x_y_to_scan_voltage(old_x, old_y)
+        self.set_scan_voltages_x_y(scan_voltage_x, scan_voltage_y)
+

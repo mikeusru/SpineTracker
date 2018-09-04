@@ -89,7 +89,7 @@ class Positions(dict):
 class Position:
     def __init__(self):
         # TODO: Change these coordinates to the coordinate class
-        self.coordinates = {'x': 0, 'y': 0, 'z': 0}
+        self.coordinates = None
         self.ref_image = None
         self.ref_image_zoomed_out = None
         self.roi_x_y = None
