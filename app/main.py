@@ -224,8 +224,8 @@ class SpineTracker:
 
     def update_position(self, pos_id):
         self.communication.get_motor_position()
-        xyz = self.state.current_coordinates.get_combined()
-        self.positions[pos_id].set_coordinates(xyz)
+        new_coordinates = self.state.current_coordinates.copy()
+        self.positions.set_coordinates(pos_id, new_coordinates)
         self.gui.update_positions_table()
         self.positions.backup_positions()
 
@@ -243,8 +243,7 @@ class SpineTracker:
         self.load_image('macro')
 
     def move_to_pos_id(self, pos_id):
-        x, y, z = [self.positions.get_coordinates(pos_id)[key] for key in ['x', 'y', 'z']]
-        # self.communication.move_stage(x, y, z)
+        coordinates = self.positions.get_coordinates(pos_id)
         coordinates.update_to_center()
         self.communication.move_to_coordinates(coordinates)
 

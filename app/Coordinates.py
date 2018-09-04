@@ -19,6 +19,31 @@ class Coordinates:
         if z is not None:
             self.motor_z = float(z)
 
+    def copy(self):
+        new_coordinates = Coordinates(self.session)
+        new_coordinates.motor_x = self.motor_x
+        new_coordinates.motor_y = self.motor_y
+        new_coordinates.motor_z = self.motor_z
+        new_coordinates.scan_voltage_x = self.scan_voltage_x
+        new_coordinates.scan_voltage_y = self.scan_voltage_y
+        return new_coordinates
+
+    def update_to_drift(self, drift_x_y_z):
+        xyz_old = self.get_combined()
+        x_old, y_old, z_old = [drift_x_y_z[xyz] for xyz in ['x', 'y', 'z']]
+        x_drift = drift_x_y_z.x_um
+        y_drift = drift_x_y_z.y_um
+        z_drift = drift_x_y_z.z_um
+        x_new = x_old - x_drift
+        y_new = y_old + y_drift
+        z_new = z_old + z_drift
+        self.set_combined_coordinates(x_new, y_new, z_new)
+
+    def set_combined_coordinates(self, x, y, z):
+        scan_voltage_x, scan_voltage_y = self.x_y_to_scan_voltage(x, y)
+        self.set_scan_voltages_x_y(scan_voltage_x, scan_voltage_y)
+        self.set_motor(z=z)
+
     def set_scan_voltages_x_y(self, x=None, y=None):
         if x is not None:
             self.scan_voltage_x = float(x)
@@ -65,4 +90,3 @@ class Coordinates:
         self.set_motor(x=x_motor, y=y_motor)
         scan_voltage_x, scan_voltage_y = self.x_y_to_scan_voltage(old_x, old_y)
         self.set_scan_voltages_x_y(scan_voltage_x, scan_voltage_y)
-

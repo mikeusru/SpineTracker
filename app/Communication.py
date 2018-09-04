@@ -70,19 +70,6 @@ class Communication:
         self.command_writer.set_z_slice_num(z_slice_num)
         self.command_reader.wait_for_response(response_command)
 
-    def xy_to_scan_voltage(self, x, y):
-        scan_voltage_multiplier = np.array(self.settings.get('scan_voltage_multiplier'))
-        scan_voltage_range_reference = np.array(self.settings.get('scan_voltage_range_reference'))
-        fov_x_y = np.squeeze(np.array([self.settings.get('fov_x'),self.settings.get('fov_y')]))
-        # convert x and y to relative pixel coordinates
-        xyz_center = self.session.state.center_coordinates.get_motor()
-        fs_coordinates = np.array([x - xyz_center['x'], y - xyz_center['y']])
-        fs_normalized = fs_coordinates / fov_x_y
-        fs_angular = fs_normalized * scan_voltage_multiplier * scan_voltage_range_reference
-        scan_shift_x, scan_shift_y = fs_angular
-        # TODO: Add setting to invert scan shift. Or just tune it automatically.
-        return -scan_shift_x, -scan_shift_y
-
     def set_zoom(self, zoom):
         response_command = 'zoom'
         self.command_reader.set_response(response_command)

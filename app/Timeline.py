@@ -261,11 +261,6 @@ class TimelineStepBlock(dict):
         else:
             return True
 
-    def get_coordinates(self, positions):
-        pos_id = self['pos_id']
-        x, y, z = [positions[pos_id][xyz] for xyz in ['x', 'y', 'z']]
-        return x, y, z
-
     def shift_start_end_times(self, new_start_time):
         time_shift = new_start_time - self['start_time']
         self['start_time'] += time_shift

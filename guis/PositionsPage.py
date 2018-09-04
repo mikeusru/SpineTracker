@@ -143,7 +143,7 @@ class PositionsPage(ttk.Frame):
         yy = np.array([])
         zz = np.array([])
         for pos_id in positions:
-            xyz = self.session.positions.get_coordinates(pos_id)
+            xyz = self.session.positions.get_coordinates(pos_id).get_combined()
             xx = np.append(xx, xyz['x'])
             yy = np.append(yy, xyz['y'])
             zz = np.append(zz, xyz['z'])
@@ -211,7 +211,7 @@ class PositionsPage(ttk.Frame):
     def select_position_in_graph(self, pos_id):
         positions = self.session.positions
         ax = self.gui['position_preview_axis']
-        xyz = positions.get_coordinates(pos_id)
+        xyz = positions.get_coordinates(pos_id).get_combined()
         x, y = [xyz[key] for key in ['x', 'y']]
         arrow_props = dict(facecolor='black')
         for annotation in ax.texts:
@@ -224,7 +224,7 @@ class PositionsPage(ttk.Frame):
         for i in self.gui['tree'].get_children():
             self.gui['tree'].delete(i)
         for pos_id in self.session.positions:
-            xyz = self.session.positions.get_coordinates(pos_id)
+            xyz = self.session.positions.get_coordinates(pos_id).get_combined()
             x, y, z = [f'{xyz[key]:.1f}' for key in ['x', 'y', 'z']]
             self.gui['tree'].insert("", pos_id, text="Position {0}".format(pos_id),
                                     values=(x, y, z))

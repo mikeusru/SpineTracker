@@ -24,10 +24,9 @@ class Positions(dict):
         return roi_x, roi_y
 
     def create_new_pos(self, ref_image, ref_image_zoomed_out):
-        xyz = self.session.state.current_coordinates.get_combined()
-        print(xyz)
+        coordinates = self.session.state.current_coordinates.copy()
         pos_id = self.initialize_new_position()
-        self.set_coordinates(pos_id, xyz)
+        self.set_coordinates(pos_id, coordinates)
         self[pos_id].set_ref_image(ref_image)
         self[pos_id].set_ref_image_zoomed_out(ref_image_zoomed_out)
         self[pos_id].set_default_roi_pos()
@@ -73,30 +72,27 @@ class Positions(dict):
                 max_pos_id = key + 1
         return max_pos_id
 
-    def set_coordinates(self, pos_id, xyz):
-        self[pos_id].set_coordinates(xyz)
+    def set_coordinates(self, pos_id, coordinates):
+        self[pos_id].set_coordinates(coordinates)
 
     def get_coordinates(self, pos_id):
-        xyz = self[pos_id].coordinates
-        return xyz
+        coordinates = self[pos_id].coordinates
+        return coordinates
 
     def update_coordinates_for_drift(self, pos_id, drift_x_y_z):
-        self[pos_id].coordinates['x'] -= drift_x_y_z.x_um
-        self[pos_id].coordinates['y'] += drift_x_y_z.y_um
-        self[pos_id].coordinates['z'] += drift_x_y_z.z_um
+        self[pos_id].coordinates.update_to_drift(drift_x_y_z)
 
 
 class Position:
     def __init__(self):
-        # TODO: Change these coordinates to the coordinate class
         self.coordinates = None
         self.ref_image = None
         self.ref_image_zoomed_out = None
         self.roi_x_y = None
         self.drift_history = []
 
-    def set_coordinates(self, xyz):
-        self.coordinates.update(xyz)
+    def set_coordinates(self, coordinates):
+        self.coordinates = coordinates
 
     def set_ref_image(self, ref_image):
         self.ref_image = ref_image.copy()
