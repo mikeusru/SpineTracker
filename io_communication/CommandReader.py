@@ -1,8 +1,6 @@
 import os
 import re
 
-import numpy as np
-
 from io_communication.file_listeners import FileReaderThread
 
 
@@ -110,7 +108,6 @@ class CommandReader:
             self.interpret_line(line)
 
     def interpret_line(self, line):
-
         command, args = get_command_and_args(line)
         if command in self.read_settings.keys():
             self.read_settings[command].set(args)
@@ -139,7 +136,6 @@ class ImagingParamFileHandler:
         self.settings = None
         self.file_path = None
         self.content = None
-        self.param_dict = {}
         self.listener_thread = None
 
     def init_session(self, session):
@@ -161,12 +157,7 @@ class ImagingParamFileHandler:
 
     def _record_params(self):
         for line in self.content:
-            param_name, param_values = get_command_and_args(line)
-            self.param_dict[param_name] = param_values
-
-    def get(self, param_name):
-        param_value = self.param_dict.get(param_name)
-        return param_value
+            self.session.communication.interpret_line(line)
 
 
 class SingleSettingReader:
