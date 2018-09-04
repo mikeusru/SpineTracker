@@ -65,6 +65,8 @@ class SpineTracker:
         print('quitting')
         self.communication.instructions_listener_thread.stop()
         print('Instruction listener closed')
+        self.communication.param_file_listener_thread.stop()
+        print('param file listener closed')
         self.log_file.close()
         self.gui.destroy()
         print('goodbye')

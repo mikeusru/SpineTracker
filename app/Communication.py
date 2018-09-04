@@ -1,8 +1,8 @@
 from queue import Queue
 import os
-from io_communication.CommandReader import CommandReader
+from io_communication.CommandReader import CommandReader, ImagingParamFileHandler
 from io_communication.CommandWriter import CommandWriter
-from io_communication.file_listeners import InstructionThread
+from io_communication.file_listeners import FileReaderThread
 import numpy as np
 
 
@@ -14,7 +14,9 @@ class Communication:
         self.instructions_in_queue = Queue()
         self.command_writer = CommandWriter(self.session)
         self.command_reader = CommandReader(self.session, self.instructions_in_queue)
+        self.param_handler = ImagingParamFileHandler()
         self.instructions_listener_thread = self.initialize_instructions_listener_thread()
+        self.param_file_listener_thread = self.initialize_param_file_listener_thread()
 
     def initialize_instructions_listener_thread(self):
         input_file = self.settings.get('input_file')
@@ -22,9 +24,14 @@ class Communication:
         read_function = self.command_reader.read_new_commands
         with self.instructions_in_queue.mutex:
             self.instructions_in_queue.queue.clear()
-        instructions_listener_thread = InstructionThread(self, path, filename, read_function)
+        instructions_listener_thread = FileReaderThread(self, path, filename, read_function)
         instructions_listener_thread.start()
         return instructions_listener_thread
+
+    def initialize_param_file_listener_thread(self):
+        self.param_handler.init_session(self.session)
+        self.param_handler.create_listener_thread()
+        return self.param_handler.listener_thread()
 
     def move_stage(self, x=None, y=None, z=None):
         if self.settings.get('park_xy_motor'):

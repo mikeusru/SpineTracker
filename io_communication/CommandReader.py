@@ -3,6 +3,22 @@ import re
 
 import numpy as np
 
+from io_communication.file_listeners import FileReaderThread
+
+
+def remove_spaces(line):
+    line = line.strip()
+    remove_space_after_comma = re.compile('(, )')
+    return remove_space_after_comma.sub(',', line)
+
+
+def get_command_and_args(line):
+    line_parts = line.split(',')
+    line_parts = [remove_spaces(part) for part in line_parts]
+    command = line_parts[0].lower()
+    args = line_parts[1:]
+    return command, args
+
 
 class CommandReader:
     def __init__(self, session, instructions_in_queue):
@@ -27,14 +43,8 @@ class CommandReader:
     def _read_file(self):
         with open(self.file_path, 'r') as file:
             content = file.readlines()
-            content = [self.remove_spaces(line) for line in content]
+            content = [remove_spaces(line) for line in content]
             return content
-
-    @staticmethod
-    def remove_spaces(line):
-        line = line.strip()
-        remove_space_after_comma = re.compile('(, )')
-        return remove_space_after_comma.sub(',', line)
 
     def _check_for_reset(self, content):
         if len(content) < len(self.instructions_received):
@@ -69,14 +79,9 @@ class CommandReader:
             if min_args <= len_args <= max_args:
                 return True
             else:
-                self.print_line(f'Error - Missing arguments. Expected between {min_args} and {max_args}. Got {len_args}')
+                self.print_line(
+                    f'Error - Missing arguments. Expected between {min_args} and {max_args}. Got {len_args}')
                 return False
-
-        def get_command_and_args(line):
-            line_parts = line.split(',')
-            command = line_parts[0].lower()
-            args = line_parts[1:]
-            return command, args
 
         command, args = get_command_and_args(line)
 
@@ -105,7 +110,7 @@ class CommandReader:
             self.received_flags['uncaging_done'] = True
         elif command == 'intensitysaving':
             check_num_args(args, 1, 1)
-            #TODO Need to do something with this information... but it's useless for now
+            # TODO Need to do something with this information... but it's useless for now
             self.received_flags['intensity_saving'] = True
         elif command == 'fovxyum':
             check_num_args(args, 2, 2)
@@ -151,3 +156,36 @@ class CommandReader:
 
     def print_line(self, line):
         self.session.print_to_log(line)
+
+
+class ImagingParamFileHandler:
+
+    def __init__(self):
+        self.session = None
+        self.settings = None
+        self.file_path = None
+        self.content = None
+        self.param_dict = {}
+        self.listener_thread = None
+
+    def init_session(self, session):
+        self.session = session
+        self.settings = session.settings
+        self.file_path = self.settings.get('imaging_param_file')
+
+    def create_listener_thread(self):
+        path, filename = os.path.split(self.file_path)
+        self.listener_thread = FileReaderThread(self, path, filename, self.read_file)
+        self.listener_thread.start()
+
+    def read_file(self):
+        with open(self.file_path, 'r') as file:
+            content = file.readlines()
+            content = [remove_spaces(line) for line in content]
+            self.content = content
+        self._record_params()
+
+    def _record_params(self):
+        for line in self.content:
+            param_name, param_values = get_command_and_args(line)
+            self.param_dict[param_name] = param_values

@@ -4,7 +4,7 @@ from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
 
-class InstructionThread(object):
+class FileReaderThread(object):
     def __init__(self, controller, path, filename, fun, *args, **kwargs):
         self.controller = controller
         self.path = path
@@ -22,7 +22,7 @@ class InstructionThread(object):
 
     def run(self):
         """Method that runs forever"""
-        self.event_handler = InstructionHandler(self.controller, self.path, self.filename, self.function, self.args,
+        self.event_handler = FileChangedHandler(self.controller, self.path, self.filename, self.function, self.args,
                                                 self.kwargs)
         self.observer = Observer()
         self.observer.schedule(self.event_handler, path=self.path, recursive=False)
@@ -39,7 +39,7 @@ class InstructionThread(object):
         self.observer.join()
 
 
-class InstructionHandler(FileSystemEventHandler):
+class FileChangedHandler(FileSystemEventHandler):
     def __init__(self, controller, path, filename, fun, *args, **kwargs):
         self.controller = controller
         self.path = path

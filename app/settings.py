@@ -108,6 +108,7 @@ class SettingsDTO(dict):
         self._create_entered_variable('init_directory', "../iniFiles/")
         self._create_entered_variable('input_file', "../instructions_fromFLIMage.txt")
         self._create_entered_variable('output_file', "../instructions_fromSpineTracker.txt")
+        self._create_entered_variable('imaging_param_file', "../scan_parameters.txt")
 
         # Settings set in command line
         self._create_command_line_variable('simulation', False)
