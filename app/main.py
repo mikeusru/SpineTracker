@@ -208,7 +208,7 @@ class SpineTracker:
     def create_new_position(self, take_new_refs=True):
         if take_new_refs:
             self.collect_new_reference_images()
-            self.communication.get_current_position()
+            self.communication.get_motor_position()
         self.positions.create_new_pos(self.state.ref_image, self.state.ref_image_zoomed_out)
         self.gui.update_positions_table()
         self.positions.backup_positions()
@@ -223,7 +223,7 @@ class SpineTracker:
         self.positions.backup_positions()
 
     def update_position(self, pos_id):
-        self.communication.get_current_position()
+        self.communication.get_motor_position()
         xyz = self.state.current_coordinates.get_combined()
         self.positions[pos_id].set_coordinates(xyz)
         self.gui.update_positions_table()
@@ -255,7 +255,6 @@ class SpineTracker:
             f.write(line + '\n')
 
     def start_imaging(self):
-        self.communication.get_scan_props()
         self.communication.set_normal_imaging_conditions()
         self.communication.turn_intensity_image_saving_on()
         self.start_expt_log()

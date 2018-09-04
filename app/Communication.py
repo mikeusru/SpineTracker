@@ -41,17 +41,17 @@ class Communication:
         else:
             x_motor = x
             y_motor = y
-        flag = 'stage_move_done'
-        self.command_reader.received_flags[flag] = False
+        response_command = 'stagemovedone'
+        self.command_reader.set_response(response_command)
         self.command_writer.move_stage(x_motor, y_motor, z)
-        self.command_reader.wait_for_received_flag(flag)
+        self.command_reader.wait_for_response(response_command)
 
     def grab_stack(self):
         self.turn_intensity_image_saving_on()
-        flag = 'acquisition_done'
-        self.command_reader.received_flags[flag] = False
+        response_command = 'acquisitiondone'
+        self.command_reader.set_response(response_command)
         self.command_writer.grab_one_stack()
-        self.command_reader.wait_for_received_flag(flag)
+        self.command_reader.wait_for_response(response_command)
 
     # def get_intensity_file_path(self):
         # flag = 'intensity_file_path'
@@ -60,23 +60,23 @@ class Communication:
         # self.command_reader.wait_for_received_flag(flag)
 
     def uncage(self, roi_x, roi_y):
-        flag = 'uncaging_done'
-        self.command_reader.received_flags[flag] = False
+        response_command = 'uncagingdone'
+        self.command_reader.set_response(response_command)
         self.command_writer.do_uncaging(roi_x, roi_y)
-        self.command_reader.wait_for_received_flag(flag)
+        self.command_reader.wait_for_response(response_command)
 
     def set_scan_shift(self, x, y):
-        scan_shift_fast, scan_shift_slow = self.xy_to_scan_voltage(x, y)
-        flag = 'scan_voltage_x_y'
-        self.command_reader.received_flags[flag] = False
-        self.command_writer.set_scan_shift(scan_shift_fast, scan_shift_slow)
-        self.command_reader.wait_for_received_flag(flag)
+        scan_voltage_x, scan_voltage_y = self.xy_to_scan_voltage(x, y)
+        response_command = 'scanvoltagexy'
+        self.command_reader.set_response(response_command)
+        self.command_writer.set_scan_shift(scan_voltage_x, scan_voltage_y)
+        self.command_reader.wait_for_response(response_command)
 
     def set_z_slice_num(self, z_slice_num):
-        flag = 'z_slice_num'
-        self.command_reader.received_flags[flag] = False
+        response_command = 'zslicenum'
+        self.command_reader.set_response(response_command)
         self.command_writer.set_z_slice_num(z_slice_num)
-        self.command_reader.wait_for_received_flag(flag)
+        self.command_reader.wait_for_response(response_command)
 
     def xy_to_scan_voltage(self, x, y):
         scan_voltage_multiplier = np.array(self.settings.get('scan_voltage_multiplier'))
@@ -87,15 +87,15 @@ class Communication:
         fs_coordinates = np.array([x - xyz_center['x'], y - xyz_center['y']])
         fs_normalized = fs_coordinates / fov_x_y
         fs_angular = fs_normalized * scan_voltage_multiplier * scan_voltage_range_reference
-        scan_shift_fast, scan_shift_slow = fs_angular
+        scan_shift_x, scan_shift_y = fs_angular
         # TODO: Add setting to invert scan shift. Or just tune it automatically.
-        return scan_shift_fast, -scan_shift_slow
+        return -scan_shift_x, -scan_shift_y
 
     def scan_voltage_to_xy(self, scan_voltage_x_y, x_center=None, y_center=None):
         scan_voltage_multiplier = np.array(self.settings.get('scan_voltage_multiplier'))
         scan_voltage_range_reference = np.array(self.settings.get('scan_voltage_range_reference'))
         fov_x_y = np.squeeze(np.array([self.settings.get('fov_x'),self.settings.get('fov_y')]))
-        fs_angular = np.array([scan_voltage_x_y[0], -scan_voltage_x_y[1]])
+        fs_angular = np.array([-scan_voltage_x_y[0], -scan_voltage_x_y[1]])
         if x_center is None:
             xyz = self.session.state.center_coordinates.get_motor()
             x_center, y_center = xyz['x'], xyz['y']
@@ -104,29 +104,17 @@ class Communication:
         x, y = fs_coordinates + np.array([x_center, y_center])
         return x, y
 
-    def get_scan_props(self):
-        flag = 'scan_voltage_multiplier'
-        self.command_reader.received_flags[flag] = False
-        self.command_writer.get_scan_voltage_multiplier()
-        self.command_reader.wait_for_received_flag(flag)
-
-        flag = 'scan_voltage_range_reference'
-        self.command_reader.received_flags[flag] = False
-        self.command_writer.get_scan_voltage_range_reference()
-        self.command_reader.wait_for_received_flag(flag)
-
     def set_zoom(self, zoom):
-        flag = 'zoom'
-        self.command_reader.received_flags[flag] = False
+        response_command = 'zoom'
+        self.command_reader.set_response(response_command)
         self.command_writer.set_zoom(zoom)
-        self.command_reader.wait_for_received_flag(flag)
-        self.settings.set('current_zoom', zoom)
+        self.command_reader.wait_for_response(response_command)
 
     def set_resolution(self, x_resolution, y_resolution):
-        flag = 'resolution_x_y'
-        self.command_reader.received_flags[flag] = False
+        response_command = 'resolutionxy'
+        self.command_reader.set_response(response_command)
         self.command_writer.set_x_y_resolution(x_resolution, y_resolution)
-        self.command_reader.wait_for_received_flag(flag)
+        self.command_reader.wait_for_response(response_command)
 
     def set_macro_imaging_conditions(self):
         zoom = self.settings.get('macro_zoom')
@@ -155,18 +143,14 @@ class Communication:
         self.set_resolution(x_resolution, y_resolution)
         self.set_z_slice_num(z_slice_num)
 
-    def get_current_position(self):
-        flag = 'current_positions'
-        self.command_reader.received_flags[flag] = False
+    def get_motor_position(self):
+        response_command = 'currentposition'
+        self.command_reader.set_response(response_command)
         self.command_writer.get_current_motor_position()
-        self.command_reader.wait_for_received_flag(flag)
-        flag = 'scan_voltage_x_y'
-        self.command_reader.received_flags[flag] = False
-        self.command_writer.get_scan_voltage_xy()
-        self.command_reader.wait_for_received_flag(flag)
+        self.command_reader.wait_for_response(response_command)
 
     def turn_intensity_image_saving_on(self):
-        flag = 'intensity_saving'
-        self.command_reader.received_flags[flag] = False
+        response_command = 'intensitysaving'
+        self.command_reader.set_response(response_command)
         self.command_writer.set_intensity_saving(1)
-        self.command_reader.wait_for_received_flag(flag)
+        self.command_reader.wait_for_response(response_command)

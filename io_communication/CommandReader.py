@@ -43,9 +43,9 @@ class CommandReader:
         self.new_setting('currentposition', 3, 3, None, self.set_current_position)
         self.new_setting('unagingdone', 0, 0, None, None)
         self.new_setting('intensitysaving', 1, 1, None, None)
-        self.new_setting('fovxyum', 2, 2, None, None)
+        self.new_setting('fovxyum', 2, 2, None, self.set_fov_x_y_um)
         self.new_setting('zoom', 1, 1, 'current_zoom', None)
-        self.new_setting('scanvoltagexy', 2, 2, 'current_zoom', None)
+        self.new_setting('scanvoltagexy', 2, 2, 'current_zoom', self.set_scan_voltages_x_y)
         self.new_setting('scanvoltagemultiplier', 2, 2, 'scan_voltage_multiplier', None)
         self.new_setting('scanvoltagerangereference', 2, 2, 'scan_voltage_range_reference', None)
         self.new_setting('zslicenum', 1, 1, 'z_slice_num', None)
@@ -117,7 +117,10 @@ class CommandReader:
         else:
             self.print_line(f"COMMAND NOT UNDERSTOOD: {command}")
 
-    def wait_for_received_flag(self, text_file_command):
+    def set_response(self, text_file_command):
+        self.read_settings[text_file_command].waiting()
+
+    def wait_for_response(self, text_file_command):
         self.print_line('Waiting for {0}'.format(text_file_command))
         while True:
             self.session.prevent_freezing_during_loops()
