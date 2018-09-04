@@ -46,7 +46,6 @@ class CommandReader:
         self.new_setting('fovxyum', 2, 2, None, None)
         self.new_setting('zoom', 1, 1, 'current_zoom', None)
         self.new_setting('scanvoltagexy', 2, 2, 'current_zoom', None)
-        # TODO: Make lists load in as numpy or whatever in settings correctly
         self.new_setting('scanvoltagemultiplier', 2, 2, 'scan_voltage_multiplier', None)
         self.new_setting('scanvoltagerangereference', 2, 2, 'scan_voltage_range_reference', None)
         self.new_setting('zslicenum', 1, 1, 'z_slice_num', None)
@@ -55,6 +54,7 @@ class CommandReader:
     def set_current_position(self, args):
         x, y, z = args
         self.session.state.current_coordinates.set_motor(x, y, z)
+        self.print_line('\nStage Moved to x= {0} , y = {1}, z = {2}\n'.format(x, y, z))
 
     def set_scan_voltages_x_y(self, args):
         x, y = args
@@ -66,7 +66,7 @@ class CommandReader:
         self.settings.set('fov_y', fov_y)
 
     def new_setting(self, text_file_command, min_args, max_args, settings_name, received_fxn):
-        new_setting = SingleSettingReader()
+        new_setting = SingleSettingReader(self.session)
         new_setting.min_args = min_args
         new_setting.max_args = max_args
         new_setting.text_file_command = text_file_command
@@ -111,87 +111,18 @@ class CommandReader:
 
     def interpret_line(self, line):
 
-        def check_num_args(total_args, min_args, max_args):
-            if total_args is None:
-                len_args = 0
-            else:
-                len_args = len(total_args)
-            if min_args <= len_args <= max_args:
-                return True
-            else:
-                self.print_line(
-                    f'Error - Missing arguments. Expected between {min_args} and {max_args}. Got {len_args}')
-                return False
-
         command, args = get_command_and_args(line)
-
-        # TODO: There's definitely some design pattern to make this better
-        if command == 'stagemovedone':
-            check_num_args(args, 3, 3)
-            x, y, z = [float(args[xyz]) for xyz in [0, 1, 2]]
-            if self.settings.get('verbose'):
-                self.print_line('\nStage Moved to x= {0} , y = {1}, z = {2}\n'.format(x, y, z))
-            self.received_flags['stage_move_done'] = True
-        elif command == 'acquisitiondone':
-            # commands need to be separated by commas, not spaces, otherwise file paths will cause problems
-            check_num_args(args, 0, 0)
-            self.received_flags['acquisition_done'] = True
-        elif command == 'intensityfilepath':
-            check_num_args(args, 1, 1)
-            self.settings.set('image_file_path', args[0])
-            self.received_flags['intensity_file_path'] = True
-        elif command == 'currentposition':
-            check_num_args(args, 3, 3)
-            x, y, z = args
-            self.session.state.current_coordinates.set_motor(x, y, z)
-            self.received_flags['current_positions'] = True
-        elif command == 'uncagingdone':
-            check_num_args(args, 0, 0)
-            self.received_flags['uncaging_done'] = True
-        elif command == 'intensitysaving':
-            check_num_args(args, 1, 1)
-            # TODO Need to do something with this information... but it's useless for now
-            self.received_flags['intensity_saving'] = True
-        elif command == 'fovxyum':
-            check_num_args(args, 2, 2)
-            self.settings.set('fov_x', args[0])
-            self.settings.set('fov_y', args[1])
-            self.received_flags['fovxyum'] = True
-        elif command == 'zoom':
-            check_num_args(args, 1, 1)
-            self.settings.set('current_zoom', args[0])
-            self.received_flags['zoom'] = True
-        elif command == 'scanvoltagexy':
-            check_num_args(args, 2, 2)
-            self.session.state.current_coordinates.set_scan_voltages_x_y(args[0], args[1])
-            self.received_flags['scan_voltage_x_y'] = True
-        elif command == 'scanvoltagemultiplier':
-            check_num_args(args, 2, 2)
-            self.settings.set('scan_voltage_multiplier', np.array([float(args[0]), float(args[1])]))
-            self.received_flags['scan_voltage_multiplier'] = True
-        elif command == 'scanvoltagerangereference':
-            check_num_args(args, 2, 2)
-            self.settings.set('scan_voltage_range_reference', np.array([float(args[0]), float(args[1])]))
-            self.received_flags['scan_voltage_range_reference'] = True
-        elif command == 'zslicenum':
-            check_num_args(args, 1, 1)
-            self.settings.set('z_slice_num', args[0])
-            self.received_flags['z_slice_num'] = True
-        elif command == 'resolutionxy':
-            check_num_args(args, 2, 2)
-            self.settings.set('resolution_x_y', [args[0], args[1]])
-            self.received_flags['resolution_x_y'] = True
+        if command in self.read_settings.keys():
+            self.read_settings[command].set(args)
         else:
             self.print_line(f"COMMAND NOT UNDERSTOOD: {command}")
 
-    def wait_for_received_flag(self, flag):
-        # self.controller.print_status('Waiting for {0}'.format(flag))
-        self.print_line('Waiting for {0}'.format(flag))
+    def wait_for_received_flag(self, text_file_command):
+        self.print_line('Waiting for {0}'.format(text_file_command))
         while True:
             self.session.prevent_freezing_during_loops()
-            if self.received_flags[flag]:
-                # self.controller.print_status('{0} received'.format(flag))
-                self.print_line('{0} received'.format(flag))
+            if self.read_settings[text_file_command].is_done():
+                self.print_line('{0} received'.format(text_file_command))
                 break
 
     def print_line(self, line):
@@ -237,11 +168,12 @@ class ImagingParamFileHandler:
 
 class SingleSettingReader:
 
-    def __init__(self):
+    def __init__(self, session):
+        self.session = session
         self.min_args = 0
         self.max_args = 0
         self.text_file_command = ''
-        self.settings_name = ''
+        self.settings_name = None
         self.received_flag = False
         self.received_function = None
         self.received_args = []
@@ -250,11 +182,32 @@ class SingleSettingReader:
         if self.received_function is not None:
             self.received_function(self.received_args)
 
+    def update_setting(self):
+        if self.settings_name is not None:
+            self.session.settings.set(self.settings_name, self.received_args)
+
     def waiting(self):
         self.received_flag = False
 
-    def received(self):
-        self.received_flag = True
-
     def is_done(self):
         return self.received_flag
+
+    def set(self, args):
+        self.received_args = args
+        self.verify_arg_num()
+        self.received_flag = True
+        self.update_setting()
+        self.run_fxn()
+
+    def verify_arg_num(self):
+        if self.received_args is None:
+            len_args = 0
+        else:
+            len_args = len(self.received_args)
+        if self.min_args <= len_args <= self.max_args:
+            return True
+        else:
+            self.session.print_to_log(
+                f'Error - Incorrect number of arguments for {self.text_file_command}.'
+                f' Expected between {self.min_args} and {self.max_args}. Got {len_args}')
+            return False

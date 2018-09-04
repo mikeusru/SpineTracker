@@ -202,7 +202,7 @@ class Setting:
             self.value = blank_to_zero(self.value)
             if self.value is not None:
                 try:
-                    self.value = np.array([self.value], dtype=self.dtype)
+                    self.value = np.array([self.value], dtype=self.dtype).squeeze()
                 except ValueError as err:
                     self.value = np.array(0, dtype=self.dtype)
                     print(err)
