@@ -215,7 +215,7 @@ class Setting:
 
     def get_value(self):
         val = self.value
-        if (type(self.value) is np.ndarray) and (len(self.value) == 1):
+        if (type(self.value) is np.ndarray) and (self.value.size == 1):
             val = self.value.item(0)
         return val
 

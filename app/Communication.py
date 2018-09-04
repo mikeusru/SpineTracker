@@ -31,7 +31,7 @@ class Communication:
     def initialize_param_file_listener_thread(self):
         self.param_handler.init_session(self.session)
         self.param_handler.create_listener_thread()
-        return self.param_handler.listener_thread()
+        return self.param_handler.listener_thread
 
     def move_to_coordinates(self, coordinates):
         motor_x_y_z = coordinates.get_motor()

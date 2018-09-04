@@ -28,7 +28,8 @@ class Positions(dict):
         y_list = []
         z_list = []
         for pos_id in self:
-            xyz = self.get_coordinates(pos_id).get_combined()
+            coordinates = self.get_coordinates(pos_id)
+            xyz = coordinates.get_combined()
             x_list.append(xyz['x'])
             y_list.append(xyz['y'])
             z_list.append(xyz['z'])

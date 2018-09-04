@@ -30,7 +30,7 @@ class Coordinates:
 
     def update_to_drift(self, drift_x_y_z):
         xyz_old = self.get_combined()
-        x_old, y_old, z_old = [drift_x_y_z[xyz] for xyz in ['x', 'y', 'z']]
+        x_old, y_old, z_old = [xyz_old[xyz] for xyz in ['x', 'y', 'z']]
         x_drift = drift_x_y_z.x_um
         y_drift = drift_x_y_z.y_um
         z_drift = drift_x_y_z.z_um
