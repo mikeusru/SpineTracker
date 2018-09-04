@@ -159,6 +159,7 @@ class SettingsDTO(dict):
         self._create_acquired_variable('current_zoom', 1, dtype=np.int)
         self._create_acquired_variable('z_slice_num', np.array([0]), dtype=np.int)
         self._create_acquired_variable('resolution_x_y', np.array([0]), dtype=np.int)
+        self._create_acquired_variable('intensity_saving', np.array([0]), dtype=np.int)
 
     def _create_entered_variable(self, name, default):
         self._create_variable(name, gui_var=None, saved=False, default=default, callback=None, dtype=None)

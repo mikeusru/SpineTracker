@@ -40,7 +40,7 @@ class CommandReader:
         self.new_setting('intensityfilepath', 1, 1, 'image_file_path', None)
         self.new_setting('currentposition', 3, 3, None, self.set_current_position)
         self.new_setting('unagingdone', 0, 0, None, None)
-        self.new_setting('intensitysaving', 1, 1, None, None)
+        self.new_setting('intensitysaving', 1, 1, 'intensity_saving', None)
         self.new_setting('fovxyum', 2, 2, None, self.set_fov_x_y_um)
         self.new_setting('zoom', 1, 1, 'current_zoom', None)
         self.new_setting('scanvoltagexy', 2, 2, 'current_zoom', self.set_scan_voltages_x_y)

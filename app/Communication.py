@@ -47,7 +47,7 @@ class Communication:
         self.command_reader.wait_for_response(response_command)
 
     def grab_stack(self):
-        self.turn_intensity_image_saving_on()
+        self.set_intensity_image_saving_on()
         response_command = 'acquisitiondone'
         self.command_reader.set_response(response_command)
         self.command_writer.grab_one_stack()
@@ -143,8 +143,9 @@ class Communication:
         self.command_writer.get_current_motor_position()
         self.command_reader.wait_for_response(response_command)
 
-    def turn_intensity_image_saving_on(self):
-        response_command = 'intensitysaving'
-        self.command_reader.set_response(response_command)
-        self.command_writer.set_intensity_saving(1)
-        self.command_reader.wait_for_response(response_command)
+    def set_intensity_image_saving_on(self):
+        if self.settings.get('intensity_saving') != 1:
+            response_command = 'intensitysaving'
+            self.command_reader.set_response(response_command)
+            self.command_writer.set_intensity_saving(1)
+            self.command_reader.wait_for_response(response_command)

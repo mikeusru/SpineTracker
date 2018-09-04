@@ -21,14 +21,8 @@ class CommandWriter:
     def set_intensity_saving(self, save_intensity_image_1_or_0):
         self.write_command('SetIntensitySaving', save_intensity_image_1_or_0)
 
-    # def get_intensity_file_path(self):
-        # self.write_command('GetIntensityFilePath')
-
     def do_uncaging(self, roi_x, roi_y):
         self.write_command('StartUncaging', roi_x, roi_y)
-
-    def get_fov_size(self):
-        self.write_command('GetFOVXY')
 
     def get_scan_voltage_xy(self):
         self.write_command('GetScanVoltageXY')
@@ -50,9 +44,6 @@ class CommandWriter:
 
     def set_x_y_resolution(self, x_resolution, y_resolution):
         self.write_command('SetResolutionXY', x_resolution, y_resolution)
-
-    def get_x_y_resolution(self):
-        self.write_command('GetResolutionXY')
 
     def write_command(self, *args):
         command = ",".join([str(x) for x in args])
