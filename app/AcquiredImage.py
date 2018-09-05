@@ -45,7 +45,7 @@ class AcquiredImage:
 
     @staticmethod
     def correct_for_3_channel_image_bug(image_stack):
-        if image_stack.shape[2] == 3:
+        if (image_stack.shape[2] == 3) or (image_stack.shape[2] == 4):
             image_stack = np.swapaxes(image_stack, 0, 2)
         return image_stack
 

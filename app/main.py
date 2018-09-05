@@ -204,8 +204,8 @@ class SpineTracker:
                                                                          dt.datetime.now().minute,
                                                                          dt.datetime.now().second))
 
-    def create_new_position(self, from_macro_window=False):
-        if not from_macro_window:
+    def create_new_position(self, take_new_refs=True):
+        if take_new_refs:
             self.collect_new_reference_images()
             self.communication.get_motor_position()
         self.positions.create_new_pos(self.state.ref_image, self.state.ref_image_zoomed_out)

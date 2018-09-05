@@ -148,7 +148,7 @@ class ImagingParamFileHandler:
         self.listener_thread = FileReaderThread(self, path, filename, self.read_file)
         self.listener_thread.start()
 
-    def read_file(self):
+    def read_file(self, *args):
         with open(self.file_path, 'r') as file:
             content = file.readlines()
             content = [remove_spaces(line) for line in content]
@@ -157,7 +157,7 @@ class ImagingParamFileHandler:
 
     def _record_params(self):
         for line in self.content:
-            self.session.communication.interpret_line(line)
+            self.session.communication.command_reader.interpret_line(line)
 
 
 class SingleSettingReader:
