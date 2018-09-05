@@ -24,8 +24,8 @@ class State:
         self.step_running = False
         self.imaging_active = False
         self.current_pos_id = 1
-        self.current_coordinates = Coordinates(self.session)
-        self.center_coordinates = Coordinates(self.session)
+        self.current_coordinates = Coordinates()
+        self.center_coordinates = Coordinates()
         self.current_image = AcquiredImage()
         self.ref_image = ReferenceImage()
         self.ref_image_zoomed_out = ReferenceImage()
@@ -210,7 +210,7 @@ class SpineTracker:
             self.communication.get_motor_position()
         self.positions.create_new_pos(self.state.ref_image, self.state.ref_image_zoomed_out)
         xyz_average = self.positions.get_average_coordinate()
-        self.state.center_coordinates.set_combined_coordinates(xyz_average['x'], xyz_average['y'], xyz_average['z'])
+        self.state.center_coordinates.set_combined_coordinates(xyz_average['x'], xyz_average['y'], xyz_average['z'], self)
         self.positions.update_all_coordinates_relative_to_center()
         self.gui.update_positions_table()
         self.positions.backup_positions()
@@ -246,7 +246,7 @@ class SpineTracker:
 
     def move_to_pos_id(self, pos_id):
         coordinates = self.positions.get_coordinates(pos_id)
-        coordinates.update_to_center()
+        coordinates.update_to_center(self)
         self.communication.move_to_coordinates(coordinates)
 
     def write_to_log(self, line):

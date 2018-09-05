@@ -29,7 +29,7 @@ class Positions(dict):
         z_list = []
         for pos_id in self:
             coordinates = self.get_coordinates(pos_id)
-            xyz = coordinates.get_combined()
+            xyz = coordinates.get_combined(self.session)
             x_list.append(xyz['x'])
             y_list.append(xyz['y'])
             z_list.append(xyz['z'])
@@ -40,7 +40,7 @@ class Positions(dict):
 
     def update_all_coordinates_relative_to_center(self):
         for pos_id in self:
-            self[pos_id].coordinates.update_to_center()
+            self[pos_id].coordinates.update_to_center(self.session)
 
     def create_new_pos(self, ref_image, ref_image_zoomed_out):
         coordinates = self.session.state.current_coordinates.copy()
@@ -99,7 +99,7 @@ class Positions(dict):
         return coordinates
 
     def update_coordinates_for_drift(self, pos_id, drift_x_y_z):
-        self[pos_id].coordinates.update_to_drift(drift_x_y_z)
+        self[pos_id].coordinates.update_to_drift(drift_x_y_z, self.session)
 
 
 class Position:
