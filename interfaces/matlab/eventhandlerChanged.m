@@ -80,6 +80,8 @@ while ~isempty(commandQueue)
                 continue
             end
             getFOV_xy();
+        case 'channelstobesaved'
+        case 'parameterfilesaved'
         otherwise
             disp('COMMAND NOT UNDERSTOOD')
     end

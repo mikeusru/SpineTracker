@@ -251,8 +251,9 @@ class SpineTracker:
 
     def write_to_log(self, line):
         file_path = self.settings.get('experiment_log_file')
-        with open(file_path, "a") as f:
-            f.write(line + '\n')
+        if os.path.exists(file_path):
+            with open(file_path, "a") as f:
+                f.write(line + '\n')
 
     def start_imaging(self):
         self.communication.set_normal_imaging_conditions()

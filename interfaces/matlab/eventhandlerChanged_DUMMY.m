@@ -113,7 +113,6 @@ while ~isempty(spineTracker.commandQueue)
             end
             z_slice_num = str2double(command(2));
             setZSliceNum(z_slice_num);
-            
         otherwise
             disp('COMMAND NOT UNDERSTOOD')
     end

@@ -157,7 +157,7 @@ class SettingsDTO(dict):
         self._create_acquired_variable('scan_voltage_multiplier', np.array([1, 1]), dtype=np.float32)
         self._create_acquired_variable('scan_voltage_range_reference', np.array([15, 15]), dtype=np.float32)
         self._create_acquired_variable('macro_image', np.zeros([128, 128]), dtype=np.uint8)
-        self._create_acquired_variable('image_file_path', '../test/test_image.tif')
+        self._create_acquired_variable('image_file_path', '../test/test_image.tif', dtype=str)
         self._create_acquired_variable('current_zoom', 1, dtype=np.int)
         self._create_acquired_variable('z_slice_num', np.array([0]), dtype=np.int)
         self._create_acquired_variable('resolution_x_y', np.array([0]), dtype=np.int)
@@ -204,11 +204,14 @@ class Setting:
         if self.dtype is not None:
             self.value = blank_to_zero(self.value)
             if self.value is not None:
-                try:
-                    self.value = np.array([self.value], dtype=self.dtype).squeeze()
-                except ValueError as err:
-                    self.value = np.array(0, dtype=self.dtype)
-                    print(err)
+                if self.dtype == str:
+                    self.value = ''.join(self.value)
+                else:
+                    try:
+                        self.value = np.array([self.value], dtype=self.dtype).squeeze()
+                    except ValueError as err:
+                        self.value = np.array(0, dtype=self.dtype)
+                        print(err)
 
     def set(self, value):
         self.value = value

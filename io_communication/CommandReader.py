@@ -43,7 +43,7 @@ class CommandReader:
         self.new_setting('intensitysaving', 1, 1, 'intensity_saving', None)
         self.new_setting('fovxyum', 2, 2, None, self.set_fov_x_y_um)
         self.new_setting('zoom', 1, 1, 'current_zoom', None)
-        self.new_setting('scanvoltagexy', 2, 2, 'current_zoom', self.set_scan_voltages_x_y)
+        self.new_setting('scanvoltagexy', 2, 2, None, self.set_scan_voltages_x_y)
         self.new_setting('scanvoltagemultiplier', 2, 2, 'scan_voltage_multiplier', None)
         self.new_setting('scanvoltagerangereference', 2, 2, 'scan_voltage_range_reference', None)
         self.new_setting('zslicenum', 1, 1, 'z_slice_num', None)
