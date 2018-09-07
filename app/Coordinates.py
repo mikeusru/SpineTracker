@@ -9,6 +9,22 @@ class Coordinates:
         self.scan_voltage_x = 0
         self.scan_voltage_y = 0
 
+    def save(self):
+        return dict(
+            motor_x=self.motor_x,
+            motor_y=self.motor_y,
+            motor_z=self.motor_z,
+            scan_voltage_x=self.scan_voltage_x,
+            scan_voltage_y=self.scan_voltage_y,
+        )
+
+    def load(self, coordinates):
+        self.motor_x = coordinates['motor_x']
+        self.motor_y = coordinates['motor_y']
+        self.motor_z = coordinates['motor_z']
+        self.scan_voltage_x = coordinates['scan_voltage_x']
+        self.scan_voltage_y = coordinates['scan_voltage_y']
+
     def set_motor(self, x=None, y=None, z=None):
         if x is not None:
             self.motor_x = float(x)
