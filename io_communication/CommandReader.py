@@ -63,13 +63,13 @@ class CommandReader:
         self.settings.set('fov_x', fov_x)
         self.settings.set('fov_y', fov_y)
 
-    def new_setting(self, text_file_command, min_args, max_args, settings_name, received_fxn):
+    def new_setting(self, text_file_command, min_args, max_args, settings_name, received_function):
         new_setting = SingleSettingReader(self.session)
         new_setting.min_args = min_args
         new_setting.max_args = max_args
         new_setting.text_file_command = text_file_command
         new_setting.settings_name = settings_name
-        new_setting.received_fxn = received_fxn
+        new_setting.received_function = received_function
         self.read_settings[text_file_command] = new_setting
 
     def read_new_commands(self, *args):

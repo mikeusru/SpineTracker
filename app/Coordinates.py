@@ -1,6 +1,6 @@
 import numpy as np
 
-
+# TODO: something is wrong when calculating center between positions.
 class Coordinates:
     def __init__(self):
         self.motor_x = 0
