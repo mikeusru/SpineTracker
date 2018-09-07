@@ -40,6 +40,8 @@ class SettingsManager:
             self.container.show_end_of_path()
         if self.setting_is_saved(name):
             self.save_settings()
+            # TODO: Maybe add a save method to all classes where info needs to be saved, so as to avoid the session/settings/pickle issue. \
+            # Or just create a save class that saves a specific list of variables or something....
 
     def update_value(self, name):
         self.settings_dto[name].update_value_from_gui()
