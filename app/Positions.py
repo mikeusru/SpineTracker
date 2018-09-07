@@ -110,6 +110,20 @@ class Position:
         self.roi_x_y = None
         self.drift_history = []
 
+    def save(self):
+        return dict(
+            coordinates=self.coordinates.save(),
+            ref_image=self.ref_image,
+            roi_x_y=self.roi_x_y,
+            drift_history=self.drift_history,
+        )
+
+    def load(self, loaded_position):
+        self.coordinates.load(loaded_position['coordinates']),
+        self.ref_image = loaded_position['ref_image']
+        self.roi_x_y = loaded_position['roi_x_y']
+        self.drift_history = loaded_position['drift_history']
+
     def set_coordinates(self, coordinates):
         self.coordinates = coordinates
 
