@@ -28,6 +28,7 @@ class CommandReader:
         self.read_settings = {}
         self.create_read_settings()
         self.file_path = self.settings.get('input_file')
+        self.imaging_param_file = self.settings.get('imaging_param_file') #Added by Ryohei
         if not os.path.isfile(self.file_path):
             open(self.file_path, 'a').close()
 
@@ -48,11 +49,13 @@ class CommandReader:
         self.new_setting('scanvoltagerangereference', 2, 2, 'scan_voltage_range_reference', None)
         self.new_setting('zslicenum', 1, 1, 'z_slice_num', None)
         self.new_setting('resolutionxy', 2, 2, 'resolution_x_y', None)
+        self.new_setting('parameterfilesaved', 1, 1, None, None) #Added for future use by Ryohei. You have to take filepath here.
+        self.new_setting('channelstobesaved', 1, 1, None, None) #Added for future use by Ryohei
 
     def set_current_position(self, args):
         x, y, z = args
         self.session.state.current_coordinates.set_motor(x, y, z)
-        self.print_line('\nStage Moved to x= {0} , y = {1}, z = {2}\n'.format(x, y, z))
+        #self.print_line('\nStage Moved to x= {0} , y = {1}, z = {2}\n'.format(x, y, z))
 
     def set_scan_voltages_x_y(self, args):
         x, y = args
@@ -77,6 +80,12 @@ class CommandReader:
         self._check_for_reset(content)
         self._check_for_new_commands(content)
         self._run_new_commands()
+
+    def force_read_imaging_param_file(self): #Added by Ryohei. Listener is perhaps not necessary.
+        with open(self.imaging_param_file, 'rt') as file:
+            content = file.readlines()
+            for count, line in enumerate(content):
+                self.interpret_line(line)
 
     def _read_file(self):
         with open(self.file_path, 'r') as file:

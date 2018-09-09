@@ -12,12 +12,14 @@ from guis.SpineRecognitionPage import SpineRecognitionPage
 from guis.StartPage import StartPage
 from guis.TimelinePage import TimelinePage
 
+import os #Ryohei for making crabIco path cleaner.
 
 class MainGuiBuilder(tk.Tk):
 
     def __init__(self, session):
         tk.Tk.__init__(self)
-        tk.Tk.iconbitmap(self, default="../images/crabIco.ico")  # icon doesn't work
+        crabIcoPath = os.path.join(os.path.dirname(os.path.dirname(__file__)), "images", "crabIco.ico") #path to ico
+        tk.Tk.iconbitmap(self, default=crabIcoPath)  # icon doesn't work
         tk.Tk.wm_title(self, "SpineTracker")
         tk.Tk.geometry(self, newGeometry='1000x600+200+200')
         self.session = session

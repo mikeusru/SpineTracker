@@ -210,7 +210,7 @@ class SpineTracker:
             self.communication.get_motor_position()
         self.positions.create_new_pos(self.state.ref_image, self.state.ref_image_zoomed_out)
         xyz_average = self.positions.get_average_coordinate()
-        self.state.center_coordinates.set_combined_coordinates(xyz_average['x'], xyz_average['y'], xyz_average['z'], self)
+        self.state.center_coordinates.set_relativeToCenter_coordinates(xyz_average['x'], xyz_average['y'], xyz_average['z'], self)
         self.positions.update_all_coordinates_relative_to_center()
         self.gui.update_positions_table()
         self.positions.backup_positions()
@@ -234,9 +234,11 @@ class SpineTracker:
     def collect_new_reference_images(self):
         self.communication.set_reference_imaging_conditions()
         self.communication.grab_stack()
+        self.communication.command_reader.force_read_imaging_param_file()
         self.load_image('reference_zoomed_out')
         self.communication.set_normal_imaging_conditions()
         self.communication.grab_stack()
+        self.communication.command_reader.force_read_imaging_param_file()
         self.load_image('reference')
 
     def collect_new_macro_image(self):

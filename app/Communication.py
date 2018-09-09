@@ -36,7 +36,7 @@ class Communication:
     def move_to_coordinates(self, coordinates):
         motor_x_y_z = coordinates.get_motor()
         scan_voltage_x_y = coordinates.get_scan_voltage_x_y()
-        self.move_motor(motor_x_y_z['x', motor_x_y_z['y'], motor_x_y_z['z']])
+        self.move_motor(motor_x_y_z['x'], motor_x_y_z['y'], motor_x_y_z['z'])
         self.set_scan_shift(scan_voltage_x_y['x'], scan_voltage_x_y['y'])
 
     def move_motor(self, x,y,z):
@@ -108,6 +108,7 @@ class Communication:
         self.set_zoom(zoom)
         self.set_resolution(x_resolution, y_resolution)
         self.set_z_slice_num(z_slice_num)
+        self.set_intensity_image_saving_on()   #Added by Ryohei
 
     def get_motor_position(self):
         response_command = 'currentposition'

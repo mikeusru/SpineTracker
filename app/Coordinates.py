@@ -48,7 +48,7 @@ class Coordinates:
         x_drift = drift_x_y_z.x_um
         y_drift = drift_x_y_z.y_um
         z_drift = drift_x_y_z.z_um
-        x_new = x_old - x_drift
+        x_new = x_old + x_drift
         y_new = y_old + y_drift
         z_new = z_old + z_drift
         self.set_combined_coordinates(x_new, y_new, z_new, session)
@@ -57,6 +57,10 @@ class Coordinates:
         scan_voltage_x, scan_voltage_y = self.x_y_to_scan_voltage(x, y, session)
         self.set_scan_voltages_x_y(scan_voltage_x, scan_voltage_y)
         self.set_motor(z=z)
+
+    def set_relativeToCenter_coordinates(self, x, y, z, session):
+        self.set_scan_voltages_x_y(0, 0)
+        self.set_motor(x=x, y=y, z=z)
 
     def set_scan_voltages_x_y(self, x=None, y=None):
         if x is not None:
@@ -80,8 +84,8 @@ class Coordinates:
         scan_voltage_multiplier = settings.get('scan_voltage_multiplier')
         scan_voltage_range_reference = settings.get('scan_voltage_range_reference')
         fov_x_y = np.squeeze(np.array([settings.get('fov_x'), settings.get('fov_y')]))
-        fs_angular = np.array([self.scan_voltage_x, -self.scan_voltage_y])
-        fs_normalized = fs_angular / (scan_voltage_multiplier * scan_voltage_range_reference)
+        fs_angular = np.array([self.scan_voltage_x, self.scan_voltage_y])
+        fs_normalized = fs_angular / scan_voltage_range_reference
         fs_coordinates = fs_normalized * fov_x_y
         return fs_coordinates
 
@@ -93,9 +97,9 @@ class Coordinates:
         # convert x and y to relative pixel coordinates
         fs_coordinates = np.array([x - self.motor_x, y - self.motor_y])
         fs_normalized = fs_coordinates / fov_x_y
-        fs_angular = fs_normalized * scan_voltage_multiplier * scan_voltage_range_reference
+        fs_angular = fs_normalized * scan_voltage_range_reference
         scan_voltage_x, scan_voltage_y = fs_angular
-        return -scan_voltage_x, -scan_voltage_y
+        return scan_voltage_x, scan_voltage_y
 
     def update_to_center(self, session):
         center_xyz = session.state.center_coordinates.get_motor()
