@@ -65,8 +65,8 @@ class SpineTracker:
         print('quitting')
         self.communication.instructions_listener_thread.stop()
         print('Instruction listener closed')
-        self.communication.param_file_listener_thread.stop()
-        print('param file listener closed')
+#        self.communication.param_file_listener_thread.stop()
+#        print('param file listener closed')
         self.log_file.close()
         self.gui.destroy()
         print('goodbye')
@@ -103,6 +103,7 @@ class SpineTracker:
             file.write(line + '\n')
 
     def load_image(self, image_type='standard'):
+        self.communication.command_reader.read_imaging_param_file() #Ryohei. Before reading, make sure the current setting. Filename particularly.
         if image_type == 'standard':
             self.state.current_image.zoom = self.settings.get('imaging_zoom')
             self.state.current_image.load(self.settings)
@@ -125,6 +126,7 @@ class SpineTracker:
             print("WRONG IMAGE TYPE")
 
     def correct_xyz_drift(self, pos_id=None, zoom=None):
+        self.communication.command_reader.read_imaging_param_file()  # Ryohei. Before correcting drift, make sure the current setting.
         if zoom is None:
             zoom = self.settings.get('imaging_zoom')
         if pos_id is None:
@@ -210,7 +212,7 @@ class SpineTracker:
             self.communication.get_motor_position()
         self.positions.create_new_pos(self.state.ref_image, self.state.ref_image_zoomed_out)
         xyz_average = self.positions.get_average_coordinate()
-        self.state.center_coordinates.set_relativeToCenter_coordinates(xyz_average['x'], xyz_average['y'], xyz_average['z'], self)
+        self.state.center_coordinates.set_relativeToCenter_coordinates(xyz_average['x'], xyz_average['y'], xyz_average['z'])
         self.positions.update_all_coordinates_relative_to_center()
         self.gui.update_positions_table()
         self.positions.backup_positions()
@@ -234,11 +236,11 @@ class SpineTracker:
     def collect_new_reference_images(self):
         self.communication.set_reference_imaging_conditions()
         self.communication.grab_stack()
-        self.communication.command_reader.force_read_imaging_param_file()
+        self.communication.command_reader.read_imaging_param_file() #Ryohei Note that before image acquisition, file name is not updated.
         self.load_image('reference_zoomed_out')
         self.communication.set_normal_imaging_conditions()
         self.communication.grab_stack()
-        self.communication.command_reader.force_read_imaging_param_file()
+        self.communication.command_reader.read_imaging_param_file() #Ryohei
         self.load_image('reference')
 
     def collect_new_macro_image(self):
@@ -259,7 +261,6 @@ class SpineTracker:
 
     def start_imaging(self):
         self.communication.set_normal_imaging_conditions()
-        self.communication.set_intensity_image_saving_on()
         self.start_expt_log()
         self.timer_steps_queue.clear_timers()
         individual_steps = self.timeline.get_steps_for_queue()

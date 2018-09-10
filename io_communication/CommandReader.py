@@ -51,6 +51,7 @@ class CommandReader:
         self.new_setting('resolutionxy', 2, 2, 'resolution_x_y', None)
         self.new_setting('parameterfilesaved', 1, 1, None, None) #Added for future use by Ryohei. You have to take filepath here.
         self.new_setting('channelstobesaved', 1, 1, None, None) #Added for future use by Ryohei
+        self.new_setting('rotation', 1, 1, 'rotation', None) #Rotation is necessary for drift correction. Need to implement.
 
     def set_current_position(self, args):
         x, y, z = args
@@ -81,7 +82,7 @@ class CommandReader:
         self._check_for_new_commands(content)
         self._run_new_commands()
 
-    def force_read_imaging_param_file(self): #Added by Ryohei. Listener is perhaps not necessary.
+    def read_imaging_param_file(self): #Added by Ryohei. Listener is perhaps not necessary.
         with open(self.imaging_param_file, 'rt') as file:
             content = file.readlines()
             for count, line in enumerate(content):

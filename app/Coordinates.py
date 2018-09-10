@@ -58,7 +58,7 @@ class Coordinates:
         self.set_scan_voltages_x_y(scan_voltage_x, scan_voltage_y)
         self.set_motor(z=z)
 
-    def set_relativeToCenter_coordinates(self, x, y, z, session):
+    def set_relativeToCenter_coordinates(self, x, y, z): #Ryohei.
         self.set_scan_voltages_x_y(0, 0)
         self.set_motor(x=x, y=y, z=z)
 
@@ -81,7 +81,6 @@ class Coordinates:
 
     def scan_voltage_to_um(self, session):
         settings = session.settings
-        scan_voltage_multiplier = settings.get('scan_voltage_multiplier')
         scan_voltage_range_reference = settings.get('scan_voltage_range_reference')
         fov_x_y = np.squeeze(np.array([settings.get('fov_x'), settings.get('fov_y')]))
         fs_angular = np.array([self.scan_voltage_x, self.scan_voltage_y])
@@ -91,7 +90,6 @@ class Coordinates:
 
     def x_y_to_scan_voltage(self, x, y, session):
         settings = session.settings
-        scan_voltage_multiplier = np.array(settings.get('scan_voltage_multiplier'))
         scan_voltage_range_reference = np.array(settings.get('scan_voltage_range_reference'))
         fov_x_y = np.squeeze(np.array([settings.get('fov_x'), settings.get('fov_y')]))
         # convert x and y to relative pixel coordinates

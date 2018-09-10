@@ -118,10 +118,10 @@ class PositionsPage(ttk.Frame):
     def create_positions_table(self, container):
         tree = self.gui['tree']
         tree["columns"] = ("x", "y", "z")
-        tree.column("#0", width=300)
-        tree.column("x", width=30)
-        tree.column("y", width=30)
-        tree.column("z", width=50)
+        tree.column("#0", width=160)
+        tree.column("x", width=100)
+        tree.column("y", width=100)
+        tree.column("z", width=100)
         tree.heading("x", text="X")
         tree.heading("y", text="Y")
         tree.heading("z", text="Z")
@@ -230,6 +230,14 @@ class PositionsPage(ttk.Frame):
                                     values=(x, y, z))
         self.preview_position_locations()
         self.gui['canvas_preview_ref_images'].draw_idle()
+        self.gui['tree'].after(100, self.select_current_position)
+
+    def select_current_position(self):
+        children = self.gui['tree'].get_children('')
+        for child in children:
+            item = child
+        if len(children) > 0:
+            self.gui['tree'].selection_set(item)
 
     def draw_ref_images(self, pos_id):
         refs = [self.session.positions.get_image(pos_id, zoomed_out=False),

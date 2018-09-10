@@ -14,9 +14,9 @@ class Communication:
         self.instructions_in_queue = Queue()
         self.command_writer = CommandWriter(self.session)
         self.command_reader = CommandReader(self.session, self.instructions_in_queue)
-        self.param_handler = ImagingParamFileHandler()
+        #self.param_handler = ImagingParamFileHandler()
         self.instructions_listener_thread = self.initialize_instructions_listener_thread()
-        self.param_file_listener_thread = self.initialize_param_file_listener_thread()
+        #self.param_file_listener_thread = self.initialize_param_file_listener_thread()
 
     def initialize_instructions_listener_thread(self):
         input_file = self.settings.get('input_file')
@@ -28,10 +28,10 @@ class Communication:
         instructions_listener_thread.start()
         return instructions_listener_thread
 
-    def initialize_param_file_listener_thread(self):
-        self.param_handler.init_session(self.session)
-        self.param_handler.create_listener_thread()
-        return self.param_handler.listener_thread
+    #def initialize_param_file_listener_thread(self):
+    #    self.param_handler.init_session(self.session)
+    #    self.param_handler.create_listener_thread()
+    #    return self.param_handler.listener_thread
 
     def move_to_coordinates(self, coordinates):
         motor_x_y_z = coordinates.get_motor()
@@ -99,6 +99,8 @@ class Communication:
         self.set_zoom(zoom)
         self.set_resolution(x_resolution, y_resolution)
         self.set_z_slice_num(z_slice_num)
+        self.set_intensity_image_saving_on()  # Added by Ryohei
+        self.command_reader.read_imaging_param_file() #Ryohei
 
     def set_reference_imaging_conditions(self):
         zoom = self.settings.get('reference_zoom')
@@ -109,6 +111,7 @@ class Communication:
         self.set_resolution(x_resolution, y_resolution)
         self.set_z_slice_num(z_slice_num)
         self.set_intensity_image_saving_on()   #Added by Ryohei
+        self.command_reader.read_imaging_param_file()  #Ryohei
 
     def get_motor_position(self):
         response_command = 'currentposition'

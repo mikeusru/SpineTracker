@@ -19,6 +19,8 @@ class AcquiredImage:
         self.is_reference = False
         self.is_reference_zoomed_out = False
         self.zoom = None
+        self.scan_voltage_multiplier = np.array([1, 1]) #Ryohei
+        self.rotation = 0 #Ryohei
         self.pos_id = 1
         self.drift_x_y_z = DriftXYZ()
 
@@ -32,6 +34,9 @@ class AcquiredImage:
             self.total_chan = int(settings.get('total_channels'))
             self.drift_chan = int(settings.get('drift_correction_channel'))
             self.fov_x_y = np.squeeze(np.array([settings.get('fov_x'), settings.get('fov_y')]))
+            self.scan_voltage_multiplier = np.array(settings.get('scan_voltage_multiplier'))
+            self.rotation = settings.get('rotation')
+
         image_stack = io.imread(self.image_file_path)
         image_stack = self._set_correct_dimensions(image_stack)
         image_stack = image_stack[np.arange(self.drift_chan - 1, len(image_stack), self.total_chan)]
@@ -68,7 +73,7 @@ class AcquiredImage:
         image_max_projection = self.get_max_projection()
         reference_resized = transform.resize(reference_max_projection, image_max_projection.shape)
         self.drift_x_y_z.compute_drift_x_y(reference_resized, image_max_projection)
-        self.drift_x_y_z.scale_x_y_drift_to_image(self.fov_x_y, self.zoom, image_max_projection.shape)
+        self.drift_x_y_z.scale_x_y_drift_to_image(self.fov_x_y, self.zoom, self.scan_voltage_multiplier, self.rotation, image_max_projection.shape) #This actually requires voltage_mult and rotation.
 
     def get_shape(self):
         return self.image_stack.shape
