@@ -93,7 +93,9 @@ class SpineImageDataPreparer:
 
     @staticmethod
     def load_image(img_file):
-        image = np.array(Image.open(img_file), dtype=np.uint8)
+        image = np.array(Image.open(img_file))
+        dtype_max = np.iinfo(image.dtype).max
+        image = (image / dtype_max * 255).astype(np.uint8)
         return image
 
     @staticmethod
