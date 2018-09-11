@@ -42,7 +42,6 @@ class State:
             self.position_timers[pos_id] = PositionTimer(self, individual_steps[pos_id],
                                                          self.session.add_step_to_queue, pos_id)
 
-
 class SpineTracker:
 
     def __init__(self, *args):
@@ -105,22 +104,23 @@ class SpineTracker:
 
     def load_image(self, image_type='standard'):
         self.communication.command_reader.read_imaging_param_file() #Ryohei. Before reading, make sure the current setting. Filename particularly.
+        pos_id = self.state.current_pos_id
         if image_type == 'standard':
             self.state.current_image.zoom = self.settings.get('imaging_zoom')
-            self.state.current_image.load(self.settings)
+            self.state.current_image.load(self.settings, pos_id)
             self.gui.reset_figure_for_af_images(self.state.current_image)
         elif image_type == 'zoomed_out':
             self.state.current_image.zoom = self.settings.get('reference_zoom')
-            self.state.current_image.load(self.settings)
+            self.state.current_image.load(self.settings, pos_id)
             self.gui.reset_figure_for_af_images(self.state.current_image)
         elif image_type == 'reference':
-            self.state.ref_image.load(self.settings)
+            self.state.ref_image.load(self.settings, pos_id)
             self.gui.reset_figure_for_af_images(self.state.ref_image)
         elif image_type == 'reference_zoomed_out':
-            self.state.ref_image_zoomed_out.load(self.settings)
+            self.state.ref_image_zoomed_out.load(self.settings, pos_id)
             self.gui.reset_figure_for_af_images(self.state.ref_image_zoomed_out)
         elif image_type == 'macro':
-            self.state.macro_image.load(self.settings)
+            self.state.macro_image.load(self.settings, pos_id)
             self.state.macro_image.set_image_contrast()
             self.state.macro_image.create_pil_image()
         else:
@@ -170,12 +170,12 @@ class SpineTracker:
         pos_id = single_step.get('pos_id')
         self.state.current_pos_id = pos_id
         self.gui.indicate_step_on_timeline(single_step)
-        if single_step['imaging_or_uncaging'] == 'Image':
+        if single_step['image_or_uncage'] == 'Image':
             self.image_at_pos_id(pos_id)
             self.state.step_running = False
             self.load_image()
             self.correct_xyz_drift(pos_id)
-        elif single_step['imaging_or_uncaging'] == 'Uncage':
+        elif single_step['image_or_uncage'] == 'Uncage':
             self.uncage_at_pos_id(pos_id)
             self.state.step_running = False
 
@@ -231,7 +231,6 @@ class SpineTracker:
         self.positions.remove(pos_id)
         self.gui.update_positions_table()
         self.positions.backup_positions()
-        #RYOHEI NEEDS TO CHANGE TIMELINE
 
     def update_position(self, pos_id):
         self.communication.get_motor_position()
@@ -336,7 +335,7 @@ class TimerStepsQueue(Queue):
             ex = 'Exclusive'
         else:
             ex = 'Non-Exclusive'
-        print('{0} {1} Timer {2} running at {3}:{4}:{5} '.format(ex, single_step['imaging_or_uncaging'], pos_id,
+        print('{0} {1} Timer {2} running at {3}:{4}:{5} '.format(ex, single_step['image_or_uncage'], pos_id,
                                                                  dt.datetime.now().hour, dt.datetime.now().minute,
                                                                  dt.datetime.now().second))
 

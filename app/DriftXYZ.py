@@ -18,7 +18,7 @@ class DriftXYZ:
     def copy(self):
         return copy.deepcopy(self)
 
-    def compute_drift_z(self, image_stack):
+    def compute_drift_z(self, image_stack, zstep):
         focus_list = []
         for image_slice in image_stack:
             focus_list.append(self.measure_focus(image_slice))
@@ -26,6 +26,7 @@ class DriftXYZ:
         drift_z = focus_list.argmax().item() - np.floor(len(image_stack) / 2)
         self.z_slices = drift_z
         self.focus_list = focus_list
+        self.z_um = drift_z * zstep
 
     @staticmethod
     def measure_focus(image):
@@ -74,4 +75,4 @@ class DriftXYZ:
             cosA = np.cos(rotation * np.pi / 180.0)
             rotMat = np.array([[cosA, -sinA], [sinA, cosA]])
             x_y_um = np.dot(rotMat, x_y_um)
-        self.x_um, self.y_um = x_y_um
+        self.x_um, self.y_um = -x_y_um

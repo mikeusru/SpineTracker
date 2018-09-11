@@ -55,12 +55,13 @@ class SettingsManager:
     def set(self, name, value):
         if self._exists(name):
             self.settings_dto[name].set(value)
-        else:
-            # TODO: Add error handling here?
-            print('Variable {} does not exist. Declare all variables first in SettingsDTO'.format(name))
+        # else:
+        #     # TODO: Add error handling here?
+        #     print('Variable {} does not exist. Declare all variables first in SettingsDTO'.format(name))
 
     def get(self, name):
-        return self.settings_dto[name].get_value()
+        if self._exists(name):
+            return self.settings_dto[name].get_value()
 
     def get_gui_var(self, name):
         return self.settings_dto[name].gui_var
@@ -157,6 +158,7 @@ class SettingsDTO(dict):
         self._create_acquired_variable('scan_voltage_multiplier', np.array([1, 1]), dtype=np.float32)
         self._create_acquired_variable('scan_voltage_range_reference', np.array([15, 15]), dtype=np.float32)
         self._create_acquired_variable('rotation', 0, dtype=np.float32)
+        self._create_acquired_variable('zstep', 1, dtype=np.float32)
         self._create_acquired_variable('macro_image', np.zeros([128, 128]), dtype=np.uint8)
         self._create_acquired_variable('image_file_path', '../test/test_image.tif', dtype=str)
         self._create_acquired_variable('current_zoom', 1, dtype=np.int)

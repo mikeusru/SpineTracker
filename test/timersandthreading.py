@@ -19,7 +19,7 @@ def hello(step,pos_id):
     else:
         ex = 'Non-Exclusive'
     
-    print('{0} {1} Timer {2} running at {3}s '.format(ex, step['imaging_or_uncaging'], pos_id, datetime.datetime.now().second))
+    print('{0} {1} Timer {2} running at {3}s '.format(ex, step['image_or_uncage'], pos_id, datetime.datetime.now().second))
     time.sleep(.2)
 #    print(name + ' has aquired the lock')
 #    print('oh herro')

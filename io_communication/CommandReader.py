@@ -40,7 +40,7 @@ class CommandReader:
         self.new_setting('acquisitiondone', 0, 0, None, None)
         self.new_setting('intensityfilepath', 1, 1, 'image_file_path', None)
         self.new_setting('currentposition', 3, 3, None, self.set_current_position)
-        self.new_setting('unagingdone', 0, 0, None, None)
+        self.new_setting('uncagingdone', 0, 0, None, None)
         self.new_setting('intensitysaving', 1, 1, 'intensity_saving', None)
         self.new_setting('fovxyum', 2, 2, None, self.set_fov_x_y_um)
         self.new_setting('zoom', 1, 1, 'current_zoom', None)
@@ -50,8 +50,9 @@ class CommandReader:
         self.new_setting('zslicenum', 1, 1, 'z_slice_num', None)
         self.new_setting('resolutionxy', 2, 2, 'resolution_x_y', None)
         self.new_setting('parameterfilesaved', 1, 1, None, None) #Added for future use by Ryohei. You have to take filepath here.
-        self.new_setting('channelstobesaved', 1, 1, None, None) #Added for future use by Ryohei
         self.new_setting('rotation', 1, 1, 'rotation', None) #Rotation is necessary for drift correction. Need to implement.
+        self.new_setting('zstep', 1, 1, 'zstep', None) #Required for correcting drift.
+        self.new_setting('channelstobesaved', 1, 1, None, None)  # Added for future use by Ryohei
 
     def set_current_position(self, args):
         x, y, z = args

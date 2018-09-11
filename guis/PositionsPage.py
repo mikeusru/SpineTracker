@@ -33,7 +33,6 @@ class PositionsPage(ttk.Frame):
                                       command=lambda: self.session.update_position(self.selected_pos_id))
         self.gui['popup'].add_command(label="Delete",
                                       command=lambda: self.session.remove_position(self.selected_pos_id))
-
         self.gui['frame_for_buttons'] = ttk.Frame(self)
         self.gui['frame_for_buttons'].grid(column=0, row=0, sticky='nw')
         self.gui['frame_for_zoom'] = ttk.Frame(self)
