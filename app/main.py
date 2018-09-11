@@ -60,6 +60,7 @@ class SpineTracker:
         self.initialize_init_directory()
         self.log_file = open('log.txt', 'w')
         self.yolo = SpineYolo(YoloArgparse().parse_args())
+        self.update_center_position() #Ryohei: Necessary to calculate center from data stored in position.p.
 
     def exit(self):
         print('quitting')
@@ -138,6 +139,11 @@ class SpineTracker:
         self.positions.record_drift_history_of_acquired_image(self.state.current_image)
         self.positions.backup_positions()
 
+    def update_center_position(self):
+        xyz_average = self.positions.get_average_coordinate()
+        self.state.center_coordinates.set_relative_to_center_coordinates(xyz_average['x'],xyz_average['y'], xyz_average['z'])
+        self.positions.update_all_coordinates_relative_to_center()
+
     def get_ref_image(self, zoom, pos_id):
         if zoom == self.settings.get('reference_zoom'):
             reference_max_projection = self.positions.get_image(pos_id, zoomed_out=True).get_max_projection()
@@ -189,6 +195,7 @@ class SpineTracker:
 
     def align_all_positions_to_refs(self):
         for pos_id in self.positions.keys():
+            self.gui.select_current_position_position_page_tree(pos_id) #Ryohei To see where you are looking at.
             self.communication.set_reference_imaging_conditions()
             self.image_at_pos_id(pos_id)
             self.load_image(image_type='zoomed_out')
@@ -197,6 +204,7 @@ class SpineTracker:
             self.image_at_pos_id(pos_id)
             self.load_image(image_type='standard')
             self.correct_xyz_drift(pos_id, zoom=self.settings.get('imaging_zoom'))
+            self.gui.select_current_position_position_page_tree(pos_id) #Upload acquired images?
 
     def record_imaging_to_log(self, pos_id):
         self.write_to_log('Position {}: {}'.format(pos_id, self.settings.get('image_file_path')))
@@ -211,9 +219,7 @@ class SpineTracker:
             self.collect_new_reference_images()
             self.communication.get_motor_position()
         self.positions.create_new_pos(self.state.ref_image, self.state.ref_image_zoomed_out)
-        xyz_average = self.positions.get_average_coordinate()
-        self.state.center_coordinates.set_relativeToCenter_coordinates(xyz_average['x'], xyz_average['y'], xyz_average['z'])
-        self.positions.update_all_coordinates_relative_to_center()
+        self.update_center_position()
         self.gui.update_positions_table()
         self.positions.backup_positions()
 
@@ -225,6 +231,7 @@ class SpineTracker:
         self.positions.remove(pos_id)
         self.gui.update_positions_table()
         self.positions.backup_positions()
+        #RYOHEI NEEDS TO CHANGE TIMELINE
 
     def update_position(self, pos_id):
         self.communication.get_motor_position()

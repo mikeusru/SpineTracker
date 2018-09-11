@@ -230,14 +230,16 @@ class PositionsPage(ttk.Frame):
                                     values=(x, y, z))
         self.preview_position_locations()
         self.gui['canvas_preview_ref_images'].draw_idle()
-        self.gui['tree'].after(100, self.select_current_position)
+        self.select_current_position()
 
-    def select_current_position(self):
+    def select_current_position(self, pos_id = 0):
         children = self.gui['tree'].get_children('')
-        for child in children:
-            item = child
-        if len(children) > 0:
-            self.gui['tree'].selection_set(item)
+        if pos_id == 0:
+            n = len(children)
+        else:
+            n = pos_id
+        if n > 0:
+            self.gui['tree'].selection_set(children[n-1])
 
     def draw_ref_images(self, pos_id):
         refs = [self.session.positions.get_image(pos_id, zoomed_out=False),
