@@ -12,10 +12,9 @@ from app.MainGuiBuilder import MainGuiBuilder
 from app.Positions import Positions
 from app.Timeline import Timeline
 from app.settings import SettingsManager, CommandLineInterpreter
-from flow.PositionTimer import PositionTimer
+from flow.PositionTimer import PositionTimer, DisplayTimer
 from spine_yolo.spine_yolo import SpineYolo
 from spine_yolo.yolo_argparser import YoloArgparse
-
 
 class State:
     def __init__(self, session):
@@ -31,6 +30,7 @@ class State:
         self.ref_image_zoomed_out = ReferenceImage()
         self.macro_image = MacroImage()
         self.position_timers = {}
+        self.display_timer = DisplayTimer(1.0, self.settings)
         self.queue_run = None
 
     def clear_position_timers(self):
@@ -42,8 +42,8 @@ class State:
             self.position_timers[pos_id] = PositionTimer(self, individual_steps[pos_id],
                                                          self.session.add_step_to_queue, pos_id)
 
-class SpineTracker:
 
+class SpineTracker:
     def __init__(self, *args):
         self.gui = MainGuiBuilder(self)
         self.settings = SettingsManager(self.gui)
@@ -62,6 +62,7 @@ class SpineTracker:
         self.update_center_position() #Ryohei: Necessary to calculate center from data stored in position.p.
 
     def exit(self):
+        self.stop_imaging()
         print('quitting')
         self.communication.instructions_listener_thread.stop()
         print('Instruction listener closed')
@@ -267,6 +268,7 @@ class SpineTracker:
 
     def start_imaging(self):
         self.communication.set_normal_imaging_conditions()
+        self.state.display_timer.start()
         self.start_expt_log()
         self.timer_steps_queue.clear_timers()
         individual_steps = self.timeline.get_steps_for_queue()
@@ -280,6 +282,7 @@ class SpineTracker:
         for pos_id in self.state.position_timers:
             self.state.position_timers[pos_id].stop()
         self.state.imaging_active = False
+        self.state.display_timer.stop()
 
     def train_yolo_model(self):
         self.yolo.toggle_training(True)

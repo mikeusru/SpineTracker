@@ -61,6 +61,8 @@ class StartPage(ttk.Frame):
         gui['communication_log_label'] = tk.Label(self, textvariable=self.settings.get_gui_var('communication_log'),
                                                   font=session.settings.get('large_font'))
         gui['communication_log_label'].grid(row=3, column=1, columnspan=2, padx=10, pady=10, sticky='nw')
+        gui['display_timer_label'] = tk.Label(self, textvariable=self.settings.get_gui_var('display_timer'), font=session.settings.get('huge_font'))
+        gui['display_timer_label'].grid(row=3, column=0, columnspan=1, padx=10, pady=10, sticky='nw')
         return gui
 
     def on_visibility(self, event):

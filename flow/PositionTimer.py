@@ -1,5 +1,5 @@
 import threading
-
+import time
 
 class PositionTimer(object):
     def __init__(self, session, steps, fun, pos_id, *args, **kwargs):
@@ -45,3 +45,36 @@ class PositionTimer(object):
     def stop(self):
         self._timer.cancel()
         self.is_running = False
+
+
+class DisplayTimer:
+    def __init__(self, interval, settings):
+        self.settings = settings
+        self._timer     = None
+        self.interval   = interval
+        self.is_running = False
+        self.start_time =  time.time()
+        self.timenow = 0
+        self.settings.set('display_timer', '{0} s'.format(round(self.timenow)))
+
+    def _run(self):
+        self.is_running = False
+        self.start(False)
+        self.timenow = time.time() - self.start_time
+        try:
+            self.settings.set('display_timer', '{0} s'.format(round(self.timenow)))
+        except:
+            self.stop()
+
+    def start(self, reset=True):
+        if not self.is_running:
+            self._timer = threading.Timer(self.interval, self._run)
+            self._timer.start()
+            self.is_running = True
+            if reset:
+                self.start_time = time.time()
+
+    def stop(self):
+        self._timer.cancel()
+        self.is_running = False
+

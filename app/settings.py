@@ -105,6 +105,7 @@ class SettingsDTO(dict):
 
         # Settings set here
         self._create_entered_variable('experiment_log_file', '../temp/experiment_log.txt')
+        self._create_entered_variable('huge_font', ("Verdana", 18))
         self._create_entered_variable('large_font', ("Verdana", 12))
         self._create_entered_variable('normal_font', ("Verdana", 10))
         self._create_entered_variable('fig_dpi', 100)
@@ -152,6 +153,7 @@ class SettingsDTO(dict):
         self._create_gui_variable('drift_label', tk.StringVar, False, 'Drift: ')
         self._create_gui_variable('trained_model_path', tk.StringVar, True,
                                   'spine_yolo/model_data/trained_stage_3_best.h5')
+        self._create_gui_variable('display_timer', tk.StringVar, True, '0 s')
 
     def initialize_acquired_variables(self):
         self._create_acquired_variable('fov_x_y', np.array([250, 250]), dtype=np.float32)
