@@ -243,7 +243,7 @@ class SpineTracker:
     def collect_new_reference_images(self):
         self.communication.set_reference_imaging_conditions() #Ryohei Note that before image acquisition, file name is not updated.
         self.communication.grab_stack()
-        self.read_imaging_param_file(self.positions.current_position, False)
+        self.read_imaging_param_file(self.positions.current_position, True)
         self.load_image('reference_zoomed_out')
         self.communication.set_normal_imaging_conditions()
         self.communication.grab_stack()

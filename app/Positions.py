@@ -115,9 +115,24 @@ class Positions(dict):
             settings = self.session.settings
             position = self[pos_id]
             position.zoom = float(settings.get('imaging_zoom'))
-            position.multiplier = np.array(settings.get('scan_voltage_multiplier')) #TODO: Should be in position class?
-            position.rotation = float(settings.get('rotation')) #TODO: Should be in position class?
-            position.fovxy = np.squeeze(np.array([settings.get('fov_x'), settings.get('fov_y')])) #TODO: Should be in position class
+            position.scan_voltage_multiplier = np.array(settings.get('scan_voltage_multiplier'))
+            position.scan_voltage_range_reference = np.array(settings.get('scan_voltage_range_reference'))
+            position.rotation = float(settings.get('rotation'))
+            position.fovxy = np.squeeze(np.array([settings.get('fov_x'), settings.get('fov_y')]))
+            position.zstep = float(settings.get('zstep'))
+
+    def export_parameters_to_session(self, pos_id):
+        if pos_id in self:
+            settings = self.session.settings
+            position = self[pos_id]
+            settings.set('imaging_zoom', position.zoom)
+            settings.set('scan_voltage_multiplier', position.scan_voltage_multiplier)
+            settings.set('scan_voltage_range_reference', position.scan_voltage_range_reference)
+            settings.set('rotation', position.rotation)
+            settings.set('fov_x', position.fov_xy[0])
+            settings.set('fov_y', position.fov_xy[1])
+            settings.set('zstep', position.zoom)
+
 
 
 class Position:
@@ -129,8 +144,8 @@ class Position:
         self.rotation = 0
         self.zoom = 10
         self.fov_xy = np.array([250, 250])
-        self.scanvoltagemultiplier = np.array([1,1])
-        self.scanvoltagerangereference = np.array([5,5])
+        self.scan_voltage_multiplier = np.array([1,1])
+        self.scan_voltage_range_reference = np.array([5,5])
         self.zstep = 1
 
         self.drift_history = []
@@ -143,8 +158,8 @@ class Position:
             drift_history=self.drift_history,
             zoom=self.zoom,
             fov_xy=self.fov_sy,
-            scanvoltagemultiplier=self.scanvoltagemultiplier,
-            scanvoltagerangereference=self.scanvoltagerangereference,
+            scan_voltage_multiplier=self.scan_voltage_multiplier,
+            scan_voltage_range_reference=self.scan_voltage_range_reference,
             zstep=self.zstep,
         )
 
@@ -155,8 +170,8 @@ class Position:
         self.drift_history = loaded_position['drift_history']
         self.zoom = loaded_position['zoom']
         self.fov_xy = loaded_position('fov_xy')
-        self.scanvoltagemultiplier = loaded_position('scanvoltagemultiplier')
-        self.scanvoltagerangereference = loaded_position('scanvoltagerangereference')
+        self.scan_voltage_multiplier = loaded_position('scan_voltage_multiplier')
+        self.scan_voltage_range_reference = loaded_position('scan_voltage_range_reference')
         self.zstep = loaded_position('zstep')
 
     def set_coordinates(self, coordinates):

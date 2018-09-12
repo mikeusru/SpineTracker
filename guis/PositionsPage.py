@@ -134,28 +134,36 @@ class PositionsPage(ttk.Frame):
     def preview_position_locations(self):
         positions = self.session.positions
         ax = self.gui['position_preview_axis']
-        if positions.current_position in positions:
-            position = positions[positions.current_position]
-            zoom = position.zoom
-            multiplier = position.scanvoltagemultiplier
-            rotation = position.rotation
-            fovxy = position.fov_xy
-            viewsize = fovxy * multiplier / zoom
-        else:
-            viewsize = np.array([10, 10])
-
-        w = viewsize[0]
-        h = viewsize[1]
+        w = 10
+        h = 10
         ax.clear()
         self.gui['colorbar_axis'].clear()
         xx = np.array([])
         yy = np.array([])
         zz = np.array([])
+        pp = ()
         for pos_id in positions:
-            xyz = self.session.positions.get_coordinates(pos_id).get_combined(self.session)
-            xx = np.append(xx, xyz['x'])
-            yy = np.append(yy, xyz['y'])
+            position = positions[pos_id]
+            zoom = position.zoom
+            multiplier = position.scan_voltage_multiplier
+            rotation = position.rotation
+            fovxy = position.fov_xy
+            viewsize = fovxy * multiplier / zoom
+            w = viewsize[0]
+            h = viewsize[1]
+            xyz = positions.get_coordinates(pos_id).get_combined(self.session)
+            xx = np.append(xx, xyz['x']-w/2)
+            yy = np.append(yy, xyz['y']-h/2)
             zz = np.append(zz, xyz['z'])
+            polygon = np.array(((-w/2, -h/2), (w/2, -h/2), (w/2, h/2), (-w/2, h/2)))
+            theta = np.radians(rotation)
+            c,s = np.cos(theta), np.sin(theta)
+            rotation_matrix = np.array(((c,-s), (s,c)))
+            for i in range(0,4):
+                polygon[i,:] = np.dot(rotation_matrix, polygon[i,:])
+            polygon[:,0] += xyz['x']
+            polygon[:,1] += xyz['y']
+            pp = pp + (polygon,)
 
         if len(positions) > 0:
             v_min = zz.min() - 1
@@ -167,10 +175,14 @@ class PositionsPage(ttk.Frame):
         pos_labels = list(positions.keys())
         c_map = matplotlib.cm.jet
         norm = matplotlib.colors.Normalize(vmin=v_min, vmax=v_max)
-        for x, y, z, p in zip(xx, yy, zz, pos_labels):
-            ax.add_patch(patches.Rectangle(xy=(x, y), width=w, height=h,
-                                           facecolor=c_map(norm(z))))
-            ax.annotate(str(p), xy=(x, y), xytext=(x + w, y + h))
+
+        for p, x, y, z, pos in zip (pp, xx, yy, zz, pos_labels):
+            ax.add_patch(patches.Polygon(xy=p, fill=True, facecolor=c_map(norm(z))))
+            ax.annotate(str(pos), xy=(p[0,:]), xytext=(p[2,:]))
+        # for x, y, z, p in zip(xx, yy, zz, pos_labels):
+        #     ax.add_patch(patches.Rectangle(xy=(x, y), width=w, height=h,
+        #                                    facecolor=c_map(norm(z))))
+        #   ax.annotate(str(p), xy=(x, y), xytext=(x + w, y + h))
         cb1 = colorbar.ColorbarBase(ax=self.gui['colorbar_axis'], cmap=c_map, norm=norm)
         cb1.set_label('Z (µm)')
         ax.set_ylabel('Y (µm)')

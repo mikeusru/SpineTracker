@@ -100,7 +100,7 @@ class Communication:
         self.set_resolution(x_resolution, y_resolution)
         self.set_z_slice_num(z_slice_num)
         self.set_intensity_image_saving_on()  # Added by Ryohei
-        self.read_imaging_param_file() #Ryohei
+        self.command_reader.read_imaging_param_file() #Ryohei
 
     def set_reference_imaging_conditions(self):
         zoom = self.settings.get('reference_zoom')
