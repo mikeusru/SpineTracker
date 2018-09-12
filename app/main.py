@@ -104,8 +104,8 @@ class SpineTracker:
             file.write(line + '\n')
 
     def load_image(self, image_type='standard'):
-        self.communication.command_reader.read_imaging_param_file() #Ryohei. Before reading, make sure the current setting. Filename particularly.
         pos_id = self.state.current_pos_id
+        self.read_imaging_param_file(pos_id, True) #Ryohei. Before reading, make sure the current setting. Filename particularly.
         if image_type == 'standard':
             self.state.current_image.zoom = self.settings.get('imaging_zoom')
             self.state.current_image.load(self.settings, pos_id)
@@ -128,11 +128,10 @@ class SpineTracker:
             print("WRONG IMAGE TYPE")
 
     def correct_xyz_drift(self, pos_id=None, zoom=None):
-        self.communication.command_reader.read_imaging_param_file()  # Ryohei. Before correcting drift, make sure the current setting.
         if zoom is None:
             zoom = self.settings.get('imaging_zoom')
         if pos_id is None:
-            pos_id = self.state.current_pos_id
+            pos_id = self.positions.current_position
         reference_max_projection = self.get_ref_image(zoom, pos_id)
         self.state.current_image.calc_x_y_z_drift(reference_max_projection)
         self.positions.update_coordinates_for_drift(pos_id, self.state.current_image.drift_x_y_z)
@@ -170,6 +169,7 @@ class SpineTracker:
         single_step = self.timer_steps_queue.current_step
         pos_id = single_step.get('pos_id')
         self.state.current_pos_id = pos_id
+        self.positions.current_position = pos_id
         self.gui.indicate_step_on_timeline(single_step)
         if single_step['image_or_uncage'] == 'Image':
             self.image_at_pos_id(pos_id)
@@ -241,14 +241,21 @@ class SpineTracker:
         self.positions.backup_positions()
 
     def collect_new_reference_images(self):
-        self.communication.set_reference_imaging_conditions()
+        self.communication.set_reference_imaging_conditions() #Ryohei Note that before image acquisition, file name is not updated.
         self.communication.grab_stack()
-        self.communication.command_reader.read_imaging_param_file() #Ryohei Note that before image acquisition, file name is not updated.
+        self.read_imaging_param_file(self.positions.current_position, False)
         self.load_image('reference_zoomed_out')
         self.communication.set_normal_imaging_conditions()
         self.communication.grab_stack()
-        self.communication.command_reader.read_imaging_param_file() #Ryohei
+        self.read_imaging_param_file(self.positions.current_position, True) #Import parameters only for normal imaging.
         self.load_image('reference')
+
+    def read_imaging_param_file(self, pos_id=None, import_parameters_toposition=False):
+        self.communication.command_reader.read_imaging_param_file()
+        if pos_id is None:
+            pos_id = self.positions.current_position
+        if import_parameters_toposition:
+            self.positions.import_parameters_from_session(pos_id)
 
     def collect_new_macro_image(self):
         self.communication.set_macro_imaging_conditions()

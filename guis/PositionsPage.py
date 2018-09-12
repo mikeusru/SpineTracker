@@ -134,8 +134,18 @@ class PositionsPage(ttk.Frame):
     def preview_position_locations(self):
         positions = self.session.positions
         ax = self.gui['position_preview_axis']
-        w = 8
-        h = 8
+        if positions.current_position in positions:
+            position = positions[positions.current_position]
+            zoom = position.zoom
+            multiplier = position.scanvoltagemultiplier
+            rotation = position.rotation
+            fovxy = position.fov_xy
+            viewsize = fovxy * multiplier / zoom
+        else:
+            viewsize = np.array([10, 10])
+
+        w = viewsize[0]
+        h = viewsize[1]
         ax.clear()
         self.gui['colorbar_axis'].clear()
         xx = np.array([])
