@@ -149,6 +149,7 @@ class PositionsPage(ttk.Frame):
             rotation = position.rotation
             fovxy = position.fov_xy
             viewsize = fovxy * multiplier / zoom
+            print('zoom = {0}'.format(zoom))
             w = viewsize[0]
             h = viewsize[1]
             xyz = positions.get_coordinates(pos_id).get_combined(self.session)

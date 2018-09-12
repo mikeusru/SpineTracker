@@ -105,7 +105,7 @@ class SpineTracker:
 
     def load_image(self, image_type='standard'):
         pos_id = self.state.current_pos_id
-        self.read_imaging_param_file(pos_id, True) #Ryohei. Before reading, make sure the current setting. Filename particularly.
+        self.read_imaging_param_file(pos_id, False) #Ryohei. Before reading, make sure the current setting. Filename particularly.
         if image_type == 'standard':
             self.state.current_image.zoom = self.settings.get('imaging_zoom')
             self.state.current_image.load(self.settings, pos_id)
@@ -220,6 +220,7 @@ class SpineTracker:
             self.collect_new_reference_images()
             self.communication.get_motor_position()
         self.positions.create_new_pos(self.state.ref_image, self.state.ref_image_zoomed_out)
+        self.read_imaging_param_file(self.positions.current_position, True) #Import parameters only for normal imaging.
         self.update_center_position()
         self.gui.update_positions_table()
         self.positions.backup_positions()
@@ -243,11 +244,9 @@ class SpineTracker:
     def collect_new_reference_images(self):
         self.communication.set_reference_imaging_conditions() #Ryohei Note that before image acquisition, file name is not updated.
         self.communication.grab_stack()
-        self.read_imaging_param_file(self.positions.current_position, True)
         self.load_image('reference_zoomed_out')
         self.communication.set_normal_imaging_conditions()
         self.communication.grab_stack()
-        self.read_imaging_param_file(self.positions.current_position, True) #Import parameters only for normal imaging.
         self.load_image('reference')
 
     def read_imaging_param_file(self, pos_id=None, import_parameters_toposition=False):
