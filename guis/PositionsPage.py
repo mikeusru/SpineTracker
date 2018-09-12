@@ -179,10 +179,7 @@ class PositionsPage(ttk.Frame):
         for p, x, y, z, pos in zip (pp, xx, yy, zz, pos_labels):
             ax.add_patch(patches.Polygon(xy=p, fill=True, facecolor=c_map(norm(z))))
             ax.annotate(str(pos), xy=(p[0,:]), xytext=(p[2,:]))
-        # for x, y, z, p in zip(xx, yy, zz, pos_labels):
-        #     ax.add_patch(patches.Rectangle(xy=(x, y), width=w, height=h,
-        #                                    facecolor=c_map(norm(z))))
-        #   ax.annotate(str(p), xy=(x, y), xytext=(x + w, y + h))
+
         cb1 = colorbar.ColorbarBase(ax=self.gui['colorbar_axis'], cmap=c_map, norm=norm)
         cb1.set_label('Z (µm)')
         ax.set_ylabel('Y (µm)')
