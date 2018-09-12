@@ -75,6 +75,7 @@ class DisplayTimer:
                 self.start_time = time.time()
 
     def stop(self):
-        self._timer.cancel()
-        self.is_running = False
+        if self.is_running:
+            self._timer.cancel()
+            self.is_running = False
 

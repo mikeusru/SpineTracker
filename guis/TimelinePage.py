@@ -285,9 +285,10 @@ class TimelineStepsFrame(ttk.Frame):
             ts[key] = settings.get(key)
         self.container.draw_timeline_steps_general()
         self.session.timeline.backup_timeline()
-        n = len(tree.Children)  ###Ryohei need to correct.
+        children = tree.get_children()
+        n = len(children)  ###Ryohei need to correct.
         if n > 0 & item_number < n:
-            tree.selection_set(tree.Children[item_number])
+            tree.selection_set(children[item_number])
 
     def download_from_timeline_step(self, timeline_step):
         settings = self.session.settings
