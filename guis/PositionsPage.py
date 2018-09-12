@@ -149,7 +149,6 @@ class PositionsPage(ttk.Frame):
             rotation = position.rotation
             fovxy = position.fov_xy
             viewsize = fovxy * multiplier / zoom
-            print('zoom = {0}'.format(zoom))
             w = viewsize[0]
             h = viewsize[1]
             xyz = positions.get_coordinates(pos_id).get_combined(self.session)
@@ -225,6 +224,7 @@ class PositionsPage(ttk.Frame):
             item_text = self.gui['tree'].item(item, "text")
             pos_id = int(item_text.split()[1])
         self.draw_ref_images(pos_id)
+        self.preview_position_locations()
         self.select_position_in_graph(pos_id)
 
     def select_position_in_graph(self, pos_id):
