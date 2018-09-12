@@ -131,7 +131,7 @@ class Positions(dict):
             settings.set('rotation', position.rotation)
             settings.set('fov_x', position.fov_xy[0])
             settings.set('fov_y', position.fov_xy[1])
-            settings.set('zstep', position.zoom)
+            settings.set('zstep', position.zstep)
 
 
 

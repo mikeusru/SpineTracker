@@ -104,24 +104,28 @@ class SpineTracker:
             file.write(line + '\n')
 
     def load_image(self, image_type='standard'):
-        pos_id = self.state.current_pos_id
+        pos_id = self.positions.current_position
+        if pos_id in self.positions:
+            position = self.positions[pos_id]
+        else:
+            position = None
         self.read_imaging_param_file(pos_id, False) #Ryohei. Before reading, make sure the current setting. Filename particularly.
         if image_type == 'standard':
             self.state.current_image.zoom = self.settings.get('imaging_zoom')
-            self.state.current_image.load(self.settings, pos_id)
+            self.state.current_image.load(self.settings, pos_id, position)
             self.gui.reset_figure_for_af_images(self.state.current_image)
         elif image_type == 'zoomed_out':
             self.state.current_image.zoom = self.settings.get('reference_zoom')
-            self.state.current_image.load(self.settings, pos_id)
+            self.state.current_image.load(self.settings, pos_id, position)
             self.gui.reset_figure_for_af_images(self.state.current_image)
         elif image_type == 'reference':
-            self.state.ref_image.load(self.settings, pos_id)
+            self.state.ref_image.load(self.settings, pos_id, position)
             self.gui.reset_figure_for_af_images(self.state.ref_image)
         elif image_type == 'reference_zoomed_out':
-            self.state.ref_image_zoomed_out.load(self.settings, pos_id)
+            self.state.ref_image_zoomed_out.load(self.settings, pos_id, position)
             self.gui.reset_figure_for_af_images(self.state.ref_image_zoomed_out)
         elif image_type == 'macro':
-            self.state.macro_image.load(self.settings, pos_id)
+            self.state.macro_image.load(self.settings, pos_id, position)
             self.state.macro_image.set_image_contrast()
             self.state.macro_image.create_pil_image()
         else:
@@ -133,7 +137,7 @@ class SpineTracker:
         if pos_id is None:
             pos_id = self.positions.current_position
         reference_max_projection = self.get_ref_image(zoom, pos_id)
-        self.state.current_image.calc_x_y_z_drift(reference_max_projection)
+        self.state.current_image.calc_x_y_z_drift(self.positions[pos_id], zoom, reference_max_projection)
         self.positions.update_coordinates_for_drift(pos_id, self.state.current_image.drift_x_y_z)
         self.gui.show_drift_info(self.state.current_image, pos_id)
         self.positions.record_drift_history_of_acquired_image(self.state.current_image)
@@ -249,11 +253,11 @@ class SpineTracker:
         self.communication.grab_stack()
         self.load_image('reference')
 
-    def read_imaging_param_file(self, pos_id=None, import_parameters_toposition=False):
+    def read_imaging_param_file(self, pos_id=None, import_parameters_to_position=False):
         self.communication.command_reader.read_imaging_param_file()
         if pos_id is None:
             pos_id = self.positions.current_position
-        if import_parameters_toposition:
+        if import_parameters_to_position:
             self.positions.import_parameters_from_session(pos_id)
 
     def collect_new_macro_image(self):
