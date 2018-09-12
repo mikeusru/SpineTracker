@@ -64,7 +64,7 @@ class TimelinePage(ttk.Frame):
         tree.heading("p", text="Period (s)")
         tree.heading("d", text="Duration (m)")
         tree.bind("<Button-3>", self.on_timeline_table_right_click)
-        # tree.bind("<<TreeviewSelect>>", self.on_timeline_table_select)
+        tree.bind("<<TreeviewSelect>>", self.on_timeline_table_select)
         tree.grid(row=0, column=0, sticky='nsew')
         scroll = ttk.Scrollbar(tree.master, orient="vertical", command=tree.yview)
         scroll.grid(row=0, column=1, sticky='nse', pady=10)
@@ -98,7 +98,7 @@ class TimelinePage(ttk.Frame):
                 x_range_list.append((step['start_time'], step['end_time'] - step['start_time']))
                 if not step['exclusive']:
                     color_list.append(color_chart.imaging)
-                elif step['exclusive'] and step['imaging_or_uncaging'] == 'Image':
+                elif step['exclusive'] and step['image_or_uncage'] == 'Image':
                     color_list.append(color_chart.exclusive_imaging)
                 else:
                     color_list.append(color_chart.uncaging)
@@ -117,6 +117,15 @@ class TimelinePage(ttk.Frame):
         self.gui['timeline_axis'].legend(
             handles=[legend_patch_uncaging, legend_patch_imaging, legend_patch_exclusive_imaging])
         self.redraw_canvas()
+
+    def on_timeline_table_select(self, event):
+        tree = self.gui['timelineTree']
+        if len(tree.selection()) == 0:
+            return
+        for item in tree.selection():
+            item_number = tree.index(item)
+        ts = self.session.timeline.timeline_steps[item_number]
+        self.gui['tFrame'].download_from_timeline_step(ts)
 
     def on_timeline_table_right_click(self, event):
         tree = self.gui['timelineTree']
@@ -155,9 +164,9 @@ class TimelinePage(ttk.Frame):
             step_name = stepDist['step_name']
             period = stepDist['period']
             duration = stepDist['duration']
-            imaging_or_uncaging = stepDist['imaging_or_uncaging']
+            image_or_uncage = stepDist['image_or_uncage']
             exclusive = stepDist['exclusive']
-            tree.insert("", ii, text=str(ii), values=(step_name, imaging_or_uncaging, exclusive, period, duration))
+            tree.insert("", ii, text=str(ii), values=(step_name, image_or_uncage, exclusive, period, duration))
             ii += 1
 
         self.create_timeline_chart()
@@ -168,17 +177,17 @@ class TimelinePage(ttk.Frame):
         current_pos_id = step.get('pos_id')
         start_time = step.get('start_time')
         end_time = step.get('end_time')
-        x_range = (start_time, end_time)
+        x_range = (start_time, end_time - start_time) #x_min, x_width.
         y_ind = 0
         for pos_id in timeline.ordered_timelines_by_positions:
             if pos_id == current_pos_id:
                 y_range = (y_ind - .4, 0.8)
-                y_ind += 1
                 self.gui['timeline_axis'].broken_barh([x_range],
                                                       y_range,
                                                       facecolor=None,
                                                       edgecolor=self.color_chart.selected_edge,
                                                       linewidth=2)
+            y_ind += 1
 
 
 class TimelineStepsFrame(ttk.Frame):
@@ -245,29 +254,46 @@ class TimelineStepsFrame(ttk.Frame):
 
         gui['add_step_button'] = ttk.Button(self, text="Add Step", command=self.add_step_callback)
         gui['add_step_button'].grid(row=3, column=0, padx=10, pady=10, sticky='wn')
+
+        gui['update_step_button'] = ttk.Button(self, text="Update selected", command=self.update_step_callback)
+        gui['update_step_button'].grid(row=3, column=1, padx=10, pady=10, sticky='wn')
+
         gui['place_holder_frame'] = gui['place_holder_frame']
         return gui
 
     def add_step_callback(self, ind=None, *args):
-        # get values
         settings = self.session.settings
-        step_name = settings.get('step_name')
-        period = settings.get('period')
-        duration = settings.get('duration')
-        imaging_or_uncaging = settings.get('image_or_uncage')
-        exclusive = settings.get('exclusive')
-        timeline_step = TimelineStepBlock(step_name=step_name, imaging_or_uncaging=imaging_or_uncaging,
-                                          exclusive=exclusive, period=period, duration=duration, index=ind)
+        timeline_step = TimelineStepBlock()
+        for key in timeline_step:
+            timeline_step[key] = settings.get(key)
         if not timeline_step.is_valid():
             print('Warning - Period and Duration must both be >0 for Imaging Steps')
             return
         self.session.timeline.add_timeline_step(timeline_step)
         self.container.draw_timeline_steps_general()
-        # reset values
-        settings.set('step_name', '')
-        settings.set('period', '')
-        settings.set('duration', '')
         self.session.timeline.backup_timeline()
+
+    def update_step_callback(self):
+        settings = self.session.settings
+        tree = self.container.gui['timelineTree']
+        if len(tree.selection()) == 0:
+            return
+        for item in tree.selection():
+            item_number = tree.index(item)
+        ts = self.session.timeline.timeline_steps[item_number]
+        for key in ts:
+            ts[key] = settings.get(key)
+        self.container.draw_timeline_steps_general()
+        self.session.timeline.backup_timeline()
+        children = tree.get_children()
+        n = len(children)  ###Ryohei need to correct.
+        if n > 0 & item_number < n:
+            tree.selection_set(children[item_number])
+
+    def download_from_timeline_step(self, timeline_step):
+        settings = self.session.settings
+        for key in timeline_step:
+            settings.set(key, timeline_step[key])
 
     def image_in_from_frame(self):
         var = self.session.settings.get('image_or_uncage')

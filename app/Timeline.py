@@ -17,9 +17,12 @@ class Timeline:
         try:
             timeline_steps = TimelineSteps(self.settings)
             if os.path.isfile(file_name):
-                timeline_steps_list = pickle.load(open(file_name, 'rb'))
-                for step in timeline_steps_list:
-                    timeline_steps.add_step(step)
+                try:
+                    timeline_steps_list = pickle.load(open(file_name, 'rb'))
+                    for step in timeline_steps_list:
+                        timeline_steps.add_step(step)
+                except:
+                    print('error in loading timeline_step.p file')
 
         except AttributeError as err:
             print(f'Unable to load {file_name}: {err}')
@@ -32,6 +35,7 @@ class Timeline:
                     open(self.settings.get('init_directory') + 'timeline_steps.p', 'wb'))
 
     def build_full_timeline(self):
+        self.ordered_timelines_by_positions = AllPositionTimelines(self.settings) #RYohei: It is necessary to renew this every time. `
         if self.check_if_steps_defined():
             self.populate_individual_timelines()
             self.ordered_timelines_by_positions.make_timelines_fit_together()
@@ -238,7 +242,7 @@ class TimelineSteps(list):
 
 
 class TimelineStepBlock(dict):
-    def __init__(self, step_name, imaging_or_uncaging, exclusive, period=60, duration=1,
+    def __init__(self, step_name='Step1', image_or_uncage='Image', exclusive=True, period=60, duration=1,
                  start_time=None, end_time=None, index=None, pos_id=None):
         super(TimelineStepBlock, self).__init__()
         if (duration is None) or (duration == 0):
@@ -246,7 +250,7 @@ class TimelineStepBlock(dict):
         if (period is None) or (period == 0):
             period = duration * 60
         self['step_name'] = step_name
-        self['imaging_or_uncaging'] = imaging_or_uncaging
+        self['image_or_uncage'] = image_or_uncage
         self['exclusive'] = exclusive
         self['period'] = period
         self['duration'] = duration
@@ -256,7 +260,7 @@ class TimelineStepBlock(dict):
         self['end_time'] = end_time
 
     def is_valid(self):
-        if (self['period']*self['duration'] == 0) and (self['imaging_or_uncaging'] == 'Image'):
+        if (self['period']*self['duration'] == 0) and (self['image_or_uncage'] == 'Image'):
             return False
         else:
             return True
@@ -272,7 +276,7 @@ class TimelineStepsMini(TimelineStepBlock):
 
     def __init__(self, timeline_step, start_time, end_time, pos_id):
         super().__init__(timeline_step['step_name'],
-                         timeline_step['imaging_or_uncaging'],
+                         timeline_step['image_or_uncage'],
                          timeline_step['exclusive'],
                          start_time=start_time,
                          end_time=end_time,
