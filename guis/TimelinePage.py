@@ -266,6 +266,7 @@ class TimelineStepsFrame(ttk.Frame):
         timeline_step = TimelineStepBlock()
         for key in timeline_step:
             timeline_step[key] = settings.get(key)
+        self.uncaging_specific_setting(timeline_step)
         if not timeline_step.is_valid():
             print('Warning - Period and Duration must both be >0 for Imaging Steps')
             return
@@ -283,12 +284,18 @@ class TimelineStepsFrame(ttk.Frame):
         ts = self.session.timeline.timeline_steps[item_number]
         for key in ts:
             ts[key] = settings.get(key)
+        self.uncaging_specific_setting(ts)
         self.container.draw_timeline_steps_general()
         self.session.timeline.backup_timeline()
         children = tree.get_children()
         n = len(children)  ###Ryohei need to correct.
         if n > 0 & item_number < n:
             tree.selection_set(children[item_number])
+
+    def uncaging_specific_setting(self, timeline_steps):
+        if timeline_steps['image_or_uncage'] == 'Uncage':
+            timeline_steps['duration'] = int(timeline_steps['period']/60 + 0.5)
+            #timeline_steps['exclusive'] = True
 
     def download_from_timeline_step(self, timeline_step):
         settings = self.session.settings

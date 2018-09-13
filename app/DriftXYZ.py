@@ -68,11 +68,14 @@ class DriftXYZ:
         self.x_pixels = shift_x.item()
         self.y_pixels = shift_y.item()
 
-    def scale_x_y_drift_to_image(self, fov_x_y, zoom, multiplicator, rotation, image_shape):
+    def scale_x_y_drift_to_image(self, position, zoom, image_shape):
+        multiplicator = position.scan_voltage_multiplier
+        fov_x_y = position.fov_xy
+        rotation = position.rotation
         x_y_um = np.squeeze(np.array([self.x_pixels, self.y_pixels])) / image_shape * multiplicator * fov_x_y / zoom
         if rotation != 0:
             sinA = np.sin(rotation * np.pi / 180.0)
             cosA = np.cos(rotation * np.pi / 180.0)
             rotMat = np.array([[cosA, -sinA], [sinA, cosA]])
             x_y_um = np.dot(rotMat, x_y_um)
-        self.x_um, self.y_um = -x_y_um
+        self.x_um, self.y_um = (-x_y_um[0], -x_y_um[1])

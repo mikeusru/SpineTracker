@@ -6,6 +6,7 @@ import copy
 from app.DriftXYZ import DriftXYZ
 from utilities.math_helpers import contrast_stretch
 
+from app.Positions import Position
 
 class AcquiredImage:
 
@@ -18,31 +19,37 @@ class AcquiredImage:
         self.is_macro = False
         self.is_reference = False
         self.is_reference_zoomed_out = False
-        self.zoom = None
-        self.scan_voltage_multiplier = np.array([1, 1]) #Ryohei
-        self.rotation = 0 #Ryohei
-        self.zstep = 1 #Ryohei
+        self.zoom = 10.0
         self.pos_id = 1
         self.drift_x_y_z = DriftXYZ()
+        self.position = Position()
 
     def copy(self):
         return copy.deepcopy(self)
 
-    def load(self, settings=None, pos_id=1):
+    def load(self, settings, pos_id, position=None):
+        if position is None:
+            self.position.scan_voltage_multiplier = np.array(settings.get('scan_voltage_multiplier'))
+            self.position.scan_voltage_range_reference = np.array(settings.get('scan_voltage_range_reference'))
+            self.position.rotation = float(settings.get('rotation'))
+            self.position.fovxy = np.squeeze(np.array([settings.get('fov_x'), settings.get('fov_y')]))
+            self.position.zstep = float(settings.get('zstep'))
+            self.position.zoom = float(settings.get('current_zoom'))
+        else:
+            self.position = position
+
         if settings is not None:
-            self.set_zoom(settings)
+            self.zoom = self.set_zoom(settings)
             self.image_file_path = settings.get('image_file_path')
             self.total_chan = int(settings.get('total_channels'))
             self.drift_chan = int(settings.get('drift_correction_channel'))
-            self.fov_x_y = np.squeeze(np.array([settings.get('fov_x'), settings.get('fov_y')]))
-            self.scan_voltage_multiplier = np.array(settings.get('scan_voltage_multiplier'))
-            self.rotation = float(settings.get('rotation'))
-            self.zstep = float(settings.get('zstep'))
+
         self.pos_id = pos_id
         image_stack = io.imread(self.image_file_path)
         image_stack = self._set_correct_dimensions(image_stack)
         image_stack = image_stack[np.arange(self.drift_chan - 1, len(image_stack), self.total_chan)]
         self.image_stack = image_stack
+        return image_stack
 
     def _set_correct_dimensions(self, image_stack):
         if len(image_stack.shape) == 2:
@@ -64,18 +71,18 @@ class AcquiredImage:
         else:
             self.zoom = settings.get('imaging_zoom')
 
-    def calc_x_y_z_drift(self, reference_max_projection):
-        self.drift_x_y_z.compute_drift_z(self.image_stack, self.zstep)
-        self.calc_x_y_drift(reference_max_projection)
+    def calc_x_y_z_drift(self, position, zoom, reference_max_projection):
+        self.drift_x_y_z.compute_drift_z(self.image_stack, position.zstep)
+        self.calc_x_y_drift(position, zoom, reference_max_projection)
 
     def get_max_projection(self):
         return np.max(self.image_stack.copy(), axis=0)
 
-    def calc_x_y_drift(self, reference_max_projection):
+    def calc_x_y_drift(self, position, zoom, reference_max_projection):
         image_max_projection = self.get_max_projection()
         reference_resized = transform.resize(reference_max_projection, image_max_projection.shape)
         self.drift_x_y_z.compute_drift_x_y(reference_resized, image_max_projection)
-        self.drift_x_y_z.scale_x_y_drift_to_image(self.fov_x_y, self.zoom, self.scan_voltage_multiplier, self.rotation, image_max_projection.shape) #This actually requires voltage_mult and rotation.
+        self.drift_x_y_z.scale_x_y_drift_to_image(position, zoom, image_max_projection.shape)  # This actually requires voltage_mult and rotation.
 
     def get_shape(self):
         return self.image_stack.shape
