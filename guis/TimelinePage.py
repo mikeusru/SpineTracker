@@ -62,7 +62,7 @@ class TimelinePage(ttk.Frame):
         tree.heading("iu", text="Type")
         tree.heading("ex", text="Exclusive")
         tree.heading("p", text="Period (s)")
-        tree.heading("d", text="Duration (m)")
+        tree.heading("d", text="Iterations")
         tree.bind("<Button-3>", self.on_timeline_table_right_click)
         tree.bind("<Button-1>", self.on_timeline_table_left_click)
         tree.grid(row=0, column=0, sticky='nsew')
@@ -169,10 +169,10 @@ class TimelinePage(ttk.Frame):
         for stepDist in timeline_steps_general:
             step_name = stepDist['step_name']
             period = stepDist['period']
-            duration = stepDist['duration']
+            iterations = stepDist['iterations']
             image_or_uncage = stepDist['image_or_uncage']
             exclusive = stepDist['exclusive']
-            tree.insert("", ii, text=str(ii), values=(step_name, image_or_uncage, exclusive, period, duration))
+            tree.insert("", ii, text=str(ii), values=(step_name, image_or_uncage, exclusive, period, iterations))
             ii += 1
 
         self.create_timeline_chart()
@@ -229,15 +229,12 @@ class TimelineStepsFrame(ttk.Frame):
         gui['period_label2'] = ttk.Label(gui['place_holder_frame'], text='sec, ',
                                          font=self.session.settings.get('large_font'))
         gui['period_label2'].pack(anchor='w', side='left')
-        gui['duration_label1'] = ttk.Label(gui['place_holder_frame'], text='Duration: ',
+        gui['iterations_label1'] = ttk.Label(gui['place_holder_frame'], text='Iterations: ',
                                            font=self.session.settings.get('large_font'))
-        gui['duration_label1'].pack(anchor='w', side='left')
-        gui['duration_entry'] = ttk.Entry(gui['place_holder_frame'], width=4,
-                                          textvariable=settings.get_gui_var('duration'))
-        gui['duration_entry'].pack(anchor='w', side='left')
-        gui['duration_label2'] = ttk.Label(gui['place_holder_frame'], text='min',
-                                           font=self.session.settings.get('large_font'))
-        gui['duration_label2'].pack(anchor='w', side='left')
+        gui['iterations_label1'].pack(anchor='w', side='left')
+        gui['iterations_entry'] = ttk.Entry(gui['place_holder_frame'], width=4,
+                                          textvariable=settings.get_gui_var('iterations'))
+        gui['iterations_entry'].pack(anchor='w', side='left')
         gui['uncage_radio_button'] = ttk.Radiobutton(self, text='Uncage',
                                                      variable=settings.get_gui_var('image_or_uncage'),
                                                      value='Uncage')
@@ -275,7 +272,7 @@ class TimelineStepsFrame(ttk.Frame):
         self.uncaging_specific_setting(timeline_step)
         timeline_step['index'] = ind
         if not timeline_step.is_valid():
-            print('Warning - Period and Duration must both be >0 for Imaging Steps')
+            print('Warning - Period and Iterations must both be >0 for Imaging Steps')
             return
         self.session.timeline.add_timeline_step(timeline_step)
         self.container.draw_timeline_steps_general()
@@ -301,7 +298,7 @@ class TimelineStepsFrame(ttk.Frame):
 
     def uncaging_specific_setting(self, timeline_steps):
         if timeline_steps['image_or_uncage'] == 'Uncage':
-            timeline_steps['duration'] = timeline_steps['period'] / 60
+            timeline_steps['iterations'] = 1
             # timeline_steps['exclusive'] = True
 
     def download_from_timeline_step(self, timeline_step):

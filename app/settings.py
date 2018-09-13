@@ -142,7 +142,7 @@ class SettingsDTO(dict):
         self._create_gui_variable('fov_y', tk.StringVar, True, 250, dtype=np.int)
         self._create_gui_variable('image_or_uncage', tk.StringVar, False, 'Image')
         self._create_gui_variable('exclusive', tk.BooleanVar, False, False)
-        self._create_gui_variable('duration', tk.StringVar, False, 5, dtype=np.float32)
+        self._create_gui_variable('iterations', tk.StringVar, False, 5, dtype=np.int)
         self._create_gui_variable('period', tk.StringVar, False, 60, dtype=np.int)
         self._create_gui_variable('step_name', tk.StringVar, False, "StepName")
         self._create_gui_variable('training_data_path', tk.StringVar, True, '../test')

@@ -182,9 +182,9 @@ class IndividualPositionTimeline(dict):
         """divide step into individual steps for each period"""
         start_time = self.total_time
         if start_time == 0:
-            duration = step['duration'] + self.stagger * (self.pos_count - 1)
+            duration = step['iterations'] * step['period'] / 60 + self.stagger * (self.pos_count - 1)
         else:
-            duration = step['duration']
+            duration = step['iterations'] * step['period'] / 60
         period = step['period']
         start_end_time_list = self.calc_start_end_time(period, duration, start_time)
         timeline_step_individual = [
@@ -242,25 +242,25 @@ class TimelineSteps(list):
 
 
 class TimelineStepBlock(dict):
-    def __init__(self, step_name='Step1', image_or_uncage='Image', exclusive=True, period=60, duration=1,
+    def __init__(self, step_name='Step1', image_or_uncage='Image', exclusive=True, period=60, iterations=1,
                  start_time=None, end_time=None, index=None, pos_id=None):
         super(TimelineStepBlock, self).__init__()
-        if (duration is None) or (duration == 0):
-            duration = 1
+        if (iterations is None) or (iterations == 0):
+            iterations = 1
         if (period is None) or (period == 0):
-            period = duration * 60
+            period = 60
         self['step_name'] = step_name
         self['image_or_uncage'] = image_or_uncage
         self['exclusive'] = exclusive
         self['period'] = period
-        self['duration'] = duration
+        self['iterations'] = iterations
         self['index'] = index
         self['pos_id'] = pos_id
         self['start_time'] = start_time
         self['end_time'] = end_time
 
     def is_valid(self):
-        if (self['period']*self['duration'] == 0) and (self['image_or_uncage'] == 'Image'):
+        if (self['period']*self['iterations'] == 0) and (self['image_or_uncage'] == 'Image'):
             return False
         else:
             return True
