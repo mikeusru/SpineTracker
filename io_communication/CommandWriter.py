@@ -45,6 +45,12 @@ class CommandWriter:
     def set_x_y_resolution(self, x_resolution, y_resolution):
         self.write_command('SetResolutionXY', x_resolution, y_resolution)
 
+    def load_setting_file(self, file_number):
+        self.write_command('LoadSetting', file_number)
+
+    def set_uncaging_location(self, x_pixel, y_pixel):
+        self.write_command('SetUncagingLocation', x_pixel, y_pixel)
+
     def write_command(self, *args):
         command = ",".join([str(x) for x in args])
         # self.controller.print_status('\nWriting Command {0}\n'.format(command))
