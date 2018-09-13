@@ -301,7 +301,7 @@ class TimelineStepsFrame(ttk.Frame):
 
     def uncaging_specific_setting(self, timeline_steps):
         if timeline_steps['image_or_uncage'] == 'Uncage':
-            timeline_steps['duration'] = int(timeline_steps['period'] / 60 + 0.5)
+            timeline_steps['duration'] = timeline_steps['period'] / 60
             # timeline_steps['exclusive'] = True
 
     def download_from_timeline_step(self, timeline_step):
