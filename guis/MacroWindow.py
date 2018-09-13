@@ -7,8 +7,6 @@ from skimage import transform
 
 from utilities.math_helpers import round_math
 
-matplotlib.use("TkAgg")
-
 
 class MacroWindow(tk.Toplevel):
     def __init__(self, session, *args, **kwargs):

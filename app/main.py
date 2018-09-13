@@ -4,6 +4,8 @@ import os
 import sys
 import threading
 from queue import Queue
+import matplotlib
+matplotlib.use("TkAgg")
 
 from app.AcquiredImage import AcquiredImage, ReferenceImage, MacroImage
 from app.Communication import Communication

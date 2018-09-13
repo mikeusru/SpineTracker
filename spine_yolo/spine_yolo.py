@@ -379,7 +379,7 @@ class SpineYolo(object):
         yolo_outputs = yolo_head(self.model_body.output, self.anchors, len(self.class_names))
         input_image_shape = K.placeholder(shape=(2,))
         boxes, scores, classes = yolo_eval(
-            yolo_outputs, input_image_shape, score_threshold=0.5, iou_threshold=0.5)
+            yolo_outputs, input_image_shape, score_threshold=0.5, iou_threshold=0.2)
         return boxes, scores, classes, input_image_shape
 
     @staticmethod
