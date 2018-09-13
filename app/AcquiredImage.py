@@ -8,6 +8,7 @@ from utilities.math_helpers import contrast_stretch
 
 from app.Positions import Position
 
+
 class AcquiredImage:
 
     def __init__(self):
@@ -82,7 +83,8 @@ class AcquiredImage:
         image_max_projection = self.get_max_projection()
         reference_resized = transform.resize(reference_max_projection, image_max_projection.shape)
         self.drift_x_y_z.compute_drift_x_y(reference_resized, image_max_projection)
-        self.drift_x_y_z.scale_x_y_drift_to_image(position, zoom, image_max_projection.shape)  # This actually requires voltage_mult and rotation.
+        self.drift_x_y_z.scale_x_y_drift_to_image(position, zoom,
+                                                  image_max_projection.shape)  # This actually requires voltage_mult and rotation.
 
     def get_shape(self):
         return self.image_stack.shape

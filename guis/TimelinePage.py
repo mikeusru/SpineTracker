@@ -42,7 +42,7 @@ class TimelinePage(ttk.Frame):
         gui['timelineTableFrame'].grid(row=0, column=1, padx=10, pady=10)
         gui['timelineTree'] = ttk.Treeview(gui['timelineTableFrame'])
         gui['popup'] = tk.Menu(self, tearoff=0)
-        gui['popup'].add_command(label="Insert Step",
+        gui['popup'].add_command(label="Insert Step Above",
                                  command=lambda: self.insert_timeline_step(self.selected_item_number))
         gui['popup'].add_command(label="Delete Step",
                                  command=lambda: self.delete_timeline_step(self.selected_item_number))
@@ -64,7 +64,7 @@ class TimelinePage(ttk.Frame):
         tree.heading("p", text="Period (s)")
         tree.heading("d", text="Duration (m)")
         tree.bind("<Button-3>", self.on_timeline_table_right_click)
-        tree.bind("<<TreeviewSelect>>", self.on_timeline_table_select)
+        tree.bind("<Button-1>", self.on_timeline_table_left_click)
         tree.grid(row=0, column=0, sticky='nsew')
         scroll = ttk.Scrollbar(tree.master, orient="vertical", command=tree.yview)
         scroll.grid(row=0, column=1, sticky='nse', pady=10)
@@ -118,12 +118,18 @@ class TimelinePage(ttk.Frame):
             handles=[legend_patch_uncaging, legend_patch_imaging, legend_patch_exclusive_imaging])
         self.redraw_canvas()
 
-    def on_timeline_table_select(self, event):
+    def on_timeline_table_left_click(self, event):
         tree = self.gui['timelineTree']
+        iid = tree.identify_row(event.y)
+        item_number = None
+        if iid:
+            # mouse over item
+            tree.selection_set(iid)
+        for item in tree.selection():
+            item_text = tree.item(item, "text")
+            item_number = tree.index(item)
         if len(tree.selection()) == 0:
             return
-        for item in tree.selection():
-            item_number = tree.index(item)
         ts = self.session.timeline.timeline_steps[item_number]
         self.gui['tFrame'].download_from_timeline_step(ts)
 
@@ -143,7 +149,7 @@ class TimelinePage(ttk.Frame):
         self.gui['popup'].post(event.x_root, event.y_root)
 
     def insert_timeline_step(self, ind):
-        self.gui['tFrame'].add_step_callback(self.session, ind)
+        self.gui['tFrame'].add_step_callback(ind)
         self.draw_timeline_steps_general()
         self.session.timeline.backup_timeline()
 
@@ -177,7 +183,7 @@ class TimelinePage(ttk.Frame):
         current_pos_id = step.get('pos_id')
         start_time = step.get('start_time')
         end_time = step.get('end_time')
-        x_range = (start_time, end_time - start_time) #x_min, x_width.
+        x_range = (start_time, end_time - start_time)  # x_min, x_width.
         y_ind = 0
         for pos_id in timeline.ordered_timelines_by_positions:
             if pos_id == current_pos_id:
@@ -267,6 +273,7 @@ class TimelineStepsFrame(ttk.Frame):
         for key in timeline_step:
             timeline_step[key] = settings.get(key)
         self.uncaging_specific_setting(timeline_step)
+        timeline_step['index'] = ind
         if not timeline_step.is_valid():
             print('Warning - Period and Duration must both be >0 for Imaging Steps')
             return
@@ -294,8 +301,8 @@ class TimelineStepsFrame(ttk.Frame):
 
     def uncaging_specific_setting(self, timeline_steps):
         if timeline_steps['image_or_uncage'] == 'Uncage':
-            timeline_steps['duration'] = int(timeline_steps['period']/60 + 0.5)
-            #timeline_steps['exclusive'] = True
+            timeline_steps['duration'] = int(timeline_steps['period'] / 60 + 0.5)
+            # timeline_steps['exclusive'] = True
 
     def download_from_timeline_step(self, timeline_step):
         settings = self.session.settings

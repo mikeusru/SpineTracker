@@ -5,6 +5,7 @@ import sys
 import threading
 from queue import Queue
 import matplotlib
+
 matplotlib.use("TkAgg")
 
 from app.AcquiredImage import AcquiredImage, ReferenceImage, MacroImage
@@ -17,6 +18,7 @@ from app.settings import SettingsManager, CommandLineInterpreter
 from flow.PositionTimer import PositionTimer, DisplayTimer
 from spine_yolo.spine_yolo import SpineYolo
 from spine_yolo.yolo_argparser import YoloArgparse
+
 
 class State:
     def __init__(self, session):
@@ -61,15 +63,15 @@ class SpineTracker:
         self.initialize_init_directory()
         self.log_file = open('log.txt', 'w')
         self.yolo = SpineYolo(YoloArgparse().parse_args())
-        self.update_center_position() #Ryohei: Necessary to calculate center from data stored in position.p.
+        self.update_center_position()  # Ryohei: Necessary to calculate center from data stored in position.p.
 
     def exit(self):
         self.stop_imaging()
         print('quitting')
         self.communication.instructions_listener_thread.stop()
         print('Instruction listener closed')
-#        self.communication.param_file_listener_thread.stop()
-#        print('param file listener closed')
+        #        self.communication.param_file_listener_thread.stop()
+        #        print('param file listener closed')
         self.log_file.close()
         self.gui.destroy()
         print('goodbye')
@@ -111,7 +113,8 @@ class SpineTracker:
             position = self.positions[pos_id]
         else:
             position = None
-        self.read_imaging_param_file(pos_id, False) #Ryohei. Before reading, make sure the current setting. Filename particularly.
+        self.read_imaging_param_file(pos_id,
+                                     False)  # Ryohei. Before reading, make sure the current setting. Filename particularly.
         if image_type == 'standard':
             self.state.current_image.zoom = self.settings.get('imaging_zoom')
             self.state.current_image.load(self.settings, pos_id, position)
@@ -147,7 +150,8 @@ class SpineTracker:
 
     def update_center_position(self):
         xyz_average = self.positions.get_average_coordinate()
-        self.state.center_coordinates.set_relative_to_center_coordinates(xyz_average['x'],xyz_average['y'], xyz_average['z'])
+        self.state.center_coordinates.set_relative_to_center_coordinates(xyz_average['x'], xyz_average['y'],
+                                                                         xyz_average['z'])
         self.positions.update_all_coordinates_relative_to_center()
 
     def get_ref_image(self, zoom, pos_id):
@@ -202,7 +206,7 @@ class SpineTracker:
 
     def align_all_positions_to_refs(self):
         for pos_id in self.positions.keys():
-            self.gui.select_current_position_position_page_tree(pos_id) #Ryohei To see where you are looking at.
+            self.gui.select_current_position_position_page_tree(pos_id)  # Ryohei To see where you are looking at.
             self.communication.set_reference_imaging_conditions()
             self.image_at_pos_id(pos_id)
             self.load_image(image_type='zoomed_out')
@@ -211,7 +215,7 @@ class SpineTracker:
             self.image_at_pos_id(pos_id)
             self.load_image(image_type='standard')
             self.correct_xyz_drift(pos_id, zoom=self.settings.get('imaging_zoom'))
-            self.gui.select_current_position_position_page_tree(pos_id) #Upload acquired images?
+            self.gui.select_current_position_position_page_tree(pos_id)  # Upload acquired images?
 
     def record_imaging_to_log(self, pos_id):
         self.write_to_log('Position {}: {}'.format(pos_id, self.settings.get('image_file_path')))
@@ -226,7 +230,8 @@ class SpineTracker:
             self.collect_new_reference_images()
             self.communication.get_motor_position()
         self.positions.create_new_pos(self.state.ref_image, self.state.ref_image_zoomed_out)
-        self.read_imaging_param_file(self.positions.current_position, True) #Import parameters only for normal imaging.
+        self.read_imaging_param_file(self.positions.current_position,
+                                     True)  # Import parameters only for normal imaging.
         self.update_center_position()
         self.gui.update_positions_table()
         self.positions.backup_positions()
@@ -248,7 +253,7 @@ class SpineTracker:
         self.positions.backup_positions()
 
     def collect_new_reference_images(self):
-        self.communication.set_reference_imaging_conditions() #Ryohei Note that before image acquisition, file name is not updated.
+        self.communication.set_reference_imaging_conditions()  # Ryohei Note that before image acquisition, file name is not updated.
         self.communication.grab_stack()
         self.load_image('reference_zoomed_out')
         self.communication.set_normal_imaging_conditions()
