@@ -29,7 +29,7 @@ class SettingsManager:
         name = args[0]
         self.update_value(name)
         if name == 'stagger':
-            self.container.update_timeline_chart()
+            self.container.rebuild_timeline()
         elif name == 'image_or_uncage':
             self.container.switch_between_image_and_uncage_guis()
         elif name == 'manual_fov_toggle':

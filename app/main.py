@@ -233,23 +233,25 @@ class SpineTracker:
         self.read_imaging_param_file(self.positions.current_position,
                                      True)  # Import parameters only for normal imaging.
         self.update_center_position()
-        self.gui.update_positions_table()
-        self.positions.backup_positions()
+        self.handle_position_update()
 
     def clear_positions(self, *args):
         self.positions.clear()
-        self.gui.update_positions_table()
+        self.handle_position_update()
 
     def remove_position(self, pos_id):
         self.positions.remove(pos_id)
-        self.gui.update_positions_table()
-        self.positions.backup_positions()
+        self.handle_position_update()
 
     def update_position(self, pos_id):
         self.communication.get_motor_position()
         new_coordinates = self.state.current_coordinates.copy()
         self.positions.set_coordinates(pos_id, new_coordinates)
+        self.handle_position_update()
+
+    def handle_position_update(self):
         self.gui.update_positions_table()
+        self.gui.rebuild_timeline()
         self.positions.backup_positions()
 
     def collect_new_reference_images(self):

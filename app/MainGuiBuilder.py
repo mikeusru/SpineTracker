@@ -86,7 +86,7 @@ class MainGuiBuilder(tk.Tk):
     def select_current_position_position_page_tree(self, pos_id):
         self.frames[PositionsPage].select_current_position(pos_id)
 
-    def update_timeline_chart(self, *args):
+    def rebuild_timeline(self, *args):
         self.frames[TimelinePage].create_timeline_chart()
 
     def switch_between_image_and_uncage_guis(self, *args):
