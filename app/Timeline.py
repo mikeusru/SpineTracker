@@ -14,6 +14,14 @@ class Timeline:
 
     def initialize_timeline_steps(self):
         file_name = self.settings.get('init_directory') + 'timeline_steps.p'
+        timeline_steps = self._load_timeline_from_file(file_name)
+        return timeline_steps
+
+    def reload_timeline(self, file_name):
+        self.timeline_steps = self._load_timeline_from_file(file_name)
+        self.ordered_timelines_by_positions = AllPositionTimelines(self.settings)
+
+    def _load_timeline_from_file(self, file_name):
         try:
             timeline_steps = TimelineSteps(self.settings)
             if os.path.isfile(file_name):
@@ -23,19 +31,20 @@ class Timeline:
                         timeline_steps.add_step(step)
                 except:
                     print('error in loading timeline_step.p file')
-
         except AttributeError as err:
             print(f'Unable to load {file_name}: {err}')
             timeline_steps = TimelineSteps(self.settings)
         return timeline_steps
 
-    def backup_timeline(self):
+    def backup_timeline(self, path=None):
+        if path is None:
+            path = self.settings.get('init_directory') + 'timeline_steps.p'
         timeline_steps_list = [step for step in self.timeline_steps]
-        pickle.dump(timeline_steps_list,
-                    open(self.settings.get('init_directory') + 'timeline_steps.p', 'wb'))
+        pickle.dump(timeline_steps_list, open(path, 'wb'))
 
     def build_full_timeline(self):
-        self.ordered_timelines_by_positions = AllPositionTimelines(self.settings) #RYohei: It is necessary to renew this every time. `
+        self.ordered_timelines_by_positions = AllPositionTimelines(
+            self.settings)  # RYohei: It is necessary to renew this every time. `
         if self.check_if_steps_defined():
             self.populate_individual_timelines()
             self.ordered_timelines_by_positions.make_timelines_fit_together()
@@ -153,9 +162,10 @@ class AllPositionTimelines(dict):
         return done_building
 
     def get_timeline_step_individual_list(self):
-        ordered_timeline_step_individual_list_by_position= {}
+        ordered_timeline_step_individual_list_by_position = {}
         for pos_id, individual_position_timeline in self.items():
-            ordered_timeline_step_individual_list_by_position[pos_id] = individual_position_timeline.timeline_step_individual_list
+            ordered_timeline_step_individual_list_by_position[
+                pos_id] = individual_position_timeline.timeline_step_individual_list
         return ordered_timeline_step_individual_list_by_position
 
 
@@ -260,7 +270,7 @@ class TimelineStepBlock(dict):
         self['end_time'] = end_time
 
     def is_valid(self):
-        if (self['period']*self['iterations'] == 0) and (self['image_or_uncage'] == 'Image'):
+        if (self['period'] * self['iterations'] == 0) and (self['image_or_uncage'] == 'Image'):
             return False
         else:
             return True

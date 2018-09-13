@@ -1,5 +1,7 @@
+import os
 import tkinter as tk
 from tkinter import ttk
+from tkinter.filedialog import askopenfilename, asksaveasfilename
 
 import matplotlib
 from matplotlib import patches
@@ -46,6 +48,10 @@ class TimelinePage(ttk.Frame):
                                  command=lambda: self.insert_timeline_step(self.selected_item_number))
         gui['popup'].add_command(label="Delete Step",
                                  command=lambda: self.delete_timeline_step(self.selected_item_number))
+        gui['popup'].add_command(label="Save Timeline As...",
+                                 command=lambda: self.save_timeline_as())
+        gui['popup'].add_command(label="Load Timeline...",
+                                 command=lambda: self.select_timeline_to_load())
         return gui
 
     def create_timeline_table(self):
@@ -143,8 +149,6 @@ class TimelinePage(ttk.Frame):
         for item in tree.selection():
             item_text = tree.item(item, "text")
             item_number = tree.index(item)
-        if len(tree.selection()) == 0:
-            return
         self.selected_item_number = item_number
         self.gui['popup'].post(event.x_root, event.y_root)
 
@@ -154,9 +158,25 @@ class TimelinePage(ttk.Frame):
         self.session.timeline.backup_timeline()
 
     def delete_timeline_step(self, ind):
+        if ind is None:
+            return
         del self.session.timeline.timeline_steps[ind]
         self.draw_timeline_steps_general()
         self.session.timeline.backup_timeline()
+
+    def save_timeline_as(self):
+        path = asksaveasfilename(initialfile=os.path.expanduser("")+"timeline_steps.p",
+                                 title="Select file",
+                                 filetypes=(("pickle file", ".p"),),
+                                 defaultextension='.p')
+        self.session.timeline.backup_timeline(path)
+
+    def select_timeline_to_load(self):
+        path = askopenfilename(initialdir=os.path.expanduser(""),
+                               title="Select file",
+                               filetypes=(("pickle file", "*.p"),))
+        self.session.timeline.reload_timeline(path)
+        self.draw_timeline_steps_general()
 
     def draw_timeline_steps_general(self):
         tree = self.gui['timelineTree']
@@ -230,10 +250,10 @@ class TimelineStepsFrame(ttk.Frame):
                                          font=self.session.settings.get('large_font'))
         gui['period_label2'].pack(anchor='w', side='left')
         gui['iterations_label1'] = ttk.Label(gui['place_holder_frame'], text='Iterations: ',
-                                           font=self.session.settings.get('large_font'))
+                                             font=self.session.settings.get('large_font'))
         gui['iterations_label1'].pack(anchor='w', side='left')
         gui['iterations_entry'] = ttk.Entry(gui['place_holder_frame'], width=4,
-                                          textvariable=settings.get_gui_var('iterations'))
+                                            textvariable=settings.get_gui_var('iterations'))
         gui['iterations_entry'].pack(anchor='w', side='left')
         gui['uncage_radio_button'] = ttk.Radiobutton(self, text='Uncage',
                                                      variable=settings.get_gui_var('image_or_uncage'),
