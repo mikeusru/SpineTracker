@@ -51,20 +51,21 @@ class CommandWriter:
     def set_uncaging_location(self, x_pixel, y_pixel):
         self.write_command('SetUncagingLocation', x_pixel, y_pixel)
 
+    def write_custom_command(self, custom_command):
+        self.write_command('CustomCommand', custom_command)
+
     def write_command(self, *args):
         command = ",".join([str(x) for x in args])
         # self.controller.print_status('\nWriting Command {0}\n'.format(command))
         self.print_line('\nWriting Command {0}\n'.format(command))
         success = False
-        while not success: #Added by Ryohei, sometimes writing is denied.
+        while not success:  # Added by Ryohei, sometimes writing is denied.
             try:
                 with open(self.file_path, "at") as f:
                     f.write('\n' + command)
                     success = True
             except:
-                print('Problem in writing!')
-
-
+                self.print_line('Problem in writing!')
 
     def print_line(self, line):
         self.session.print_to_log(line)

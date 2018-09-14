@@ -28,11 +28,6 @@ class Communication:
         instructions_listener_thread.start()
         return instructions_listener_thread
 
-    #def initialize_param_file_listener_thread(self):
-    #    self.param_handler.init_session(self.session)
-    #    self.param_handler.create_listener_thread()
-    #    return self.param_handler.listener_thread
-
     def move_to_coordinates(self, coordinates):
         motor_x_y_z = coordinates.get_motor()
         scan_voltage_x_y = coordinates.get_scan_voltage_x_y()
@@ -112,6 +107,13 @@ class Communication:
         self.set_z_slice_num(z_slice_num)
         self.set_intensity_image_saving_on()   #Added by Ryohei
         self.command_reader.read_imaging_param_file()  #Ryohei
+
+    def send_custom_command(self, custom_command):
+        if custom_command != '':
+            response_command = 'customcommandreceived'
+            self.command_reader.set_response(response_command)
+            self.command_writer.write_custom_command(custom_command)
+            self.command_reader.wait_for_response(response_command)
 
     def get_motor_position(self):
         response_command = 'currentposition'

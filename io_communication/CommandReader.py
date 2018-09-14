@@ -49,6 +49,7 @@ class CommandReader:
         self.new_setting('scanvoltagerangereference', 2, 2, 'scan_voltage_range_reference', None)
         self.new_setting('zslicenum', 1, 1, 'z_slice_num', None)
         self.new_setting('resolutionxy', 2, 2, 'resolution_x_y', None)
+        self.new_setting('customcommandreceived', 0, 0, None, None)
         self.new_setting('parameterfilesaved', 1, 1, None, None) #Added for future use by Ryohei. You have to take filepath here.
         self.new_setting('rotation', 1, 1, 'rotation', None) #Rotation is necessary for drift correction. Need to implement.
         self.new_setting('zstep', 1, 1, 'zstep', None) #Required for correcting drift.

@@ -181,6 +181,7 @@ class SpineTracker:
         self.state.current_pos_id = pos_id
         self.positions.current_position = pos_id
         self.gui.indicate_step_on_timeline(single_step)
+        self.communication.send_custom_command(single_step['custom_command'])
         if single_step['image_or_uncage'] == 'Image':
             self.image_at_pos_id(pos_id)
             self.state.step_running = False
