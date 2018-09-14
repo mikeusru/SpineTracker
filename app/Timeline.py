@@ -177,7 +177,7 @@ class IndividualPositionTimeline(dict):
         self.stagger = self.settings.get('stagger')
         self.pos_id = pos_id
         self.y_label = ''
-        self.total_time = 0
+        self.total_time = 0.0
         self.pos_count = pos_count
         self.start_end_time_array = []
         self.timeline_step_individual_list = []
@@ -192,9 +192,9 @@ class IndividualPositionTimeline(dict):
         """divide step into individual steps for each period"""
         start_time = self.total_time
         if start_time == 0:
-            duration = step['iterations'] * step['period'] / 60 + self.stagger * (self.pos_count - 1)
+            duration = step['iterations'] * step['period'] + self.stagger * 60 * (self.pos_count - 1)
         else:
-            duration = step['iterations'] * step['period'] / 60
+            duration = step['iterations'] * step['period']
         period = step['period']
         start_end_time_list = self.calc_start_end_time(period, duration, start_time)
         timeline_step_individual = [
@@ -209,22 +209,23 @@ class IndividualPositionTimeline(dict):
         end_times_single_step = self.calc_end_times(start_times_single_step, period)
         start_end_time_list = [{'start': start, 'end': end} for start, end in
                                zip(start_times_single_step, end_times_single_step)]
-        # start_end_single_step = np.array([start_times_single_step, end_times_single_step])
         return start_end_time_list
 
-    def calc_start_times(self, period, duration, start_time):
-        start_time_array = np.arange(start_time, start_time + duration, period / 60)
+    @staticmethod
+    def calc_start_times(period, duration, start_time):
+        start_time_array = np.arange(start_time, start_time + duration, period)
         return start_time_array
 
-    def calc_end_times(self, start_times, period):
-        end_times = start_times + period / 60
+    @staticmethod
+    def calc_end_times(start_times, period):
+        end_times = start_times + period
         return end_times
 
     def get_next_step(self):
         individual_step = self.timeline_step_individual_list[self.step_building_index]
         actual_start_time = max(individual_step['start_time'], self.min_start_time)
         # add small amount of time based on position so they are added to the queue sequentially, not at the same time
-        actual_start_time = actual_start_time + (self.pos_count * 0.001)
+        actual_start_time = actual_start_time + (self.pos_count * 0.00001)
         return individual_step, actual_start_time
 
     def update_min_start_time(self, start_time):

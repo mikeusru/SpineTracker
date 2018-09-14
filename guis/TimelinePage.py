@@ -52,6 +52,8 @@ class TimelinePage(ttk.Frame):
                                  command=lambda: self.save_timeline_as())
         gui['popup'].add_command(label="Load Timeline...",
                                  command=lambda: self.select_timeline_to_load())
+        gui['popup'].add_command(label="Clear Timeline",
+                                 command=lambda: self.clear_timeline())
         return gui
 
     def create_timeline_table(self):
@@ -101,7 +103,7 @@ class TimelinePage(ttk.Frame):
             color_list = []
             y_ind += 1
             for step in timeline.ordered_timelines_by_positions[pos_id].timeline_step_individual_list:
-                x_range_list.append((step['start_time'], step['end_time'] - step['start_time']))
+                x_range_list.append((step['start_time']/60, step['end_time']/60 - step['start_time']/60))
                 if not step['exclusive']:
                     color_list.append(color_chart.imaging)
                 elif step['exclusive'] and step['image_or_uncage'] == 'Image':
@@ -170,6 +172,11 @@ class TimelinePage(ttk.Frame):
                                  filetypes=(("pickle file", ".p"),),
                                  defaultextension='.p')
         self.session.timeline.backup_timeline(path)
+
+    def clear_timeline(self):
+        while len(self.session.timeline.timeline_steps) > 0:
+            del self.session.timeline.timeline_steps[0]
+        self.draw_timeline_steps_general()
 
     def select_timeline_to_load(self):
         path = askopenfilename(initialdir=os.path.expanduser(""),
