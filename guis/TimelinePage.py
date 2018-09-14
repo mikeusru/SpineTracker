@@ -29,7 +29,7 @@ class TimelinePage(ttk.Frame):
     def define_gui_elements(self):
         gui = dict()
         gui['tFrame'] = TimelineStepsFrame(self, self.session)
-        gui['tFrame'].grid(row=0, column=0, columnspan=1)
+        gui['tFrame'].grid(row=0, column=0, columnspan=1, sticky='nwse')
         gui['timeline_figure'] = self.session.gui.shared_figs['timeline_figure']
         gui['timeline_axis'] = self.session.gui.shared_figs['timeline_axis']
         gui['canvas_timeline'] = FigureCanvasTkAgg(gui['timeline_figure'], self)
@@ -42,7 +42,7 @@ class TimelinePage(ttk.Frame):
                                                     padx=10, pady=10, sticky='nsew')
         gui['timelineTableFrame'] = ttk.Frame(self)
         gui['timelineTableFrame'].grid(row=0, column=1, padx=10, pady=10)
-        gui['timelineTree'] = ttk.Treeview(gui['timelineTableFrame'])
+        gui['timeline_tree'] = ttk.Treeview(gui['timelineTableFrame'])
         gui['popup'] = tk.Menu(self, tearoff=0)
         gui['popup'].add_command(label="Insert Step Above",
                                  command=lambda: self.insert_timeline_step(self.selected_item_number))
@@ -57,20 +57,22 @@ class TimelinePage(ttk.Frame):
         return gui
 
     def create_timeline_table(self):
-        tree = self.gui['timelineTree']
-        tree["columns"] = ("sn", "iu", 'ex', "p", "d")
+        tree = self.gui['timeline_tree']
+        tree["columns"] = ("sn", "iu", 'ex', "p", "i", "cc")
         tree.column("#0", width=30)
         tree.column("sn", width=120)
         tree.column("iu", width=60)
         tree.column("ex", width=60)
         tree.column("p", width=60)
-        tree.column("d", width=75)
+        tree.column("i", width=75)
+        tree.column("cc", width=60)
         tree.heading("#0", text='#')
         tree.heading("sn", text="Step")
         tree.heading("iu", text="Type")
         tree.heading("ex", text="Exclusive")
         tree.heading("p", text="Period (s)")
-        tree.heading("d", text="Iterations")
+        tree.heading("i", text="Iterations")
+        tree.heading("cc", text="Comm")
         tree.bind("<Button-3>", self.on_timeline_table_right_click)
         tree.bind("<Button-1>", self.on_timeline_table_left_click)
         tree.grid(row=0, column=0, sticky='nsew')
@@ -103,7 +105,7 @@ class TimelinePage(ttk.Frame):
             color_list = []
             y_ind += 1
             for step in timeline.ordered_timelines_by_positions[pos_id].timeline_step_individual_list:
-                x_range_list.append((step['start_time']/60, step['end_time']/60 - step['start_time']/60))
+                x_range_list.append((step['start_time'] / 60, step['end_time'] / 60 - step['start_time'] / 60))
                 if not step['exclusive']:
                     color_list.append(color_chart.imaging)
                 elif step['exclusive'] and step['image_or_uncage'] == 'Image':
@@ -127,7 +129,7 @@ class TimelinePage(ttk.Frame):
         self.redraw_canvas()
 
     def on_timeline_table_left_click(self, event):
-        tree = self.gui['timelineTree']
+        tree = self.gui['timeline_tree']
         iid = tree.identify_row(event.y)
         item_number = None
         if iid:
@@ -142,7 +144,7 @@ class TimelinePage(ttk.Frame):
         self.gui['tFrame'].download_from_timeline_step(ts)
 
     def on_timeline_table_right_click(self, event):
-        tree = self.gui['timelineTree']
+        tree = self.gui['timeline_tree']
         iid = tree.identify_row(event.y)
         item_number = None
         if iid:
@@ -167,7 +169,7 @@ class TimelinePage(ttk.Frame):
         self.session.timeline.backup_timeline()
 
     def save_timeline_as(self):
-        path = asksaveasfilename(initialfile=os.path.expanduser("")+"timeline_steps.p",
+        path = asksaveasfilename(initialfile=os.path.expanduser("") + "timeline_steps.p",
                                  title="Select file",
                                  filetypes=(("pickle file", ".p"),),
                                  defaultextension='.p')
@@ -186,7 +188,7 @@ class TimelinePage(ttk.Frame):
         self.draw_timeline_steps_general()
 
     def draw_timeline_steps_general(self):
-        tree = self.gui['timelineTree']
+        tree = self.gui['timeline_tree']
         timeline_steps_general = self.session.timeline.timeline_steps
         # clear table first
         for i in tree.get_children():
@@ -199,7 +201,8 @@ class TimelinePage(ttk.Frame):
             iterations = stepDist['iterations']
             image_or_uncage = stepDist['image_or_uncage']
             exclusive = stepDist['exclusive']
-            tree.insert("", ii, text=str(ii), values=(step_name, image_or_uncage, exclusive, period, iterations))
+            custom_command=stepDist['custom_command']
+            tree.insert("", ii, text=str(ii), values=(step_name, image_or_uncage, exclusive, period, iterations, custom_command))
             ii += 1
 
         self.create_timeline_chart()
@@ -234,43 +237,52 @@ class TimelineStepsFrame(ttk.Frame):
     def define_gui_elements(self):
         gui = dict()
         settings = self.session.settings
-        gui['label1'] = ttk.Label(self, text='Step Name:', font=self.session.settings.get('large_font'))
-        gui['label1'].grid(row=0, column=0, sticky='nw', padx=10, pady=10)
-        gui['step_name_entry'] = ttk.Entry(self, width=30,
-                                           textvariable=settings.get_gui_var('step_name'))
-        gui['step_name_entry'].grid(row=0, column=1, sticky='nw', padx=10, pady=10)
-        gui['period_iterations_frame'] = ttk.Frame(self)
-        gui['period_iterations_frame'].grid(row=1, column=1, columnspan=1, sticky='nw', pady=10)
-        gui['iterations_frame'] = ttk.Frame(gui['period_iterations_frame'])
-        gui['iterations_frame'].pack(side='left', anchor='w')
         gui['image_radio_button'] = ttk.Radiobutton(self, text='Image',
                                                     variable=settings.get_gui_var('image_or_uncage'),
                                                     value='Image')
-        gui['image_radio_button'].grid(row=1, column=0, sticky='nw', pady=10, padx=10)
-        gui['period_label1'] = ttk.Label(gui['period_iterations_frame'], text='  Period: ',
-                                         font=self.session.settings.get('large_font'))
-        gui['period_label1'].pack(anchor='w', side='left')
-        gui['period_entry'] = ttk.Entry(gui['period_iterations_frame'], width=4,
-                                        textvariable=settings.get_gui_var('period'))
-        gui['period_entry'].pack(anchor='w', side='left')
-        gui['period_label2'] = ttk.Label(gui['period_iterations_frame'], text='sec, ',
-                                         font=self.session.settings.get('large_font'))
-        gui['period_label2'].pack(anchor='w', side='left')
-        gui['iterations_label1'] = ttk.Label(gui['iterations_frame'], text='Iterations: ',
-                                             font=self.session.settings.get('large_font'))
-        gui['iterations_label1'].pack(anchor='w', side='left')
-        gui['iterations_entry'] = ttk.Entry(gui['iterations_frame'], width=4,
-                                            textvariable=settings.get_gui_var('iterations'))
-        gui['iterations_entry'].pack(anchor='w', side='left')
+        gui['image_radio_button'].grid(row=0, column=0, pady=10, padx=10)
         gui['uncage_radio_button'] = ttk.Radiobutton(self, text='Uncage',
                                                      variable=settings.get_gui_var('image_or_uncage'),
                                                      value='Uncage')
-        gui['uncage_radio_button'].grid(row=2, column=0, sticky='nw', padx=10, pady=3)
+        gui['uncage_radio_button'].grid(row=0, column=1, padx=10, pady=10)
+        gui['step_name_label'] = ttk.Label(self, text='Step Name:', font=self.session.settings.get('large_font'))
+        gui['step_name_label'].grid(row=1, column=0, sticky='nw', padx=10, pady=3)
+        gui['step_name_entry'] = ttk.Entry(self, width=30,
+                                           textvariable=settings.get_gui_var('step_name'))
+        gui['step_name_entry'].grid(row=1, column=1, sticky='nw', padx=10, pady=3)
+        gui['period_label1'] = ttk.Label(self, text='Period: ',
+                                         font=self.session.settings.get('large_font'))
+        gui['period_label1'].grid(row=2, column=0, sticky='nw', padx=10, pady=3)
+        gui['period_entry_frame'] = ttk.Frame(self)
+        gui['period_entry_frame'].grid(row=2, column=1, sticky='nw', padx=10, pady=3)
+        gui['period_entry'] = ttk.Entry(gui['period_entry_frame'], width=4,
+                                        textvariable=settings.get_gui_var('period'))
+        gui['period_entry'].grid(row=0, column=0, sticky='nw', padx=0, pady=0)
+        gui['period_label2'] = ttk.Label(gui['period_entry_frame'], text='sec',
+                                         font=self.session.settings.get('large_font'))
+        gui['period_label2'].grid(row=0, column=1, sticky='nw', padx=0, pady=0)
+        gui['iterations_label1'] = ttk.Label(self, text='Iterations: ',
+                                             font=self.session.settings.get('large_font'))
+        gui['iterations_label1'].grid(row=3, column=0, sticky='nw', padx=10, pady=3)
+        gui['iterations_entry'] = ttk.Entry(self, width=4,
+                                            textvariable=settings.get_gui_var('iterations'))
+        gui['iterations_entry'].grid(row=3, column=1, sticky='nw', padx=10, pady=3)
         gui['exclusive_checkbutton'] = ttk.Checkbutton(self, text='Exclusive',
                                                        variable=settings.get_gui_var('exclusive'))
-        gui['exclusive_checkbutton'].grid(row=2, column=1, sticky='nw', padx=10, pady=3)
+        gui['exclusive_checkbutton'].grid(row=4, column=0, sticky='nw', padx=10, pady=3)
+        gui['custom_command_label1'] = ttk.Label(self, text='Custom Command: ',
+                                                 font=self.session.settings.get('large_font'))
+        gui['custom_command_label1'].grid(row=5, column=0, sticky='nw', padx=10, pady=3)
+        gui['custom_command_entry'] = ttk.Entry(self, width=30,
+                                                textvariable=settings.get_gui_var('custom_command'))
+        gui['custom_command_entry'].grid(row=5, column=1, sticky='nw', padx=10, pady=3)
+        gui['add_step_button'] = ttk.Button(self, text="Add Step", command=self.add_step_callback)
+        gui['add_step_button'].grid(row=6, column=0, padx=10, pady=10, sticky='wn')
+
+        gui['update_step_button'] = ttk.Button(self, text="Update selected", command=self.update_step_callback)
+        gui['update_step_button'].grid(row=6, column=1, padx=10, pady=10, sticky='wn')
         gui['stagger_frame'] = ttk.Frame(self)
-        gui['stagger_frame'].grid(row=4, column=0, sticky='nw', columnspan=2)
+        gui['stagger_frame'].grid(row=7, column=0, sticky='sw', columnspan=2)
         gui['stagger_label1'] = ttk.Label(gui['stagger_frame'], text='Stagger: ',
                                           font=self.session.settings.get('large_font'))
         gui['stagger_label1'].grid(row=0, column=0, sticky='nw', padx=10, pady=10)
@@ -281,12 +293,6 @@ class TimelineStepsFrame(ttk.Frame):
         gui['stagger_label2'] = ttk.Label(gui['stagger_frame'], text='min',
                                           font=self.session.settings.get('large_font'))
         gui['stagger_label2'].grid(row=0, column=2, sticky='nw', padx=0, pady=10)
-
-        gui['add_step_button'] = ttk.Button(self, text="Add Step", command=self.add_step_callback)
-        gui['add_step_button'].grid(row=3, column=0, padx=10, pady=10, sticky='wn')
-
-        gui['update_step_button'] = ttk.Button(self, text="Update selected", command=self.update_step_callback)
-        gui['update_step_button'].grid(row=3, column=1, padx=10, pady=10, sticky='wn')
         return gui
 
     def add_step_callback(self, ind=None, *args):
@@ -305,7 +311,7 @@ class TimelineStepsFrame(ttk.Frame):
 
     def update_step_callback(self):
         settings = self.session.settings
-        tree = self.container.gui['timelineTree']
+        tree = self.container.gui['timeline_tree']
         if len(tree.selection()) == 0:
             return
         for item in tree.selection():
