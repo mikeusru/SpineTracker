@@ -90,7 +90,7 @@ class MainGuiBuilder(tk.Tk):
         self.frames[TimelinePage].create_timeline_chart()
 
     def switch_between_image_and_uncage_guis(self, *args):
-        self.frames[TimelinePage].gui['tFrame'].image_in_from_frame()
+        self.frames[TimelinePage].gui['tFrame'].image_uncage_radiobutton_switch()
 
     def toggle_manual_fov_entering(self, *args):
         self.frames[SettingsPage].toggle_fov_mode()

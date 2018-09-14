@@ -239,27 +239,27 @@ class TimelineStepsFrame(ttk.Frame):
         gui['step_name_entry'] = ttk.Entry(self, width=30,
                                            textvariable=settings.get_gui_var('step_name'))
         gui['step_name_entry'].grid(row=0, column=1, sticky='nw', padx=10, pady=10)
-        gui['place_holder_frame'] = ttk.Frame(self)
-        gui['place_holder_frame'].grid(row=1, column=1, columnspan=1, sticky='nw', pady=10)
-        gui['place_holder_frame'] = ttk.Frame(gui['place_holder_frame'])
-        gui['place_holder_frame'].pack(side='left', anchor='w')
+        gui['period_iterations_frame'] = ttk.Frame(self)
+        gui['period_iterations_frame'].grid(row=1, column=1, columnspan=1, sticky='nw', pady=10)
+        gui['iterations_frame'] = ttk.Frame(gui['period_iterations_frame'])
+        gui['iterations_frame'].pack(side='left', anchor='w')
         gui['image_radio_button'] = ttk.Radiobutton(self, text='Image',
                                                     variable=settings.get_gui_var('image_or_uncage'),
                                                     value='Image')
         gui['image_radio_button'].grid(row=1, column=0, sticky='nw', pady=10, padx=10)
-        gui['period_label1'] = ttk.Label(gui['place_holder_frame'], text='  Period: ',
+        gui['period_label1'] = ttk.Label(gui['period_iterations_frame'], text='  Period: ',
                                          font=self.session.settings.get('large_font'))
         gui['period_label1'].pack(anchor='w', side='left')
-        gui['period_entry'] = ttk.Entry(gui['place_holder_frame'], width=4,
+        gui['period_entry'] = ttk.Entry(gui['period_iterations_frame'], width=4,
                                         textvariable=settings.get_gui_var('period'))
         gui['period_entry'].pack(anchor='w', side='left')
-        gui['period_label2'] = ttk.Label(gui['place_holder_frame'], text='sec, ',
+        gui['period_label2'] = ttk.Label(gui['period_iterations_frame'], text='sec, ',
                                          font=self.session.settings.get('large_font'))
         gui['period_label2'].pack(anchor='w', side='left')
-        gui['iterations_label1'] = ttk.Label(gui['place_holder_frame'], text='Iterations: ',
+        gui['iterations_label1'] = ttk.Label(gui['iterations_frame'], text='Iterations: ',
                                              font=self.session.settings.get('large_font'))
         gui['iterations_label1'].pack(anchor='w', side='left')
-        gui['iterations_entry'] = ttk.Entry(gui['place_holder_frame'], width=4,
+        gui['iterations_entry'] = ttk.Entry(gui['iterations_frame'], width=4,
                                             textvariable=settings.get_gui_var('iterations'))
         gui['iterations_entry'].pack(anchor='w', side='left')
         gui['uncage_radio_button'] = ttk.Radiobutton(self, text='Uncage',
@@ -287,8 +287,6 @@ class TimelineStepsFrame(ttk.Frame):
 
         gui['update_step_button'] = ttk.Button(self, text="Update selected", command=self.update_step_callback)
         gui['update_step_button'].grid(row=3, column=1, padx=10, pady=10, sticky='wn')
-
-        gui['place_holder_frame'] = gui['place_holder_frame']
         return gui
 
     def add_step_callback(self, ind=None, *args):
@@ -333,13 +331,13 @@ class TimelineStepsFrame(ttk.Frame):
         for key in timeline_step:
             settings.set(key, timeline_step[key])
 
-    def image_in_from_frame(self):
+    def image_uncage_radiobutton_switch(self):
         var = self.session.settings.get('image_or_uncage')
         if var == "Image":
-            self.gui['place_holder_frame'].pack(side='left', anchor='w')
+            self.gui['iterations_entry'].config(state='normal')
             self.session.settings.set('exclusive', False)
         else:
-            self.gui['place_holder_frame'].pack_forget()
+            self.gui['iterations_entry'].config(state='disabled')
             self.session.settings.set('exclusive', True)
 
 
