@@ -182,6 +182,7 @@ class SpineTracker:
         self.positions.current_position = pos_id
         self.gui.indicate_step_on_timeline(single_step)
         self.communication.send_custom_command(single_step['custom_command'])
+        self.set_uncaging_roi(pos_id)
         if single_step['image_or_uncage'] == 'Image':
             self.image_at_pos_id(pos_id)
             self.state.step_running = False
@@ -190,6 +191,10 @@ class SpineTracker:
         elif single_step['image_or_uncage'] == 'Uncage':
             self.uncage_at_pos_id(pos_id)
             self.state.step_running = False
+
+    def set_uncaging_roi(self, pos_id):
+        roi_x, roi_y = self.positions.get_roi_x_y(pos_id)
+        self.communication.uncage(roi_x, roi_y)
 
     def prevent_freezing_during_loops(self):
         self.gui.update()

@@ -53,6 +53,12 @@ class Communication:
         self.command_writer.do_uncaging(roi_x, roi_y)
         self.command_reader.wait_for_response(response_command)
 
+    def set_uncaging_location(self, roi_x, roi_y):
+        response_command = 'uncaginglocation'
+        self.command_reader.set_response(response_command)
+        self.command_writer.set_uncaging_location(roi_x, roi_y)
+        self.command_reader.wait_for_response(response_command)
+
     def set_scan_shift(self, scan_voltage_x, scan_voltage_y):
         response_command = 'scanvoltagexy'
         self.command_reader.set_response(response_command)
