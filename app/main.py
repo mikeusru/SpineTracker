@@ -3,7 +3,10 @@ import datetime as dt
 import os
 import sys
 import threading
+import time
 from queue import Queue
+from tkinter import messagebox
+
 import matplotlib
 
 matplotlib.use("TkAgg")
@@ -222,6 +225,18 @@ class SpineTracker:
             self.load_image(image_type='standard')
             self.correct_xyz_drift(pos_id, zoom=self.settings.get('imaging_zoom'))
             self.gui.select_current_position_position_page_tree(pos_id)  # Upload acquired images?
+
+    def image_all_positions(self):
+        start_time = time.time()
+        for pos_id in self.positions.keys():
+            self.gui.select_current_position_position_page_tree(pos_id)  # Ryohei To see where you are looking at.
+            self.communication.set_normal_imaging_conditions()
+            self.image_at_pos_id(pos_id)
+            self.load_image(image_type='standard')
+            self.correct_xyz_drift(pos_id, zoom=self.settings.get('imaging_zoom'))
+            self.gui.select_current_position_position_page_tree(pos_id)  # Upload acquired images?
+        elapsed_time = time.time() - start_time
+        messagebox.showinfo("Single Imaging Cycle Complete", f'Time to image all positions: {elapsed_time:0.1f}s')
 
     def record_imaging_to_log(self, pos_id):
         self.write_to_log('Position {}: {}'.format(pos_id, self.settings.get('image_file_path')))

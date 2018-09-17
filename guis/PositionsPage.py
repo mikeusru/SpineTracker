@@ -54,6 +54,10 @@ class PositionsPage(ttk.Frame):
                                                         command=lambda: session.align_all_positions_to_refs())
         self.gui['button_align_positions'].grid(row=3, column=0, padx=10,
                                                 pady=10, sticky='wn')
+        self.gui['button_cycle_through_positions'] = ttk.Button(self.gui['frame_for_buttons'], text="Image Positions Once",
+                                                        command=lambda: session.image_all_positions())
+        self.gui['button_cycle_through_positions'].grid(row=4, column=0, padx=10,
+                                                pady=10, sticky='wn')
 
         self.gui['label_imaging_zoom'] = tk.Label(self.gui['frame_for_zoom'], text="Imaging Zoom",
                                                   font=settings.get('large_font'))
