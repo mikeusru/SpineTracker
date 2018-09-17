@@ -31,6 +31,8 @@ class PositionsPage(ttk.Frame):
                                       command=lambda: self.session.move_to_pos_id(pos_id=self.selected_pos_id))
         self.gui['popup'].add_command(label="Update XYZ",
                                       command=lambda: self.session.update_position(self.selected_pos_id))
+        self.gui['popup'].add_command(label="Take New Ref Images",
+                                      command=lambda: self.session.update_reference_images(self.selected_pos_id))
         self.gui['popup'].add_command(label="Delete",
                                       command=lambda: self.session.remove_position(self.selected_pos_id))
         self.gui['frame_for_buttons'] = ttk.Frame(self)
@@ -54,7 +56,7 @@ class PositionsPage(ttk.Frame):
                                                         command=lambda: session.align_all_positions_to_refs())
         self.gui['button_align_positions'].grid(row=3, column=0, padx=10,
                                                 pady=10, sticky='wn')
-        self.gui['button_cycle_through_positions'] = ttk.Button(self.gui['frame_for_buttons'], text="Image Positions Once",
+        self.gui['button_cycle_through_positions'] = ttk.Button(self.gui['frame_for_buttons'], text="Single Imaging Cycle",
                                                         command=lambda: session.image_all_positions())
         self.gui['button_cycle_through_positions'].grid(row=4, column=0, padx=10,
                                                 pady=10, sticky='wn')

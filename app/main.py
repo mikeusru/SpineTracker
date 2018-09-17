@@ -275,6 +275,11 @@ class SpineTracker:
         self.gui.rebuild_timeline()
         self.positions.backup_positions()
 
+    def update_reference_images(self, pos_id):
+        self.collect_new_reference_images()
+        self.positions.update_refs(pos_id, self.state.ref_image, self.state.ref_image_zoomed_out)
+        self.handle_position_update()
+
     def collect_new_reference_images(self):
         self.communication.set_reference_imaging_conditions()  # Ryohei Note that before image acquisition, file name is not updated.
         self.communication.grab_stack()

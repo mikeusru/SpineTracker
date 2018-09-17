@@ -52,6 +52,10 @@ class Positions(dict):
         self[pos_id].set_default_roi_pos()
         self.current_position = pos_id
 
+    def update_refs(self, pos_id, ref_image, ref_image_zoomed_out):
+        self[pos_id].set_ref_image(ref_image)
+        self[pos_id].set_ref_image_zoomed_out(ref_image_zoomed_out)
+
     def clear(self):
         keys = [pos_id for pos_id in self]
         for pos_id in keys:
@@ -134,7 +138,6 @@ class Positions(dict):
             settings.set('zstep', position.zstep)
 
 
-
 class Position:
     def __init__(self):
         self.coordinates = None
@@ -144,8 +147,8 @@ class Position:
         self.rotation = 0
         self.zoom = 10
         self.fov_xy = np.array([250, 250])
-        self.scan_voltage_multiplier = np.array([1,1])
-        self.scan_voltage_range_reference = np.array([5,5])
+        self.scan_voltage_multiplier = np.array([1, 1])
+        self.scan_voltage_range_reference = np.array([5, 5])
         self.zstep = 1
 
         self.drift_history = []
@@ -157,7 +160,7 @@ class Position:
             roi_x_y=self.roi_x_y,
             drift_history=self.drift_history,
             zoom=self.zoom,
-            fov_xy=self.fov_sy,
+            fov_xy=self.fov_xy,
             scan_voltage_multiplier=self.scan_voltage_multiplier,
             scan_voltage_range_reference=self.scan_voltage_range_reference,
             zstep=self.zstep,
