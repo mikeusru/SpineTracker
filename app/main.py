@@ -194,7 +194,7 @@ class SpineTracker:
 
     def set_uncaging_roi(self, pos_id):
         roi_x, roi_y = self.positions.get_roi_x_y(pos_id)
-        self.communication.uncage(roi_x, roi_y)
+        self.communication.set_uncaging_location(roi_x, roi_y)
 
     def prevent_freezing_during_loops(self):
         self.gui.update()
