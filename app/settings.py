@@ -66,9 +66,11 @@ class SettingsManager:
     def get_gui_var(self, name):
         return self.settings_dto[name].gui_var
 
-    def load_settings(self):
-        if os.path.isfile(self._get_file_name()):
-            settings_dict = pickle.load(open(self._get_file_name(), 'rb'))
+    def load_settings(self, path=None):
+        if path is None:
+            path = self._get_file_name()
+        if os.path.isfile(path):
+            settings_dict = pickle.load(open(path, 'rb'))
             self.update_with_loaded_dict(settings_dict)
 
     def update_with_loaded_dict(self, settings_dict):
@@ -78,12 +80,14 @@ class SettingsManager:
     def setting_is_saved(self, name):
         return self.settings_dto[name].saved
 
-    def save_settings(self):
+    def save_settings(self, path=None):
+        if path is None:
+            path = self._get_file_name()
         settings_dict = {}
         for name, setting in self.settings_dto.items():
             if setting.saved:
                 settings_dict.update({name: setting.value})
-        pickle.dump(settings_dict, open(self._get_file_name(), 'wb'))
+        pickle.dump(settings_dict, open(path, 'wb'))
 
     def _get_file_name(self):
         return self.get('init_directory') + 'user_settings.p'

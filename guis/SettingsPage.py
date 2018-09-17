@@ -1,6 +1,8 @@
+import os
 import tkinter as tk
 from tkinter import ttk
 import matplotlib
+from tkinter.filedialog import asksaveasfilename, askopenfilename
 
 matplotlib.use("TkAgg")
 
@@ -22,6 +24,14 @@ class SettingsPage(ttk.Frame):
         gui['entry_total_channels'] = ttk.Entry(self,
                                                 textvariable=settings.get_gui_var('total_channels'))
         gui['entry_total_channels'].grid(row=0, column=1, padx=10, pady=10, sticky='nw')
+        gui['save_settings_button'] = tk.Button(self, text="Save Settings As...",
+                                                font=settings.get('normal_font'),
+                                                command=self.save_settings_as)
+        gui['save_settings_button'].grid(row=0, column=3, sticky='ne', padx=10, pady=10)
+        gui['load_settings_button'] = tk.Button(self, text="Load Settings",
+                                                font=settings.get('normal_font'),
+                                                command=self.load_settings)
+        gui['load_settings_button'].grid(row=1, column=3, sticky='ne', padx=10, pady=10)
         gui['drift_correction_channel_label'] = tk.Label(self, text="Drift Correction Channel",
                                                          font=settings.get('large_font'))
         gui['drift_correction_channel_label'].grid(row=1, column=0, sticky='nw', padx=10, pady=10)
@@ -96,3 +106,16 @@ class SettingsPage(ttk.Frame):
     def enable_fov_entry(self):
         self.gui['entry_fov_x'].configure(state='enable')
         self.gui['entry_fov_y'].configure(state='enable')
+
+    def save_settings_as(self):
+        path = asksaveasfilename(initialfile=os.path.expanduser("") + "user_settings.p",
+                                 title="Select file",
+                                 filetypes=(("pickle file", ".p"),),
+                                 defaultextension='.p')
+        self.session.settings.save_settings(path)
+
+    def load_settings(self):
+        path = askopenfilename(initialdir=os.path.expanduser(""),
+                               title="Select Settings File",
+                               filetypes=(("pickle file", "*.p"),))
+        self.session.settings.load_settings(path)
