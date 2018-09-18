@@ -211,8 +211,8 @@ class TimelinePage(ttk.Frame):
         self.display_timeline_chart()
         timeline = self.session.timeline
         current_pos_id = step.get('pos_id')
-        start_time = step.get('start_time')
-        end_time = step.get('end_time')
+        start_time = step.get('start_time')/60
+        end_time = step.get('end_time')/60
         x_range = (start_time, end_time - start_time)  # x_min, x_width.
         y_ind = 0
         for pos_id in timeline.ordered_timelines_by_positions:

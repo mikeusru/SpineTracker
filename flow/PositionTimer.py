@@ -59,8 +59,9 @@ class DisplayTimer:
         self.is_running = False
         self.start(False)
         self.timenow = time.time() - self.start_time
-        timemin = round(self.timenow/60 - 0.5)
-        timesec = round(self.timenow - timemin)
+        #print('time = {0}'.format(self.timenow))
+        timemin = int(self.timenow/60.0)
+        timesec = int(self.timenow - timemin*60)
         try:
             self.settings.set('display_timer', '{0:02}:{1:02}'.format(timemin, timesec))
         except:
