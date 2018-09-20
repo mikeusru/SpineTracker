@@ -114,6 +114,19 @@ class SpineTracker:
             writer = csv.writer(log_file, delimiter=',')
             writer.writerow(fields)
 
+    def rename_files(self):
+        log_file_path = self.settings.get('experiment_log_file')
+        with open(log_file_path) as csv_file:
+            csv_reader = csv.reader(csv_file, delimiter=',')
+            for row in csv_reader:
+                if len(row) == 4 and row[0] == 'Position:':
+                    pos_id = row[1]
+                    image_path_old = row[3]
+                    path, file = os.path.split(image_path_old)
+                    image_name_new = f'position_{pos_id}_{file}'
+                    image_path_new = os.path.join(path, image_name_new)
+                    os.rename(image_path_old, image_path_new)
+
     def load_image(self, image_type='standard'):
         pos_id = self.positions.current_position
         if pos_id in self.positions:
