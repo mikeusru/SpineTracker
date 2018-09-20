@@ -102,6 +102,9 @@ class MainGuiBuilder(tk.Tk):
         self.frames[TimelinePage].highlight_current_step(step)
         self.frames[StartPage].update_canvases()
 
+    def set_log_path(self):
+        self.frames[StartPage].set_log_path()
+
 
 class SharedFigs(dict):
 

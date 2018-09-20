@@ -108,7 +108,7 @@ class SettingsDTO(dict):
         self.container = container
 
         # Settings set here
-        self._create_entered_variable('experiment_log_file', '../temp/experiment_log.txt')
+        self._create_entered_variable('experiment_log_file', '../temp/experiment_log.csv')
         self._create_entered_variable('huge_font', ("Verdana", 18))
         self._create_entered_variable('large_font', ("Verdana", 12))
         self._create_entered_variable('normal_font', ("Verdana", 10))

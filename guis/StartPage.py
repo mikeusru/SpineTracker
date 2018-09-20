@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
-
+from tkinter.filedialog import asksaveasfilename
+import os
 import matplotlib
 import numpy as np
 from matplotlib import patches
@@ -61,7 +62,8 @@ class StartPage(ttk.Frame):
         gui['communication_log_label'] = tk.Label(self, textvariable=self.settings.get_gui_var('communication_log'),
                                                   font=session.settings.get('large_font'))
         gui['communication_log_label'].grid(row=3, column=1, columnspan=2, padx=10, pady=10, sticky='nw')
-        gui['display_timer_label'] = tk.Label(self, textvariable=self.settings.get_gui_var('display_timer'), font=session.settings.get('huge_font'))
+        gui['display_timer_label'] = tk.Label(self, textvariable=self.settings.get_gui_var('display_timer'),
+                                              font=session.settings.get('huge_font'))
         gui['display_timer_label'].grid(row=3, column=0, columnspan=1, padx=10, pady=10, sticky='nw')
         return gui
 
@@ -112,3 +114,10 @@ class StartPage(ttk.Frame):
         axes = self.gui['axes_af_images']
         for i in range(subplot_length):
             axes.append(figure.add_subplot(1, subplot_length, i + 1))
+
+    def set_log_path(self):
+        path = asksaveasfilename(initialfile=os.path.expanduser("") + "experiment_log.csv",
+                                 title="Select file",
+                                 filetypes=(("comma separated values", ".csv"),),
+                                 defaultextension='.csv')
+        self.session.settings.set('experiment_log_file', path)

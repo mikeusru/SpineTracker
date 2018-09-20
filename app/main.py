@@ -1,4 +1,5 @@
 import copy
+import csv
 import datetime as dt
 import os
 import sys
@@ -105,10 +106,13 @@ class SpineTracker:
             os.mkdir(directory)
         open(file_path, 'a').close()
 
-    def write_to_expt_log(self, line):
+    def write_to_log(self, fields):
+        if type(fields) == str:
+            fields = [fields]
         file_path = self.settings.get('experiment_log_file')
-        with open(file_path, "a") as file:
-            file.write(line + '\n')
+        with open(file_path, "a") as log_file:
+            writer = csv.writer(log_file, delimiter=',')
+            writer.writerow(fields)
 
     def load_image(self, image_type='standard'):
         pos_id = self.positions.current_position
@@ -226,7 +230,7 @@ class SpineTracker:
             self.correct_xyz_drift(pos_id, zoom=self.settings.get('imaging_zoom'))
             self.gui.select_current_position_position_page_tree(pos_id)  # Upload acquired images?
 
-    def image_all_positions(self):
+    def image_all_positions(self, time_cycle=True):
         start_time = time.time()
         for pos_id in self.positions.keys():
             self.gui.select_current_position_position_page_tree(pos_id)  # Ryohei To see where you are looking at.
@@ -236,10 +240,12 @@ class SpineTracker:
             self.correct_xyz_drift(pos_id, zoom=self.settings.get('imaging_zoom'))
             self.gui.select_current_position_position_page_tree(pos_id)  # Upload acquired images?
         elapsed_time = time.time() - start_time
-        messagebox.showinfo("Single Imaging Cycle Complete", f'Time to image all positions: {elapsed_time:0.1f}s')
+        if time_cycle:
+            messagebox.showinfo("Single Imaging Cycle Complete", f'Time to image all positions: {elapsed_time:0.1f}s')
 
     def record_imaging_to_log(self, pos_id):
-        self.write_to_log('Position {}: {}'.format(pos_id, self.settings.get('image_file_path')))
+        file_path = self.settings.get('image_file_path')
+        self.write_to_log(['Position:', pos_id, 'File Path:', file_path])
 
     def record_uncaging_to_log(self, pos_id):
         self.write_to_log('Position {0}: Uncaging at {1}:{2}:{3}'.format(pos_id, dt.datetime.now().hour,
@@ -305,16 +311,10 @@ class SpineTracker:
         coordinates.update_to_center(self)
         self.communication.move_to_coordinates(coordinates)
 
-    def write_to_log(self, line):
-        file_path = self.settings.get('experiment_log_file')
-        if os.path.exists(file_path):
-            with open(file_path, "a") as f:
-                f.write(line + '\n')
-
     def start_imaging(self):
+        self.create_log_file()
         self.communication.set_normal_imaging_conditions()
         self.state.display_timer.start()
-        self.start_expt_log()
         self.timer_steps_queue.clear_timers()
         individual_steps = self.timeline.get_steps_for_queue()
         self.state.initialize_position_timers(individual_steps)
@@ -322,6 +322,10 @@ class SpineTracker:
         self.state.queue_run = threading.Thread(target=self.run_steps_from_queue_when_appropriate)
         self.state.queue_run.daemon = True
         self.state.queue_run.start()
+
+    def create_log_file(self):
+        self.gui.set_log_path()
+        self.start_expt_log()
 
     def stop_imaging(self):
         for pos_id in self.state.position_timers:

@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class Coordinates:
     def __init__(self):
         self.motor_x = 0
@@ -57,7 +58,7 @@ class Coordinates:
         self.set_scan_voltages_x_y(scan_voltage_x, scan_voltage_y)
         self.set_motor(z=z)
 
-    def set_relative_to_center_coordinates(self, x, y, z): #Ryohei.
+    def set_relative_to_center_coordinates(self, x, y, z):  # Ryohei.
         self.set_scan_voltages_x_y(0, 0)
         self.set_motor(x=x, y=y, z=z)
 
