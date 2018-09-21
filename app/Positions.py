@@ -1,6 +1,7 @@
 import os
 
 import pickle
+import re
 
 import numpy as np
 
@@ -137,6 +138,12 @@ class Positions(dict):
             settings.set('fov_y', position.fov_xy[1])
             settings.set('zstep', position.zstep)
 
+    def clear_file_record(self):
+        for pos_id in self:
+            self[pos_id].clear_file_names()
+
+    def rename_latest_files(self, pos_id):
+        self[pos_id].rename_file(pos_id)
 
 class Position:
     def __init__(self):
@@ -150,7 +157,7 @@ class Position:
         self.scan_voltage_multiplier = np.array([1, 1])
         self.scan_voltage_range_reference = np.array([5, 5])
         self.zstep = 1
-
+        self.collected_files = []
         self.drift_history = []
 
     def save(self):
@@ -165,6 +172,12 @@ class Position:
             scan_voltage_range_reference=self.scan_voltage_range_reference,
             zstep=self.zstep,
         )
+
+    def clear_file_names(self):
+        self.collected_files = []
+
+    def add_file_name(self, path):
+        self.collected_files.append(path)
 
     def load(self, loaded_position):
         self.coordinates.load(loaded_position['coordinates']),
@@ -204,3 +217,25 @@ class Position:
     def set_default_roi_pos(self):
         roi_x_y = np.array(self.ref_image.get_shape()[:2]) / 2
         self.roi_x_y = roi_x_y
+
+    def rename_file(self, pos_id):
+        path, file = os.path.split(self.collected_files[-1])
+        file_number, associated_files = self.get_associated_files(path, file)
+        number_extractor = re.compile(file_number)
+        new_number = f'{len(self.collected_files):04d}'
+        for file_to_rename in associated_files:
+            file_with_new_number = number_extractor.sub(new_number, file_to_rename)
+            new_file_name = f'position_{pos_id}_{file_with_new_number}'
+            file_path_new = os.path.join(path, new_file_name)
+            os.rename(self.collected_files[-1], file_path_new)
+
+    @staticmethod
+    def get_associated_files(path, file):
+        associated_files = []
+        number_extractor = re.compile('([0-9]+)(?:.tif)')
+        file_number = number_extractor.search(file).group(1)
+        all_files_in_folder = os.listdir(path)
+        for file_in_folder in all_files_in_folder:
+            if file_number in file_in_folder:
+                associated_files.append(file_in_folder)
+        return file_number, associated_files

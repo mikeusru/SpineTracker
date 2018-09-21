@@ -50,7 +50,6 @@ class State:
             self.position_timers[pos_id] = PositionTimer(self, individual_steps[pos_id],
                                                          self.session.add_step_to_queue, pos_id)
 
-
 class SpineTracker:
     def __init__(self, *args):
         self.gui = MainGuiBuilder(self)
@@ -207,7 +206,9 @@ class SpineTracker:
             self.image_at_pos_id(pos_id)
             self.state.step_running = False
             self.load_image()
+            self.positions[pos_id].add_file_path(self.settings.get('image_file_path'))
             self.correct_xyz_drift(pos_id)
+            self.positions.rename_latest_files(pos_id)
         elif single_step['image_or_uncage'] == 'Uncage':
             self.uncage_at_pos_id(pos_id)
             self.state.step_running = False
@@ -326,6 +327,7 @@ class SpineTracker:
 
     def start_imaging(self):
         self.create_log_file()
+        self.reset_image_file_record()
         self.communication.set_normal_imaging_conditions()
         self.state.display_timer.start()
         self.timer_steps_queue.clear_timers()
@@ -336,8 +338,11 @@ class SpineTracker:
         self.state.queue_run.daemon = True
         self.state.queue_run.start()
 
+    def reset_image_file_record(self):
+        self.positions.clear_file_record()
+
     def create_log_file(self):
-        self.gui.set_log_path()
+        # self.gui.set_log_path()
         self.start_expt_log()
 
     def stop_imaging(self):
