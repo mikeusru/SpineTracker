@@ -176,7 +176,7 @@ class Position:
     def clear_file_names(self):
         self.collected_files = []
 
-    def add_file_name(self, path):
+    def add_file_path(self, path):
         self.collected_files.append(path)
 
     def load(self, loaded_position):
@@ -220,14 +220,16 @@ class Position:
 
     def rename_file(self, pos_id):
         path, file = os.path.split(self.collected_files[-1])
-        file_number, associated_files = self.get_associated_files(path, file)
+        parent_dir = os.path.dirname(path) #assumes we're looking in parent dir
+        file_number, associated_files = self.get_associated_files(parent_dir, file)
         number_extractor = re.compile(file_number)
         new_number = f'{len(self.collected_files):04d}'
         for file_to_rename in associated_files:
+            old_path = os.path.join(parent_dir, file_to_rename)
             file_with_new_number = number_extractor.sub(new_number, file_to_rename)
             new_file_name = f'position_{pos_id}_{file_with_new_number}'
-            file_path_new = os.path.join(path, new_file_name)
-            os.rename(self.collected_files[-1], file_path_new)
+            file_path_new = os.path.join(parent_dir, new_file_name)
+            os.rename(old_path, file_path_new)
 
     @staticmethod
     def get_associated_files(path, file):
