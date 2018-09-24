@@ -50,6 +50,7 @@ class State:
             self.position_timers[pos_id] = PositionTimer(self, individual_steps[pos_id],
                                                          self.session.add_step_to_queue, pos_id)
 
+
 class SpineTracker:
     def __init__(self, *args):
         self.gui = MainGuiBuilder(self)
@@ -196,6 +197,8 @@ class SpineTracker:
 
     def run_current_step(self):
         single_step = self.timer_steps_queue.current_step
+        step_info = single_step.print_step_info()
+        self.write_to_log(step_info)
         pos_id = single_step.get('pos_id')
         self.state.current_pos_id = pos_id
         self.positions.current_position = pos_id

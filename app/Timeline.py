@@ -164,8 +164,7 @@ class AllPositionTimelines(dict):
     def get_timeline_step_individual_list(self):
         ordered_timeline_step_individual_list_by_position = {}
         for pos_id, individual_position_timeline in self.items():
-            ordered_timeline_step_individual_list_by_position[
-                pos_id] = individual_position_timeline.timeline_step_individual_list
+            ordered_timeline_step_individual_list_by_position[pos_id] = individual_position_timeline.timeline_step_individual_list
         return ordered_timeline_step_individual_list_by_position
 
 
@@ -281,6 +280,13 @@ class TimelineStepBlock(dict):
         time_shift = new_start_time - self['start_time']
         self['start_time'] += time_shift
         self['end_time'] += time_shift
+
+    def print_step_info(self):
+        csv_line = []
+        for key, value in self.items():
+            csv_line.append(key)
+            csv_line.append(value)
+        return csv_line
 
 
 class TimelineStepsMini(TimelineStepBlock):

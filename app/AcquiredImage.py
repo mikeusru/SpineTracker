@@ -40,7 +40,7 @@ class AcquiredImage:
             self.position = position
 
         if settings is not None:
-            self.zoom = self.set_zoom(settings)
+            self.set_zoom(settings)
             self.image_file_path = settings.get('image_file_path')
             self.total_chan = int(settings.get('total_channels'))
             self.drift_chan = int(settings.get('drift_correction_channel'))
