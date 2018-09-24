@@ -224,7 +224,7 @@ class IndividualPositionTimeline(dict):
         individual_step = self.timeline_step_individual_list[self.step_building_index]
         actual_start_time = max(individual_step['start_time'], self.min_start_time)
         # add small amount of time based on position so they are added to the queue sequentially, not at the same time
-        actual_start_time = actual_start_time + (self.pos_count * 0.00001)
+        actual_start_time = actual_start_time + ((self.pos_count-1) * 0.1)
         return individual_step, actual_start_time
 
     def update_min_start_time(self, start_time):

@@ -331,7 +331,7 @@ class SpineTracker:
     def start_imaging(self):
         self.create_log_file()
         self.reset_image_file_record()
-        self.communication.set_normal_imaging_conditions()
+        # self.communication.set_normal_imaging_conditions()
         self.state.display_timer.start()
         self.timer_steps_queue.clear_timers()
         individual_steps = self.timeline.get_steps_for_queue()
