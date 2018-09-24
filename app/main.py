@@ -68,6 +68,7 @@ class SpineTracker:
         self.initialize_init_directory()
         self.yolo = SpineYolo(YoloArgparse().parse_args())
         self.update_center_position()  # Ryohei: Necessary to calculate center from data stored in position.p.
+        self.create_log_file(['SpineTracker Opened'])
 
     def exit(self):
         self.stop_imaging()
@@ -96,7 +97,7 @@ class SpineTracker:
     def mainloop(self):
         self.gui.mainloop()
 
-    def start_expt_log(self):
+    def start_expt_log(self, first_line):
         log_file_time_string = time.strftime("%Y%m%d_%H%M%S")
         directory = self.settings.get('experiment_log_directory')
         file_name = f'experiment_log_log_{log_file_time_string}.csv'
@@ -105,6 +106,7 @@ class SpineTracker:
             os.mkdir(directory)
         open(file_path, 'a').close()
         self.state.log_file = file_path
+        self.write_to_log(first_line)
 
     def write_to_log(self, fields):
         if type(fields) == str:
@@ -329,7 +331,7 @@ class SpineTracker:
         self.communication.move_to_coordinates(coordinates)
 
     def start_imaging(self):
-        self.create_log_file()
+        self.create_log_file(['Imaging Started'])
         self.reset_image_file_record()
         # self.communication.set_normal_imaging_conditions()
         self.state.display_timer.start()
@@ -344,9 +346,9 @@ class SpineTracker:
     def reset_image_file_record(self):
         self.positions.clear_file_record()
 
-    def create_log_file(self):
+    def create_log_file(self, first_line):
         # self.gui.set_log_path()
-        self.start_expt_log()
+        self.start_expt_log(first_line)
 
     def stop_imaging(self):
         for pos_id in self.state.position_timers:
