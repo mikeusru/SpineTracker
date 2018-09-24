@@ -40,6 +40,7 @@ class State:
         self.position_timers = {}
         self.display_timer = DisplayTimer(1.0, self.settings)
         self.queue_run = None
+        self.log_file = None
 
     def clear_position_timers(self):
         self.position_timers = {}
@@ -65,7 +66,6 @@ class SpineTracker:
         self.state = State(self)
         self.settings.initialize_gui_callbacks()
         self.initialize_init_directory()
-        self.log_file = open('log.txt', 'w')
         self.yolo = SpineYolo(YoloArgparse().parse_args())
         self.update_center_position()  # Ryohei: Necessary to calculate center from data stored in position.p.
 
@@ -74,9 +74,6 @@ class SpineTracker:
         print('quitting')
         self.communication.instructions_listener_thread.stop()
         print('Instruction listener closed')
-        #        self.communication.param_file_listener_thread.stop()
-        #        print('param file listener closed')
-        self.log_file.close()
         self.gui.destroy()
         print('goodbye')
 
@@ -100,22 +97,25 @@ class SpineTracker:
         self.gui.mainloop()
 
     def start_expt_log(self):
-        file_path = self.settings.get('experiment_log_file')
-        directory = os.path.dirname(file_path)
+        log_file_time_string = time.strftime("%Y%m%d_%H%M%S")
+        directory = self.settings.get('experiment_log_directory')
+        file_name = f'experiment_log_log_{log_file_time_string}.csv'
+        file_path = os.path.join(directory, file_name)
         if not os.path.exists(directory):
             os.mkdir(directory)
         open(file_path, 'a').close()
+        self.state.log_file = file_path
 
     def write_to_log(self, fields):
         if type(fields) == str:
             fields = [fields]
-        file_path = self.settings.get('experiment_log_file')
+        file_path = self.state.log_file
         with open(file_path, "a") as log_file:
             writer = csv.writer(log_file, delimiter=',')
             writer.writerow(fields)
 
     def rename_files(self):
-        log_file_path = self.settings.get('experiment_log_file')
+        log_file_path = self.state.log_file
         with open(log_file_path) as csv_file:
             csv_reader = csv.reader(csv_file, delimiter=',')
             for row in csv_reader:

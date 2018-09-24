@@ -114,10 +114,3 @@ class StartPage(ttk.Frame):
         axes = self.gui['axes_af_images']
         for i in range(subplot_length):
             axes.append(figure.add_subplot(1, subplot_length, i + 1))
-
-    def set_log_path(self):
-        path = asksaveasfilename(initialfile=os.path.expanduser("") + "experiment_log.csv",
-                                 title="Select file",
-                                 filetypes=(("comma separated values", ".csv"),),
-                                 defaultextension='.csv')
-        self.session.settings.set('experiment_log_file', path)
