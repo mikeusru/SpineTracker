@@ -5,7 +5,7 @@ import os
 import sys
 import threading
 import time
-from queue import Queue
+from queue import Queue, Empty
 from tkinter import messagebox
 
 import matplotlib
@@ -416,8 +416,11 @@ class TimerStepsQueue(Queue):
                                                                  dt.datetime.now().second))
 
     def clear_timers(self):
-        with self.mutex:
-            self.queue.clear()
+        while not self.empty():
+            try:
+                self.get(False)
+            except Empty:
+                continue
 
 
 if __name__ == "__main__":

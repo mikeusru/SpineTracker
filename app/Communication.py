@@ -1,4 +1,4 @@
-from queue import Queue
+from queue import Queue, Empty
 import os
 from io_communication.CommandReader import CommandReader, ImagingParamFileHandler
 from io_communication.CommandWriter import CommandWriter
@@ -22,8 +22,11 @@ class Communication:
         input_file = self.settings.get('input_file')
         path, filename = os.path.split(input_file)
         read_function = self.command_reader.read_new_commands
-        with self.instructions_in_queue.mutex:
-            self.instructions_in_queue.queue.clear()
+        while not self.instructions_in_queue.empty():
+            try:
+                self.instructions_in_queue.get(False)
+            except Empty:
+                continue
         instructions_listener_thread = FileReaderThread(self, path, filename, read_function)
         instructions_listener_thread.start()
         return instructions_listener_thread
