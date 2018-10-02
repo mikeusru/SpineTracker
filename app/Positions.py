@@ -229,7 +229,10 @@ class Position:
             file_with_new_number = number_extractor.sub(new_number, file_to_rename)
             new_file_name = f'position_{pos_id}_{file_with_new_number}'
             file_path_new = os.path.join(parent_dir, new_file_name)
-            os.rename(old_path, file_path_new)
+            try:
+                os.rename(old_path, file_path_new)
+            except FileExistsError:
+                pass
 
     @staticmethod
     def get_associated_files(path, file):
