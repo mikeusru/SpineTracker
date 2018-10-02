@@ -47,7 +47,11 @@ class State:
 
     def initialize_position_timers(self, individual_steps):
         self.clear_position_timers()
+        all_positions = []
         for pos_id in individual_steps:
+            all_positions.append(pos_id)
+        all_positions.sort()
+        for pos_id in all_positions:
             self.position_timers[pos_id] = PositionTimer(self, individual_steps[pos_id],
                                                          self.session.add_step_to_queue, pos_id)
 

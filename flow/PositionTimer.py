@@ -1,6 +1,7 @@
 import threading
 import time
 
+
 class PositionTimer(object):
     def __init__(self, session, steps, fun, pos_id, *args, **kwargs):
         self.session = session
@@ -30,10 +31,13 @@ class PositionTimer(object):
             if self.step_count >= len(self.run_times):
                 return
             # if self.step_count == 0:
-                # prev_time = 0
+            # prev_time = 0
             # else:
-                # prev_time = self.run_times[self.step_count - 1]
-            interval = self.run_intervals[self.step_count]
+            # prev_time = self.run_times[self.step_count - 1]
+            if self.step_count == 0:
+                interval = 0
+            else:
+                interval = self.run_intervals[self.step_count - 1]
             step_count = self.step_count
             self.step_count += 1
             print(f'\nTimer Interval = {round(interval)}s')
@@ -49,10 +53,10 @@ class PositionTimer(object):
 class DisplayTimer:
     def __init__(self, interval, settings):
         self.settings = settings
-        self._timer     = None
-        self.interval   = interval
+        self._timer = None
+        self.interval = interval
         self.is_running = False
-        self.start_time =  time.time()
+        self.start_time = time.time()
         self.timenow = 0
         self.settings.set('display_timer', '{0:02}:{1:02}'.format(0, 0))
 
@@ -60,9 +64,9 @@ class DisplayTimer:
         self.is_running = False
         self.start(False)
         self.timenow = time.time() - self.start_time
-        #print('time = {0}'.format(self.timenow))
-        timemin = int(self.timenow/60.0)
-        timesec = int(self.timenow - timemin*60)
+        # print('time = {0}'.format(self.timenow))
+        timemin = int(self.timenow / 60.0)
+        timesec = int(self.timenow - timemin * 60)
         try:
             self.settings.set('display_timer', '{0:02}:{1:02}'.format(timemin, timesec))
         except:
@@ -80,4 +84,3 @@ class DisplayTimer:
         if self.is_running:
             self._timer.cancel()
             self.is_running = False
-
