@@ -62,10 +62,8 @@ class ExperimentTimer:
         self.step_count = 0
 
         self.run_times = []
-        self.run_intervals = []
         for step in self.steps:
             self.run_times.append(step['start_time'])
-            self.run_intervals.append(step['end_time'] - step['start_time'])
         self.start()
 
     def _run(self, step_count):
@@ -80,7 +78,7 @@ class ExperimentTimer:
             if self.step_count == 0:
                 interval = 0
             else:
-                interval = self.run_intervals[self.step_count - 1]
+                interval = self.run_times[self.step_count] - self.run_times[self.step_count - 1]
             step_count = self.step_count
             self.step_count += 1
             print(f'\nTimer Interval = {round(interval)}s')
