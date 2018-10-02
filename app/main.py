@@ -5,6 +5,7 @@ import os
 import sys
 import threading
 import time
+from operator import itemgetter
 from queue import Queue, Empty
 from tkinter import messagebox
 
@@ -19,7 +20,7 @@ from app.MainGuiBuilder import MainGuiBuilder
 from app.Positions import Positions
 from app.Timeline import Timeline
 from app.settings import SettingsManager, CommandLineInterpreter
-from flow.PositionTimer import PositionTimer, DisplayTimer
+from flow.PositionTimer import PositionTimer, DisplayTimer, ExperimentTimer
 from spine_yolo.spine_yolo import SpineYolo
 from spine_yolo.yolo_argparser import YoloArgparse
 
@@ -38,22 +39,21 @@ class State:
         self.ref_image_zoomed_out = ReferenceImage()
         self.macro_image = MacroImage()
         self.position_timers = {}
+        self.experiment_timer = None
         self.display_timer = DisplayTimer(1.0, self.settings)
         self.queue_run = None
         self.log_file = None
 
-    def clear_position_timers(self):
-        self.position_timers = {}
-
     def initialize_position_timers(self, individual_steps):
-        self.clear_position_timers()
-        all_positions = []
+        self.position_timers = {}
+        all_steps = []
         for pos_id in individual_steps:
-            all_positions.append(pos_id)
-        all_positions.sort()
-        for pos_id in all_positions:
-            self.position_timers[pos_id] = PositionTimer(self, individual_steps[pos_id],
-                                                         self.session.add_step_to_queue, pos_id)
+            all_steps += individual_steps[pos_id]
+        all_steps_sorted = sorted(all_steps, key=itemgetter('start_time'))
+        self.experiment_timer = ExperimentTimer(all_steps_sorted, self.session.add_step_to_queue)
+        # for pos_id in all_positions:
+        #     self.position_timers[pos_id] = PositionTimer(self, individual_steps[pos_id],
+        #                                                  self.session.add_step_to_queue, pos_id)
 
 
 class SpineTracker:
@@ -187,8 +187,8 @@ class SpineTracker:
             reference_max_projection = self.positions.get_image(pos_id, zoomed_out=False).get_max_projection()
         return reference_max_projection
 
-    def add_step_to_queue(self, step, pos_id):
-        self.timer_steps_queue.add_step(step, pos_id)
+    def add_step_to_queue(self, step):
+        self.timer_steps_queue.add_step(step)
 
     def run_steps_from_queue_when_appropriate(self):
         while self.state.current_image:
@@ -355,8 +355,9 @@ class SpineTracker:
         self.start_expt_log(first_line)
 
     def stop_imaging(self):
-        for pos_id in self.state.position_timers:
-            self.state.position_timers[pos_id].stop()
+        self.state.experiment_timer.stop()
+        # for pos_id in self.state.position_timers:
+        #     self.state.position_timers[pos_id].stop()
         self.state.imaging_active = False
         self.state.display_timer.stop()
         self.gui.rebuild_timeline()
@@ -398,14 +399,12 @@ class TimerStepsQueue(Queue):
         super(TimerStepsQueue, self).__init__()
         self.current_step = None
 
-    def add_step(self, step, pos_id):
+    def add_step(self, step):
         single_step = copy.copy(step)  # .copy() returns dict, not TimelineStepBlock object
-        single_step['pos_id'] = pos_id
         self.put(single_step)
 
     def load_next_step(self):
         self.current_step = self.get()
-
         self.print_current_step_info()
 
     def print_current_step_info(self):
