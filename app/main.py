@@ -232,6 +232,7 @@ class SpineTracker:
     def image_at_pos_id(self, pos_id):
         self.move_to_pos_id(pos_id)
         self.communication.grab_stack()
+        self.read_imaging_param_file()
         self.record_imaging_to_log(pos_id)
 
     def uncage_at_pos_id(self, pos_id):
