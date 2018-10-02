@@ -355,6 +355,7 @@ class SpineTracker:
             self.state.position_timers[pos_id].stop()
         self.state.imaging_active = False
         self.state.display_timer.stop()
+        self.gui.rebuild_timeline()
 
     def train_yolo_model(self):
         self.yolo.toggle_training(True)
