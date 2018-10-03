@@ -90,7 +90,7 @@ class Positions(dict):
                     self[pos_id] = position
                 self.current_position = pos_id
         except EOFError as err:
-            print(f'Error loading positions: {err}')
+            print('Error loading positions: {}'.format(err))
 
     def initialize_new_position(self):
         pos_id = self._get_next_pos_id()

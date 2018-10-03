@@ -107,7 +107,11 @@ class SpineTracker:
         file_name = f'experiment_log_log_{log_file_time_string}.csv'
         file_path = os.path.join(directory, file_name)
         if not os.path.exists(directory):
-            os.mkdir(directory)
+            try:
+                os.mkdir(directory)
+            except FileNotFoundError:
+                os.mkdir(os.path.dirname(directory))
+                os.mkdir(directory)
         open(file_path, 'a').close()
         self.state.log_file = file_path
         self.write_to_log(first_line)
