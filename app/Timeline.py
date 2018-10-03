@@ -122,10 +122,12 @@ class AllPositionTimelines(dict):
             for pos_id in self:
                 if self[pos_id].is_empty():
                     continue
-                individual_timeline_step, actual_start_time = self[
-                    pos_id].get_next_step()
-                if (actual_start_time < earliest_start_time) or (
-                        actual_start_time == earliest_start_time and individual_timeline_step['exclusive']):
+                individual_timeline_step, actual_start_time = self[pos_id].get_next_step()
+                if (
+                        actual_start_time < earliest_start_time) or (
+                        actual_start_time == earliest_start_time and individual_timeline_step['exclusive']) or (
+                        actual_start_time == earliest_start_time and pos_id < next_individual_timeline_step['pos_id']
+                ):
                     earliest_start_time = actual_start_time
                     next_individual_timeline_step = individual_timeline_step
         next_individual_timeline_step.shift_start_end_times(new_start_time=earliest_start_time)
@@ -164,7 +166,8 @@ class AllPositionTimelines(dict):
     def get_timeline_step_individual_list(self):
         ordered_timeline_step_individual_list_by_position = {}
         for pos_id, individual_position_timeline in self.items():
-            ordered_timeline_step_individual_list_by_position[pos_id] = individual_position_timeline.timeline_step_individual_list
+            ordered_timeline_step_individual_list_by_position[
+                pos_id] = individual_position_timeline.timeline_step_individual_list
         return ordered_timeline_step_individual_list_by_position
 
 
@@ -223,8 +226,8 @@ class IndividualPositionTimeline(dict):
     def get_next_step(self):
         individual_step = self.timeline_step_individual_list[self.step_building_index]
         actual_start_time = max(individual_step['start_time'], self.min_start_time)
-        # add small amount of time based on position so they are added to the queue sequentially, not at the same time
-        actual_start_time = actual_start_time + ((self.pos_count-1) * 0.001)
+        # add small amount of time based on position so they are added to the queue sequentially
+        # actual_start_time = actual_start_time + ((self.pos_count-1) * 0.001)
         return individual_step, actual_start_time
 
     def update_min_start_time(self, start_time):

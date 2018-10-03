@@ -49,7 +49,7 @@ class State:
         all_steps = []
         for pos_id in individual_steps:
             all_steps += individual_steps[pos_id]
-        all_steps_sorted = sorted(all_steps, key=itemgetter('start_time'))
+        all_steps_sorted = sorted(all_steps, key=itemgetter('start_time', 'pos_id'))
         self.experiment_timer = ExperimentTimer(all_steps_sorted, self.session.add_step_to_queue)
         # for pos_id in all_positions:
         #     self.position_timers[pos_id] = PositionTimer(self, individual_steps[pos_id],
@@ -360,7 +360,11 @@ class SpineTracker:
         self.start_expt_log(first_line)
 
     def stop_imaging(self):
-        self.state.experiment_timer.stop()
+        try:
+            self.state.experiment_timer.stop()
+            self.print_to_log('Experiment timer stopped')
+        except AttributeError:
+            self.print_to_log('No experiment timer running')
         # for pos_id in self.state.position_timers:
         #     self.state.position_timers[pos_id].stop()
         self.state.imaging_active = False
