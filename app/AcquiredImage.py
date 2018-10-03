@@ -37,7 +37,12 @@ class AcquiredImage:
             self.position.zstep = float(settings.get('zstep'))
             self.position.zoom = float(settings.get('current_zoom'))
         else:
-            self.position = position
+            self.position.scan_voltage_multiplier = position.scan_voltage_multiplier
+            self.position.scan_voltage_range_reference = position.scan_voltage_range_reference
+            self.position.rotation = position.rotation
+            self.position.fovxy = position.fovxy
+            self.position.zstep = position.zstep
+            self.position.zoom = position.zoom
 
         if settings is not None:
             self.set_zoom(settings)
