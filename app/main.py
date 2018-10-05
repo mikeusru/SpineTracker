@@ -176,6 +176,9 @@ class SpineTracker:
         self.positions.update_coordinates_for_drift(pos_id, self.state.current_image.drift_x_y_z)
         self.gui.show_drift_info(self.state.current_image, pos_id)
         self.positions.record_drift_history_of_acquired_image(self.state.current_image)
+        self.state.queue_run = threading.Thread(target=self.positions.backup_positions)
+        self.state.queue_run.daemon = True
+        self.state.queue_run.start()
         self.positions.backup_positions()
 
     def update_center_position(self):

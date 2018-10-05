@@ -86,6 +86,7 @@ class Positions(dict):
         try:
             if os.path.isfile(file_name):
                 positions_dict = pickle.load(open(file_name, 'rb'))
+                pos_id = 1
                 for pos_id, position in positions_dict.items():
                     self[pos_id] = position
                 self.current_position = pos_id
