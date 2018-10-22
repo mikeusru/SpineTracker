@@ -9,6 +9,7 @@ from matplotlib.figure import Figure
 from matplotlib import patches
 import matplotlib.dates
 import matplotlib.colorbar as colorbar
+from matplotlib import pyplot as plt
 
 matplotlib.use("TkAgg")
 
@@ -272,7 +273,8 @@ class PositionsPage(ttk.Frame):
         for ax, ref_image in zip(self.gui['ref_images_axes'], refs):
             ax.clear()
             ax.axis('off')
-            ax.imshow(ref_image.get_max_projection())
+            img = ref_image.get_max_projection()
+            ax.imshow(img)
         self.draw_roi(pos_id, self.gui['ref_images_axes'][0])
         self.gui['canvas_preview_ref_images'].draw_idle()
 
