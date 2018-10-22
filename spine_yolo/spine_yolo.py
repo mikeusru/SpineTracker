@@ -61,6 +61,8 @@ class SpineYolo(object):
 
     def get_model_file(self, stage):
         model_file = MODEL_FILES[stage] + '.h5'
+        if not os.path.exists(self.model_save_path):
+            os.makedirs(self.model_save_path)
         file = os.path.join(self.model_save_path, model_file)
         return file
 
