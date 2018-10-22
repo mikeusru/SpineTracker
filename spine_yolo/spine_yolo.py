@@ -118,9 +118,9 @@ class SpineYolo(object):
                       save_all=True,
                       out_path='../spine_yolo/images/out')
 
-    def prepare_image_data(self, images_path):
+    def prepare_image_data(self, images_path, is_labeled=False):
         spine_data_preparer = SpineImageDataPreparer()
-        spine_data_preparer.set_labeled_state(False)
+        spine_data_preparer.set_labeled_state(is_labeled)
         spine_data_preparer.set_initial_directory(images_path)
         spine_data_preparer.set_save_directory()
         spine_data_preparer.run()
@@ -153,7 +153,7 @@ class SpineYolo(object):
             Warning("Could not open anchors file, using default.")
             self.anchors = YOLO_ANCHORS
 
-    def create_model(self, load_pretrained=True, freeze_body=True):
+    def create_model(self, load_pretrained=False, freeze_body=True):
         """
         returns the body of the model and the model
 
@@ -259,7 +259,7 @@ class SpineYolo(object):
                                      epochs=5,
                                      callbacks=[logging, checkpoint])
 
-            self.model.save_weights(self.get_model_file(1))
+            self.model.save_weights(first_round_weights)
             self.draw(image_set='validation', weights_name=first_round_weights,
                       out_path="output_images_stage_1", save_all=False)
 

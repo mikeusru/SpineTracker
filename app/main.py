@@ -376,7 +376,8 @@ class SpineTracker:
 
     def train_yolo_model(self):
         self.yolo.toggle_training(True)
-        self.yolo.set_data_path(self.settings.get('training_data_path'))
+        self.yolo.prepare_image_data(self.settings.get('training_data_path'), is_labeled=True)
+        # self.yolo.set_data_path(self.settings.get('training_data_path'))
         self.yolo.set_classes()
         self.yolo.set_anchors()
         self.yolo.set_partition()

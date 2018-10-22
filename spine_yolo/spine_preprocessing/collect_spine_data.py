@@ -11,7 +11,7 @@ from skimage import transform
 class SpineImageDataPreparer:
 
     def __init__(self):
-        self.do_sliding_windows = True
+        self.do_sliding_windows = False
         self.labeled = True
         self.resize_to_scale = False
         self.target_scale_px_per_um = 10
@@ -41,7 +41,7 @@ class SpineImageDataPreparer:
         if path is not None:
             self.save_directory = path
         if not os.path.exists(self.save_directory):
-            os.mkdir(self.save_directory)
+            os.makedirs(self.save_directory)
 
     def run(self):
         self.create_dataframe()

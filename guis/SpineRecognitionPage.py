@@ -90,7 +90,7 @@ class SpineRecognitionPage(ttk.Frame):
     def select_folder_for_newly_trained_model(self):
         path = askdirectory(initialdir=self.session.settings.get('new_model_path'),
                             title="Choose a directory for new model")
-        self.set_new_path('training_data_path', path)
+        self.set_new_path('new_model_path', path)
 
     def select_folder_for_test_data(self):
         path = askdirectory(initialdir=self.session.settings.get('test_data_path'),
