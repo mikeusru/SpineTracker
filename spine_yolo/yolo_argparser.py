@@ -30,7 +30,7 @@ class YoloArgparse(argparse.ArgumentParser):
             '-f',
             '--from_scratch',
             help="don't load starting weights (on/off)",
-            default='off')
+            default='on')
 
         self.add_argument(
             '-a',

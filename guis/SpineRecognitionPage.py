@@ -85,7 +85,8 @@ class SpineRecognitionPage(ttk.Frame):
 
     def train_model(self):
         self.select_folder_for_newly_trained_model()
-        self.session.train_yolo_model()
+        # self.session.train_yolo_model() #TODO: Put this back. The other thing is just to collect some data for now.
+        self.session.train_yolo_model_with_different_sized_datasets()
 
     def select_folder_for_newly_trained_model(self):
         path = askdirectory(initialdir=self.session.settings.get('new_model_path'),

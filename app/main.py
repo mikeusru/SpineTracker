@@ -384,6 +384,16 @@ class SpineTracker:
         self.yolo.set_model_save_path(self.settings.get('new_model_path'))
         self.yolo.run()
 
+    def train_yolo_model_with_different_sized_datasets(self):
+        self.yolo.toggle_training(True)
+        self.yolo.prepare_image_data(self.settings.get('training_data_path'), is_labeled=True)
+        self.yolo.set_classes()
+        self.yolo.set_anchors()
+        for ratio in [1, .5, .25, .125, 0.0625, 0.03125]:
+            self.yolo.set_partition(train_validation_split=.9, ratio_of_training_data_to_use=ratio)
+            self.yolo.set_model_save_path(self.settings.get('new_model_path'))
+            self.yolo.run()
+
     def test_yolo_model(self):
         self.yolo.toggle_training(False)
         self.yolo.prepare_image_data(self.settings.get('test_data_path'))

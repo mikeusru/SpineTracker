@@ -129,10 +129,13 @@ class SpineYolo(object):
     def set_dummy_partition(self):
         self.set_partition(train_validation_split=0)
 
-    def set_partition(self, train_validation_split=0.9):
+    def set_partition(self, train_validation_split=0.9, ratio_of_training_data_to_use=1):
         data_len = self.file_list.size
-        partition = dict(train=np.array(range(int(train_validation_split * data_len))),
-                         validation=np.array(range(int(train_validation_split * data_len), data_len)))
+        train_array = np.array(range(int((train_validation_split * data_len)*ratio_of_training_data_to_use)))
+        validation_array = np.array(range(int(train_validation_split * data_len), data_len))
+        np.random.shuffle(self.file_list)
+        partition = dict(train=train_array,
+                         validation=validation_array)
         self.partition = partition
 
     def set_classes(self):
