@@ -116,8 +116,7 @@ class SpineYolo(object):
         else:
             self.draw(test_model_path=self.trained_model_path,
                       image_set='validation',
-                      save_all=True,
-                      out_path='../spine_yolo/images/out')
+                      save_all=True)
 
     def prepare_image_data(self, images_path, is_labeled=False):
         spine_data_preparer = SpineImageDataPreparer()
@@ -360,9 +359,9 @@ class SpineYolo(object):
         boxes, scores, classes, input_image_shape = self.create_yolo_output_variables()
         # Run prediction images.
         sess = K.get_session()
-
-        if not os.path.exists(out_path):
-            os.makedirs(out_path)
+        out_path_full = os.path.join('..', 'spine_yolo', 'data', 'images', out_path)
+        if not os.path.exists(out_path_full):
+            os.makedirs(out_path_full)
         for i in range(len(image_data)):
             out_boxes, out_scores, out_classes = sess.run(
                 [boxes, scores, classes],
@@ -380,7 +379,7 @@ class SpineYolo(object):
             # Save the image:
             if save_all or (len(out_boxes) > 0):
                 image = Image.fromarray(image_with_boxes)
-                image.save(os.path.join(out_path, str(i) + '.tif'))
+                image.save(os.path.join(out_path_full, str(i) + '.tif'))
 
     def create_yolo_output_variables(self):
         yolo_outputs = yolo_head(self.model_body.output, self.anchors, len(self.class_names))
