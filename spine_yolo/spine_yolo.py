@@ -1,6 +1,7 @@
 """
 This is a class for training and evaluating yadk2
 """
+import datetime
 import os
 
 import numpy as np
@@ -131,7 +132,7 @@ class SpineYolo(object):
 
     def set_partition(self, train_validation_split=0.9, ratio_of_training_data_to_use=1):
         data_len = self.file_list.size
-        train_array = np.array(range(int((train_validation_split * data_len)*ratio_of_training_data_to_use)))
+        train_array = np.array(range(int(train_validation_split * data_len * ratio_of_training_data_to_use)))
         validation_array = np.array(range(int(train_validation_split * data_len), data_len))
         np.random.shuffle(self.file_list)
         partition = dict(train=train_array,
@@ -228,7 +229,8 @@ class SpineYolo(object):
 
         best weights according to val_loss is saved as trained_stage_3_best.h5
         """
-        logging = TensorBoard()
+        log_dir = os.path.join(os.getcwd(), '..', 'spine_yolo', 'logs', datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
+        logging = TensorBoard(log_dir=log_dir)
         checkpoint_final_best = ModelCheckpoint(self.get_model_file('best'), monitor='val_loss',
                                                 save_weights_only=True, save_best_only=True)
         checkpoint = ModelCheckpoint(self.get_model_file('latest'), monitor='val_loss',
