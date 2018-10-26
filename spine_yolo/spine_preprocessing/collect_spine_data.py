@@ -11,9 +11,9 @@ from skimage import transform
 class SpineImageDataPreparer:
 
     def __init__(self):
-        self.do_sliding_windows = False
+        self.do_sliding_windows = True
         self.labeled = True
-        self.resize_to_scale = False
+        self.resize_to_scale = True
         self.target_scale_px_per_um = 10
         self.sliding_window_side = 256
         self.sliding_window_step = 128
