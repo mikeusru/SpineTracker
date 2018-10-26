@@ -232,8 +232,7 @@ class SpineYolo(object):
 
         best weights according to val_loss is saved as trained_stage_3_best.h5
         """
-        log_dir = os.path.join(os.getcwd(), '..', 'spine_yolo', 'logs', datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
-        logging = TensorBoard(log_dir=log_dir)
+        logging = TensorBoard(log_dir=self.log_dir)
         checkpoint_final_best = ModelCheckpoint(self.get_model_file('best'), monitor='val_loss',
                                                 save_weights_only=True, save_best_only=True)
         checkpoint = ModelCheckpoint(self.get_model_file('latest'), monitor='val_loss',

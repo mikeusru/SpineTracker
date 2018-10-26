@@ -380,8 +380,8 @@ class SpineTracker:
         # self.yolo.set_data_path(self.settings.get('training_data_path'))
         self.yolo.set_classes()
         self.yolo.set_anchors()
-        self.yolo.set_log_dir(self.settings.get('tensorboard_log_dir'))
         self.yolo.set_partition(train_validation_split=.9, ratio_of_training_data_to_use=1)
+        self.yolo.set_log_dir(self.settings.get('tensorboard_log_dir'))
         self.yolo.set_model_save_path(self.settings.get('new_model_path'))
         self.yolo.run()
 
