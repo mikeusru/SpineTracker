@@ -1,3 +1,4 @@
+import os
 import tkinter as tk
 from tkinter.filedialog import askdirectory, askopenfilename
 from tkinter import ttk
@@ -50,8 +51,8 @@ class SpineRecognitionPage(ttk.Frame):
                                              command=self.test_model)
         gui['test_model_button'].grid(row=3, column=1, sticky='nw', padx=10, pady=10)
         gui['run_on_single_image_button'] = tk.Button(self, text='Run On Single Image',
-                                             font=settings.get('large_font'),
-                                             command=self.test_single_image)
+                                                      font=settings.get('large_font'),
+                                                      command=self.test_single_image)
         gui['run_on_single_image_button'].grid(row=4, column=0, sticky='nw', padx=10, pady=10)
 
         return gui
@@ -85,6 +86,7 @@ class SpineRecognitionPage(ttk.Frame):
 
     def train_model(self):
         self.select_folder_for_newly_trained_model()
+        self.set_training_log_dir()
         self.session.train_yolo_model()
         # self.session.train_yolo_model_with_different_sized_datasets()
 
@@ -93,9 +95,15 @@ class SpineRecognitionPage(ttk.Frame):
                             title="Choose a directory for new model")
         self.set_new_path('new_model_path', path)
 
+    def set_training_log_dir(self):
+        default_dir = os.path.join('..', 'spine_yolo', 'logs')
+        path = askdirectory(initialdir=default_dir,
+                                 title="Choose log file directory")
+        self.set_new_path('tensorboard_log_dir', path)
+
     def select_folder_for_test_data(self):
         path = askdirectory(initialdir=self.session.settings.get('test_data_path'),
-                            title="Choose directory with test images")
+                            title="Choose directory with test data")
         self.set_new_path('test_data_path', path)
 
     def load_model(self):

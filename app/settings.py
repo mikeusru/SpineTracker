@@ -152,6 +152,7 @@ class SettingsDTO(dict):
         self._create_gui_variable('custom_command', tk.StringVar, False, "")
         self._create_gui_variable('training_data_path', tk.StringVar, True, '../test')
         self._create_gui_variable('new_model_path', tk.StringVar, True, '../test')
+        self._create_gui_variable('tensorboard_log_dir', tk.StringVar, True, os.path.join('..', 'spine_yolo', 'logs'))
         self._create_gui_variable('test_data_path', tk.StringVar, True, '../test')
         self._create_gui_variable('yolo_image_path', tk.StringVar, True, '../test.tif')
         self._create_gui_variable('communication_log', tk.StringVar, False, 'Communication Log...')

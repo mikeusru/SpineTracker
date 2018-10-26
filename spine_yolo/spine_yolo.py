@@ -50,6 +50,7 @@ class SpineYolo(object):
         self.training_on = _args.train == 'on'
         self.overfit_single_image = _args.overfit_single_image == 'on'
         self.file_list = None
+        self.log_dir = None
         self.class_names = None
         self.anchors = None
         self.partition = None
@@ -59,6 +60,9 @@ class SpineYolo(object):
         self.matching_boxes_shape = (13, 13, 5, 5)
         self.model_body = None
         self.model = None
+
+    def set_log_dir(self, log_dir):
+        self.log_dir = log_dir
 
     def get_model_file(self, stage):
         model_file = MODEL_FILES[stage] + '.h5'
