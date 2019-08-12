@@ -11,6 +11,7 @@ from tkinter import messagebox
 
 import matplotlib
 
+
 matplotlib.use("TkAgg")
 
 from app.AcquiredImage import AcquiredImage, ReferenceImage, MacroImage
@@ -20,9 +21,11 @@ from app.MainGuiBuilder import MainGuiBuilder
 from app.Positions import Positions
 from app.Timeline import Timeline
 from app.settings import SettingsManager, CommandLineInterpreter
+from app.SpineYoloClient import SpineYoloClient
 from flow.PositionTimer import PositionTimer, DisplayTimer, ExperimentTimer
-from spine_yolo.spine_yolo import SpineYolo
-from spine_yolo.yolo_argparser import YoloArgparse
+# from spine_yolo.spine_yolo import SpineYolo
+# from spine_yolo.yolo_argparser import YoloArgparse
+
 
 
 class State:
@@ -63,6 +66,7 @@ class SpineTracker:
         self.args = args
         self.command_line_interpreter = self.initialize_command_line_interpreter()
         self.communication = Communication(self)
+        self.spine_finder = SpineYoloClient()
         self.positions = self.initialize_positions()
         self.timeline = Timeline(self)
         self.gui.build_guis()
@@ -70,7 +74,7 @@ class SpineTracker:
         self.state = State(self)
         self.settings.initialize_gui_callbacks()
         self.initialize_init_directory()
-        self.yolo = SpineYolo(YoloArgparse().parse_args())
+        # self.yolo = SpineYolo(YoloArgparse().parse_args())
         self.update_center_position()  # Ryohei: Necessary to calculate center from data stored in position.p.
         self.create_log_file(['SpineTracker Opened'])
 
@@ -336,6 +340,15 @@ class SpineTracker:
         self.communication.set_macro_imaging_conditions()
         self.communication.grab_stack()
         self.load_image('macro')
+        self.identify_spines()
+
+    def identify_spines(self):
+        img = self.state.macro_image
+        x_res = self.settings.get('macro_resolution_x')
+        scale = x_res * img.zoom / img.fov_x_y[0]
+        #X, Y, Right, Bottom, Score, Z
+        xyrbsz = self.spine_finder.find_spines(img.temp_file_path, scale)
+        self.state.macro_image.found_spines = xyrbsz
 
     def move_to_pos_id(self, pos_id):
         coordinates = self.positions.get_coordinates(pos_id)
@@ -405,7 +418,7 @@ class SpineTracker:
         self.yolo.set_trained_model_path(self.settings.get('trained_model_path'))
         self.yolo.run()
 
-    def test_yolo_on_single_image(self):
+    def run_yolo_on_single_image(self):
         image_path = self.settings.get('yolo_image_path')
         self.yolo.set_classes()
         self.yolo.set_anchors()

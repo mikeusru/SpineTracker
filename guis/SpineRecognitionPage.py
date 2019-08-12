@@ -82,7 +82,7 @@ class SpineRecognitionPage(ttk.Frame):
 
     def test_single_image(self):
         self.select_image_file()
-        self.session.test_yolo_on_single_image()
+        self.session.run_yolo_on_single_image()
 
     def train_model(self):
         self.select_folder_for_newly_trained_model()

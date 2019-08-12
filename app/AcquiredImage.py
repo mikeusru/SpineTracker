@@ -118,6 +118,7 @@ class MacroImage(AcquiredImage):
         super(MacroImage, self).__init__()
         self.is_macro = True
         self.pil_image = None
+        self.temp_file_path = "../temp/macro_image.tif"
 
     def set_image_contrast(self):
         self.image_stack = np.array([contrast_stretch(img) for img in self.image_stack])
@@ -126,6 +127,6 @@ class MacroImage(AcquiredImage):
     def create_pil_image(self):
         # since PIL doesn't support creating multi-frame images, save the image and load it as a workaround for now.
         image_list = [Image.fromarray(image.astype(np.uint8)) for image in self.image_stack]
-        image_list[0].save("../temp/macro_image.tif", compression="tiff_deflate", save_all=True,
+        image_list[0].save(self.temp_file_path, compression="tiff_deflate", save_all=True,
                            append_images=image_list[1:])
-        self.pil_image = Image.open("../temp/macro_image.tif")
+        self.pil_image = Image.open(self.temp_file_path)
