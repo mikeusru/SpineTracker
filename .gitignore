@@ -5,6 +5,12 @@ instructions_output.txt
 instructions_input.txt
 log.txt
 *.pyc
+instructions_from*
+.idea/
+iniFiles/
+spine_yolo/data
+temp/
+*env*
 
 # Ignore generated models, test images, and Darknet files.
 *.h5
