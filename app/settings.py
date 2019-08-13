@@ -136,6 +136,7 @@ class SettingsDTO(dict):
         self._create_gui_variable('park_xy_motor', tk.BooleanVar, True, True)
         self._create_gui_variable('macro_resolution_x', tk.StringVar, True, 512, dtype=np.int)
         self._create_gui_variable('macro_resolution_y', tk.StringVar, True, 512, dtype=np.int)
+        self._create_gui_variable('max_positions', tk.StringVar, True, 0, dtype=np.int)
         self._create_gui_variable('normal_resolution_x', tk.StringVar, True, 128, dtype=np.int)
         self._create_gui_variable('normal_resolution_y', tk.StringVar, True, 128, dtype=np.int)
         self._create_gui_variable('macro_zoom', tk.StringVar, True, 1, dtype=np.int)

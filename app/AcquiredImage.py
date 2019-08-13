@@ -119,6 +119,7 @@ class MacroImage(AcquiredImage):
         self.is_macro = True
         self.pil_image = None
         self.temp_file_path = "../temp/macro_image.tif"
+        self.found_spines = None
 
     def set_image_contrast(self):
         self.image_stack = np.array([contrast_stretch(img) for img in self.image_stack])

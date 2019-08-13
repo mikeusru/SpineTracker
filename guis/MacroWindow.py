@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
-import matplotlib
+
 import numpy as np
 from PIL import ImageTk, ImageMath
 from skimage import transform
@@ -42,6 +42,8 @@ class MacroWindow(tk.Toplevel):
                                           width=4)
         gui['button_load_macro_image'] = ttk.Button(gui['frame_buttons'], text="Grab Macro Image",
                                                     command=lambda: self.load_macro_image())
+        gui['button_run_fully_automated_experiment'] = ttk.Button(gui['frame_buttons'], text="Run Full Automation",
+                                                    command=lambda: self.run_automated_experiment())
 
         # Arrange GUI elements
         gui['frame_canvas'].grid(row=0, column=0, sticky='nsew')
@@ -58,11 +60,31 @@ class MacroWindow(tk.Toplevel):
         gui['entry_z_slices'].grid(row=1, column=1, padx=10, pady=10, sticky='nw')
 
         gui['button_load_macro_image'].grid(row=2, column=1, padx=10, pady=10, sticky='nw')
+        gui['button_run_fully_automated_experiment'].grid(row=2, column=2, padx=10, pady=10, sticky='nw')
         return gui
 
     def change_image_size(self, event):
         if self.image:
             self.gui['scrollingCanvas'].set_image()
+
+    def run_automated_experiment(self):
+        self.load_macro_image()
+        self.define_positions_from_spines()
+        self.session.align_all_positions_to_refs()
+        self.session.start_imaging()
+
+    def define_positions_from_spines(self):
+        XYRBSZ = self.session.state.macro_image.found_spines
+        max_pos = self.settings.get('max_positions')
+        # spines should already be ordered by score but just in case...
+        XYRBSZ = XYRBSZ[np.argsort(XYRBSZ[:, 4][::-1], axis=0), :]
+        # TODO: user can select how spines are picked. Either pick top 5, or maybe a random sample from top xx amount
+        x_centers_standardized = np.mean(XYRBSZ[:max_pos, [0, 2]], axis=1) / \
+                                 self.session.state.macro_image.image_stack.shape[1]
+        y_centers_standardized = np.mean(XYRBSZ[:max_pos, [1, 3]], axis=1) / \
+                                 self.session.state.macro_image.image_stack.shape[0]
+        for x, y, z in zip(x_centers_standardized, y_centers_standardized, XYRBSZ[:max_pos, 5]):
+            self.add_position_on_image_click(x, y, z)
 
     def load_macro_image(self):
         self.session.collect_new_macro_image()
