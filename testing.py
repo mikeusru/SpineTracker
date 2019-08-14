@@ -1,38 +1,23 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Oct 18 13:54:25 2017
+import os
 
-@author: smirnovm
-"""
+def communication(child_writes):
+    r,w = os.pipe()
 
-from threading import Thread
-import time
+    processid = os.fork()
+    if processid:
+        os.close(w)
+        r = os.fdopen(r)
+        print("Parent reading")
+        str=r.read()
+        print("Parents reads=", str)
+    else:
+        #This is the child process
+        os.close(r)
+        w = os.fdopen(w, 'w')
+        print("Child writing")
+        w.write(child_writes)
+        print("Child Writes = ", child_writes)
+        w.close()
 
-def timer(name, delay, repeat):
-    print("timer: " +name + " started")
-    while repeat > 0:
-        time.sleep(delay)
-        print(name, ": ", str(time.ctime(time.time())))
-        repeat -=1
-    print("Timer :" + name + " Completed")
-    
-def main():
-    t1 = Thread(target = timer, args = ("Timer1", 1, 5))
-    t2 = Thread(target = timer, args = ("Timer2", 2, 5))
-    t1.start()
-    t2.start()
-    
-    print("Main Complete")
-    
-if __name__ == '__main__':
-    main()
-    
-#################
-
-from PIL import Image
-im = Image.open('../images/crab.jpg')
-
-
-####
-img = app.acq['image_stack']
-img = np.max(img,0)
+child_writes = "Hello Everyone"
+communication(child_writes)

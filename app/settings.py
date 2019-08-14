@@ -149,6 +149,8 @@ class SettingsDTO(dict):
         self._create_gui_variable('exclusive', tk.BooleanVar, False, False)
         self._create_gui_variable('iterations', tk.StringVar, False, 5, dtype=np.int)
         self._create_gui_variable('period', tk.StringVar, False, 60, dtype=np.int)
+        self._create_gui_variable('pipe_connect_text', tk.StringVar, False, 'pipe-connection-status')
+        self._create_gui_variable('pipe_connect_bool', tk.BooleanVar, False, False)
         self._create_gui_variable('step_name', tk.StringVar, False, "StepName")
         self._create_gui_variable('custom_command', tk.StringVar, False, "")
         self._create_gui_variable('training_data_path', tk.StringVar, True, '../test')

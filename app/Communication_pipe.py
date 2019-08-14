@@ -1,7 +1,8 @@
 from queue import Queue, Empty
 import os
-from io_communication.CommandReader import CommandReader, ImagingParamFileHandler
-from io_communication.CommandWriter import CommandWriter
+from io_communication.CommandReader_pipe import CommandReader, ImagingParamFileHandler
+from io_communication.CommandWriter_pipe import CommandWriter
+from io_communication.FLIM_pipeClient import FLIM_Com
 from io_communication.file_listeners import FileReaderThread
 import numpy as np
 
@@ -17,11 +18,39 @@ class Communication:
         #self.param_handler = ImagingParamFileHandler()
         self.instructions_listener_thread = self.initialize_instructions_listener_thread()
         #self.param_file_listener_thread = self.initialize_param_file_listener_thread()
+        self.pipe_target = FLIM_Com()
+        self.pipe_initialize()
+
+    def pipe_initialize(self):
+        self.pipe_target.messageReceived += self.pipe_client_message_received
+        self.pipe_target.start()
+
+    def pipe_connect(self):
+        if self.pipe_target.Connected:
+            self.pipe_target.disconnect()
+        else:
+            self.pipe_target.start()
+
+    def pipe_unsubscribe(self):
+        self.pipe_target.messageReceived -= self.pipe_client_message_received
+        if self.pipe_target.Connected:
+            self.pipe_target.disconnect()
+
+    def pipe_client_message_received(self, message, source):
+        self.settings.set('pipe_connect_text', 'Connect with FLIMage')
+        if source == 'R':
+            print('Message from FLIMage: {}'.format(message))
+            # event-driven actions
+            self.command_reader.read_new_command(message)
+        elif source == 'W' and self.pipe_target.debug:
+            print('Mesage from FLIMage: {}'.format(message))
+            # simple reply
+        self.settings.set('pipe_connect_bool', self.pipe_target.Connected)
 
     def initialize_instructions_listener_thread(self):
         input_file = self.settings.get('input_file')
         path, filename = os.path.split(input_file)
-        read_function = self.command_reader.read_new_commands
+        read_function = self.command_reader.read_new_command
         while not self.instructions_in_queue.empty():
             try:
                 self.instructions_in_queue.get(False)

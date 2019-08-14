@@ -15,7 +15,7 @@ import matplotlib
 matplotlib.use("TkAgg")
 
 from app.AcquiredImage import AcquiredImage, ReferenceImage, MacroImage
-from app.Communication import Communication
+from app.Communication_pipe import Communication
 from app.Coordinates import Coordinates
 from app.MainGuiBuilder import MainGuiBuilder
 from app.Positions import Positions
@@ -81,8 +81,10 @@ class SpineTracker:
     def exit(self):
         self.stop_imaging()
         print('quitting')
-        self.communication.instructions_listener_thread.stop()
-        print('Instruction listener closed')
+        # self.communication.instructions_listener_thread.stop()
+        self.communication.pipe_unsubscribe()
+        # print('Instruction listener closed')
+        print('Pipe disconnected')
         self.gui.destroy()
         print('goodbye')
 
