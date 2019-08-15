@@ -28,10 +28,10 @@ class ConnectionsPage(ttk.Frame):
         gui['commands_received_label'] = tk.Label(self, text='Commands Received',
                                                   font=self.session.settings.get('large_font'))
         gui['commands_received_label'].grid(row=1, column=1, padx=10, pady=10, sticky='nwse')
-        gui['commands_sent'] = tk.Text(self, height=10, width=50)
+        gui['commands_sent'] = tk.Text(self, height=30, width=50)
         gui['commands_sent'].config(state='disabled')
         gui['commands_sent'].grid(row=2, column=0, sticky='nw', padx=10, pady=3)
-        gui['commands_received'] = tk.Text(self, height=10, width=50)
+        gui['commands_received'] = tk.Text(self, height=30, width=50)
         gui['commands_received'].config(state='disabled')
         gui['commands_received'].grid(row=2, column=1, sticky='nw', padx=10, pady=3)
 
