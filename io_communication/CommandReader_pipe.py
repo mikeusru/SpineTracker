@@ -74,47 +74,19 @@ class CommandReader:
         self.settings.set('fov_x', fov_x)
         self.settings.set('fov_y', fov_y)
 
-    def new_setting(self, text_file_command, min_args, max_args, settings_name, received_function):
+    def new_setting(self, pipe_command, min_args, max_args, settings_name, received_function):
         new_setting = SingleSettingReader(self.session)
         new_setting.min_args = min_args
         new_setting.max_args = max_args
-        new_setting.text_file_command = text_file_command
+        new_setting.pipe_command = pipe_command
         new_setting.settings_name = settings_name
         new_setting.received_function = received_function
-        self.read_settings[text_file_command] = new_setting
+        self.read_settings[pipe_command] = new_setting
 
     def read_new_command(self, message):
-        # content = self._read_file()
-        # self._check_for_reset(content)
-        # self._check_for_new_commands(content)
+        self.session.print_received_command(message)
         self._add_line_to_instructions(message)
         self._run_new_commands()
-
-    def read_imaging_param_file(self):  # Added by Ryohei. Listener is perhaps not necessary.
-        with open(self.imaging_param_file, 'rt') as file:
-            content = file.readlines()
-            for count, line in enumerate(content):
-                self.interpret_line(line)
-    #
-    # def _read_file(self):
-    #     with open(self.file_path, 'r') as file:
-    #         content = file.readlines()
-    #         content = [remove_spaces(line) for line in content]
-    #         return content
-     #
-    # def _check_for_reset(self, content):
-    #     if len(content) < len(self.instructions_received):
-    #         self.reset()
-    #
-    # def _check_for_new_commands(self, content):
-    #     instructions_length = len(self.instructions_received)
-    #     for count, line in enumerate(content):
-    #         if count >= instructions_length:
-    #             if self.settings.get('verbose'):
-    #                 self.print_line('\nnew line {0}\n'.format(count))
-    #                 self.print_line('\nnew instructions received\n')
-    #                 self.print_line('\n{0}\n'.format(line))
-    #             self._add_line_to_instructions(line)
 
     def _add_line_to_instructions(self, line):
         self.instructions_received.append(line)
@@ -132,15 +104,15 @@ class CommandReader:
         else:
             self.print_line(f"COMMAND NOT UNDERSTOOD: {command}")
 
-    def set_response(self, text_file_command):
-        self.read_settings[text_file_command].waiting()
+    def set_response(self, pipe_command):
+        self.read_settings[pipe_command].waiting()
 
-    def wait_for_response(self, text_file_command):
-        self.print_line('Waiting for {0}'.format(text_file_command))
+    def wait_for_response(self, pipe_command):
+        self.print_line('Waiting for {0}'.format(pipe_command))
         while True:
             self.session.prevent_freezing_during_loops()
-            if self.read_settings[text_file_command].is_done():
-                self.print_line('{0} received'.format(text_file_command))
+            if self.read_settings[pipe_command].is_done():
+                self.print_line('{0} received'.format(pipe_command))
                 break
 
     def print_line(self, line):
@@ -184,7 +156,7 @@ class SingleSettingReader:
         self.session = session
         self.min_args = 0
         self.max_args = 0
-        self.text_file_command = ''
+        self.pipe_command = ''
         self.settings_name = None
         self.received_flag = False
         self.received_function = None
@@ -220,6 +192,6 @@ class SingleSettingReader:
             return True
         else:
             self.session.print_to_log(
-                f'Error - Incorrect number of arguments for {self.text_file_command}.'
+                f'Error - Incorrect number of arguments for {self.pipe_command}.'
                 f' Expected between {self.min_args} and {self.max_args}. Got {len_args}')
             return False

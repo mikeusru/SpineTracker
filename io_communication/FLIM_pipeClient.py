@@ -70,7 +70,7 @@ class FLIM_Com:
         self.Initializing = False
         self.initFilePath = os.path.join(shell.SHGetFolderPath(0, shellcon.CSIDL_PERSONAL, None, 0), initFilePath)
         if not os.path.isdir(self.initFilePath):
-            os.mkdir(self.initFilePath)
+            os.makedirs(self.initFilePath)
 
     def start(self):
         self.Initializing = True

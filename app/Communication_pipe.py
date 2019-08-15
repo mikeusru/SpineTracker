@@ -15,21 +15,21 @@ class Communication:
         self.instructions_in_queue = Queue()
         self.command_writer = CommandWriter(self.session)
         self.command_reader = CommandReader(self.session, self.instructions_in_queue)
-        #self.param_handler = ImagingParamFileHandler()
-        self.instructions_listener_thread = self.initialize_instructions_listener_thread()
-        #self.param_file_listener_thread = self.initialize_param_file_listener_thread()
         self.pipe_target = FLIM_Com()
-        self.pipe_initialize()
-
-    def pipe_initialize(self):
-        self.pipe_target.messageReceived += self.pipe_client_message_received
-        self.pipe_target.start()
+        # self.pipe_initialize()
 
     def pipe_connect(self):
         if self.pipe_target.Connected:
-            self.pipe_target.disconnect()
+            self.pipe_unsubscribe()
         else:
+            self.pipe_target.messageReceived += self.pipe_client_message_received
             self.pipe_target.start()
+            while not self.instructions_in_queue.empty():
+                try:
+                    self.instructions_in_queue.get(False)
+                except Empty:
+                    continue
+        self.settings.set('pipe_connect_bool', self.pipe_target.Connected)
 
     def pipe_unsubscribe(self):
         self.pipe_target.messageReceived -= self.pipe_client_message_received
@@ -37,7 +37,6 @@ class Communication:
             self.pipe_target.disconnect()
 
     def pipe_client_message_received(self, message, source):
-        self.settings.set('pipe_connect_text', 'Connect with FLIMage')
         if source == 'R':
             print('Message from FLIMage: {}'.format(message))
             # event-driven actions
@@ -47,29 +46,16 @@ class Communication:
             # simple reply
         self.settings.set('pipe_connect_bool', self.pipe_target.Connected)
 
-    def initialize_instructions_listener_thread(self):
-        input_file = self.settings.get('input_file')
-        path, filename = os.path.split(input_file)
-        read_function = self.command_reader.read_new_command
-        while not self.instructions_in_queue.empty():
-            try:
-                self.instructions_in_queue.get(False)
-            except Empty:
-                continue
-        instructions_listener_thread = FileReaderThread(self, path, filename, read_function)
-        instructions_listener_thread.start()
-        return instructions_listener_thread
-
     def move_to_coordinates(self, coordinates):
         motor_x_y_z = coordinates.get_motor()
         scan_voltage_x_y = coordinates.get_scan_voltage_x_y()
         self.move_motor(motor_x_y_z['x'], motor_x_y_z['y'], motor_x_y_z['z'])
         self.set_scan_shift(scan_voltage_x_y['x'], scan_voltage_x_y['y'])
 
-    def move_motor(self, x,y,z):
+    def move_motor(self, x, y, z):
         response_command = 'stagemovedone'
         self.command_reader.set_response(response_command)
-        self.command_writer.move_stage(x,y,z)
+        self.command_writer.move_stage(x, y, z)
         self.command_reader.wait_for_response(response_command)
 
     def grab_stack(self):
@@ -133,7 +119,7 @@ class Communication:
         self.set_resolution(x_resolution, y_resolution)
         self.set_z_slice_num(z_slice_num)
         self.set_intensity_image_saving_on()  # Added by Ryohei
-        self.command_reader.read_imaging_param_file() #Ryohei
+        # self.command_reader.read_imaging_param_file()  # Ryohei
 
     def set_reference_imaging_conditions(self):
         zoom = self.settings.get('reference_zoom')
@@ -143,8 +129,8 @@ class Communication:
         self.set_zoom(zoom)
         self.set_resolution(x_resolution, y_resolution)
         self.set_z_slice_num(z_slice_num)
-        self.set_intensity_image_saving_on()   #Added by Ryohei
-        self.command_reader.read_imaging_param_file()  #Ryohei
+        self.set_intensity_image_saving_on()  # Added by Ryohei
+        # self.command_reader.read_imaging_param_file()  # Ryohei
 
     def send_custom_command(self, custom_command):
         if custom_command != '':

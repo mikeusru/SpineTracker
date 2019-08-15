@@ -38,6 +38,8 @@ class SettingsManager:
             self.container.show_end_of_path()
         elif name == 'trained_model_path':
             self.container.show_end_of_path()
+        elif name == 'pipe_connect_bool':
+            self.container.toggle_pipe_connection()
         if self.setting_is_saved(name):
             self.save_settings()
             # TODO: Maybe add a save method to all classes where info needs to be saved, so as to avoid the session/settings/pickle issue. \
@@ -149,7 +151,6 @@ class SettingsDTO(dict):
         self._create_gui_variable('exclusive', tk.BooleanVar, False, False)
         self._create_gui_variable('iterations', tk.StringVar, False, 5, dtype=np.int)
         self._create_gui_variable('period', tk.StringVar, False, 60, dtype=np.int)
-        self._create_gui_variable('pipe_connect_text', tk.StringVar, False, 'pipe-connection-status')
         self._create_gui_variable('pipe_connect_bool', tk.BooleanVar, False, False)
         self._create_gui_variable('step_name', tk.StringVar, False, "StepName")
         self._create_gui_variable('custom_command', tk.StringVar, False, "")

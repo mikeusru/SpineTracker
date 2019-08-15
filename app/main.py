@@ -432,6 +432,12 @@ class SpineTracker:
         self.write_to_log(line)
         self.settings.set('communication_log', line)
 
+    def print_sent_command(self, line):
+        self.gui.print_sent_command(line)
+
+    def print_received_command(self, line):
+        self.gui.print_received_command(line)
+
 
 class TimerStepsQueue(Queue):
 

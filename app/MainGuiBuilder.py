@@ -11,14 +11,16 @@ from tkinter import ttk
 from guis.SpineRecognitionPage import SpineRecognitionPage
 from guis.StartPage import StartPage
 from guis.TimelinePage import TimelinePage
+from guis.ConnectionsPage import ConnectionsPage
 
-import os #Ryohei for making crabIco path cleaner.
+import os  # Ryohei for making crabIco path cleaner.
+
 
 class MainGuiBuilder(tk.Tk):
 
     def __init__(self, session):
         tk.Tk.__init__(self)
-        crabIcoPath = os.path.join(os.path.dirname(os.path.dirname(__file__)), "images", "crabIco.ico") #path to ico
+        crabIcoPath = os.path.join(os.path.dirname(os.path.dirname(__file__)), "images", "crabIco.ico")  # path to ico
         tk.Tk.iconbitmap(self, default=crabIcoPath)
         tk.Tk.wm_title(self, "SpineTracker")
         tk.Tk.geometry(self, newGeometry='1000x600+200+200')
@@ -41,7 +43,7 @@ class MainGuiBuilder(tk.Tk):
 
     def build_frames(self):
         frames = {}
-        for F in (StartPage, SettingsPage, PositionsPage, TimelinePage, SpineRecognitionPage):
+        for F in (StartPage, SettingsPage, PositionsPage, TimelinePage, SpineRecognitionPage, ConnectionsPage):
             frame = F(self.container, self.session)
             frames[F] = frame
             self.container.add(frame, text=F.name)
@@ -104,6 +106,15 @@ class MainGuiBuilder(tk.Tk):
 
     def set_log_path(self):
         self.frames[StartPage].set_log_path()
+
+    def toggle_pipe_connection(self):
+        self.session.communication.pipe_connect()
+
+    def print_sent_command(self, line):
+        self.frames[ConnectionsPage].show_text('s', line)
+
+    def print_received_command(self, line):
+        self.frames[ConnectionsPage].show_text('r', line)
 
 
 class SharedFigs(dict):
