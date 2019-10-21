@@ -41,7 +41,7 @@ tornado==5.0.1
 traitlets==4.3.2
 urllib3==1.22
 wcwidth==0.1.7
-Werkzeug==0.14.1
+Werkzeug==0.15.3
 argh==0.26.2
 atomicwrites==1.1.5
 attrs==18.1.0
