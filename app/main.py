@@ -5,58 +5,25 @@ import os
 import sys
 import threading
 import time
-from operator import itemgetter
 from queue import Queue, Empty
 from tkinter import messagebox
 
 import matplotlib
 
+from app.state import State
 
 matplotlib.use("TkAgg")
 
-from app.AcquiredImage import AcquiredImage, ReferenceImage, MacroImage
 from app.Communication_pipe import Communication
-from app.Coordinates import Coordinates
 from app.MainGuiBuilder import MainGuiBuilder
 from app.Positions import Positions
 from app.Timeline import Timeline
 from app.settings import SettingsManager, CommandLineInterpreter
 from app.SpineYoloClient import SpineYoloClient
-from flow.PositionTimer import PositionTimer, DisplayTimer, ExperimentTimer
+
+
 # from spine_yolo.spine_yolo import SpineYolo
 # from spine_yolo.yolo_argparser import YoloArgparse
-
-
-
-class State:
-    def __init__(self, session):
-        self.session = session
-        self.settings = session.settings
-        self.step_running = False
-        self.imaging_active = False
-        self.current_pos_id = 1
-        self.current_coordinates = Coordinates()
-        self.center_coordinates = Coordinates()
-        self.current_image = AcquiredImage()
-        self.ref_image = ReferenceImage()
-        self.ref_image_zoomed_out = ReferenceImage()
-        self.macro_image = MacroImage()
-        self.position_timers = {}
-        self.experiment_timer = None
-        self.display_timer = DisplayTimer(1.0, self.settings)
-        self.queue_run = None
-        self.log_file = None
-
-    def initialize_position_timers(self, individual_steps):
-        self.position_timers = {}
-        all_steps = []
-        for pos_id in individual_steps:
-            all_steps += individual_steps[pos_id]
-        all_steps_sorted = sorted(all_steps, key=itemgetter('start_time', 'pos_id'))
-        self.experiment_timer = ExperimentTimer(all_steps_sorted, self.session.add_step_to_queue)
-        # for pos_id in all_positions:
-        #     self.position_timers[pos_id] = PositionTimer(self, individual_steps[pos_id],
-        #                                                  self.session.add_step_to_queue, pos_id)
 
 
 class SpineTracker:
@@ -348,7 +315,7 @@ class SpineTracker:
         img = self.state.macro_image
         x_res = self.settings.get('macro_resolution_x')
         scale = x_res * img.zoom / img.fov_x_y[0]
-        #X, Y, Right, Bottom, Score, Z
+        # X, Y, Right, Bottom, Score, Z
         xyrbsz = self.spine_finder.find_spines(img.temp_file_path, scale)
         self.state.macro_image.found_spines = xyrbsz
 
