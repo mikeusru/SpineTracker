@@ -20,18 +20,49 @@ def get_command_and_args(line):
 
 class CommandReader:
     def __init__(self, session, instructions_in_queue):
-        self.session = session
-        self.settings = session.settings
         self.instructions_in_queue = instructions_in_queue
         self.instructions_received = []
         self.received_flags = {}
         self.read_settings = {}
         self.create_read_settings()
-        self.file_path = self.settings.get('input_file')
-        self.imaging_param_file = self.settings.get('imaging_param_file')  # Added by Ryohei
+        self.file_path = None
+        self.imaging_param_file = None
+        self.stage_control_target = None
+        self.scan_voltage_target = None
+        self.setting_target = None
+        self.logger = None
+        self.received_command_printer = None
+        self.freeze_preventer = None
+        self.fov_target = None
 
+    def set_fov_setter(self, fun):
+        self.fov_target = fun
+
+    def set_imaging_param_file(self, file_path):
+        self.imaging_param_file = file_path
+
+    def set_file_path(self, file_path):
+        self.file_path = file_path
+
+    def set_freeze_preventer(self, fun):
+        self.freeze_preventer = fun
+
+    def set_received_command_printer(self, fun):
+        self.received_command_printer = fun
+
+    def set_setting_target(self, fun):
+        self.setting_target = fun
+
+    def set_logger(self, fun):
+        self.logger = fun
         if not os.path.isfile(self.file_path):
             open(self.file_path, 'a').close()
+
+    def set_stage_control_target(self, fun):
+        self.stage_control_target = fun
+
+    def set_scan_voltage_target(self, fun):
+        self.scan_voltage_target = fun
 
     def reset(self):
         self.instructions_received = []
@@ -61,22 +92,20 @@ class CommandReader:
 
     def set_current_position(self, args):
         x, y, z = args
-        self.session.state.current_coordinates.set_motor(x, y, z)
-        # self.print_line('\nStage Moved to x= {0} , y = {1}, z = {2}\n'.format(x, y, z))
+        self.stage_control_target(x, y, z)
 
     def set_scan_voltages_x_y(self, args):
         x, y = args
-        self.session.state.current_coordinates.set_scan_voltages_x_y(x, y)
+        self.scan_voltage_target(x, y)
 
     def set_fov_x_y_um(self, args):
         fov_x, fov_y = args
-        self.settings.set('fov_x', fov_x)
-        self.settings.set('fov_y', fov_y)
+        self.fov_target(fov_x, fov_y)
 
     def new_setting(self, pipe_command, min_args, max_args, settings_name, received_function):
         new_setting = SingleSettingReader()
-        new_setting.set_setting_target(self.session.settings.set)
-        new_setting.set_logger(self.session.print_to_log)
+        new_setting.set_setting_target(self.setting_target)
+        new_setting.set_logger(self.logger)
         new_setting.min_args = min_args
         new_setting.max_args = max_args
         new_setting.pipe_command = pipe_command
@@ -85,9 +114,12 @@ class CommandReader:
         self.read_settings[pipe_command] = new_setting
 
     def read_new_command(self, message):
-        self.session.print_received_command(message)
+        self.print_received_command(message)
         self._add_line_to_instructions(message)
         self._run_new_commands()
+
+    def print_received_command(self, message):
+        self.received_command_printer(message)
 
     def _add_line_to_instructions(self, line):
         self.instructions_received.append(line)
@@ -111,12 +143,13 @@ class CommandReader:
     def wait_for_response(self, pipe_command):
         self.print_line('Waiting for {0}'.format(pipe_command))
         while True:
-            self.session.prevent_freezing_during_loops()
+            self.prevent_freeze()
             if self.read_settings[pipe_command].is_done():
                 self.print_line('{0} received'.format(pipe_command))
                 break
 
+    def prevent_freeze(self):
+        self.freeze_preventer()
+
     def print_line(self, line):
-        self.session.print_to_log(line)
-
-
+        self.logger(line)

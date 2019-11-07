@@ -1,11 +1,7 @@
 from queue import Queue, Empty
-import os
 from io_communication.CommandReader_pipe import CommandReader
-from io_communication.ImagingParamFileHandler import ImagingParamFileHandler
 from io_communication.CommandWriter_pipe import CommandWriter
 from io_communication.FLIM_pipeClient import FLIM_Com
-from io_communication.file_listeners import FileReaderThread
-import numpy as np
 
 
 class Communication:
@@ -15,20 +11,33 @@ class Communication:
         self.settings = session.settings
         self.instructions_in_queue = Queue()
         self.command_writer = None
+        self.command_reader = None
         self.pipe_target = FLIM_Com()
         self.init_command_writer()
+        self.init_command_reader()
+
+    def init_command_reader(self):
         self.command_reader = CommandReader(self.session, self.instructions_in_queue)
-        # self.pipe_initialize()
+        self.command_reader.set_file_path(self.settings.get('input_file'))
+        self.command_reader.set_stage_control_target(self.session.state.current_coordinates.set_motor)
+        self.command_reader.set_scan_voltage_target(self.session.state.current_coordinates.set_scan_voltages_x_y)
+        self.command_reader.set_setting_target(self.session.settings.set)
+        self.command_reader.set_logger(self.session.print_to_log)
+        self.command_reader.set_received_command_printer(self.session.print_received_command)
+        self.command_reader.set_freeze_preventer(self.session.prevent_freezing_during_loops)
+        self.command_reader.set_imaging_param_file(self.settings.get('imaging_param_file'))
+        self.command_reader.set_fov_setter(self.set_fov)
 
     def init_command_writer(self):
         self.command_writer = CommandWriter()
-        self.command_writer.set_print_function(self.print_function)
         self.command_writer.set_output_file(self.settings.get('output_file'))
         self.command_writer.set_command_destination(self.pipe_target.sendCommand)
+        self.command_writer.set_logger(self.session.print_to_log)
+        self.command_writer.set_sent_command_printer(self.session.print_sent_command)
 
-    def print_function(self, line):
-        self.session.print_sent_command(line)
-        self.session.print_to_log(line)
+    def set_fov(self, x, y):
+        self.settings.set('fov_x', x)
+        self.settings.set('fov_y', y)
 
     def pipe_connect(self):
         if self.pipe_target.Connected:

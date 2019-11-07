@@ -6,14 +6,21 @@ class CommandWriter:
         self.file_path = None
         self.print_function = None
         self.command_destination = None
+        self.logger = None
+        self.sent_command_printer = None
+
+    def set_sent_command_printer(self, fun):
+        self.sent_command_printer = fun
+
+    def set_logger(self, fun):
+        self.logger = fun
+        if not os.path.isfile(self.file_path):
+            open(self.file_path, 'a').close()
 
     def set_output_file(self, file_path):
         self.file_path = file_path
         if not os.path.isfile(self.file_path):
             open(self.file_path, 'a').close()
-
-    def set_print_function(self, fun):
-        self.print_function = fun
 
     def set_command_destination(self, fun):
         self.command_destination = fun
@@ -73,8 +80,7 @@ class CommandWriter:
 
     def print_line(self, line):
         try:
-            self.print_function(line)
+            self.sent_command_printer(line)
+            self.logger(line)
         except:
             print('print_function undefined')
-        # self.session.print_sent_command(line)
-        # self.session.print_to_log(line)
