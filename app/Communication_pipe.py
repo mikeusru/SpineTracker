@@ -1,6 +1,7 @@
 from queue import Queue, Empty
 import os
-from io_communication.CommandReader_pipe import CommandReader, ImagingParamFileHandler
+from io_communication.CommandReader_pipe import CommandReader
+from io_communication.ImagingParamFileHandler import ImagingParamFileHandler
 from io_communication.CommandWriter_pipe import CommandWriter
 from io_communication.FLIM_pipeClient import FLIM_Com
 from io_communication.file_listeners import FileReaderThread

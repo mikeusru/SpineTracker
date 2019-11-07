@@ -1,8 +1,7 @@
 import os
 import re
 
-from io_communication.FLIM_pipeClient import FLIM_Com
-from io_communication.file_listeners import FileReaderThread
+from io_communication.SingleSettingReader import SingleSettingReader
 
 
 def remove_spaces(line):
@@ -75,7 +74,9 @@ class CommandReader:
         self.settings.set('fov_y', fov_y)
 
     def new_setting(self, pipe_command, min_args, max_args, settings_name, received_function):
-        new_setting = SingleSettingReader(self.session)
+        new_setting = SingleSettingReader()
+        new_setting.set_setting_target(self.session.settings.set)
+        new_setting.set_logger(self.session.print_to_log)
         new_setting.min_args = min_args
         new_setting.max_args = max_args
         new_setting.pipe_command = pipe_command
@@ -119,79 +120,3 @@ class CommandReader:
         self.session.print_to_log(line)
 
 
-class ImagingParamFileHandler:
-
-    def __init__(self):
-        self.session = None
-        self.settings = None
-        self.file_path = None
-        self.content = None
-        self.listener_thread = None
-
-    def init_session(self, session):
-        self.session = session
-        self.settings = session.settings
-        self.file_path = self.settings.get('imaging_param_file')
-
-    def create_listener_thread(self):
-        path, filename = os.path.split(self.file_path)
-        self.listener_thread = FileReaderThread(self, path, filename, self.read_file)
-        self.listener_thread.start()
-
-    def read_file(self, *args):
-        with open(self.file_path, 'r') as file:
-            content = file.readlines()
-            content = [remove_spaces(line) for line in content]
-            self.content = content
-        self._record_params()
-
-    def _record_params(self):
-        for line in self.content:
-            self.session.communication.command_reader.interpret_line(line)
-
-
-class SingleSettingReader:
-
-    def __init__(self, session):
-        self.session = session
-        self.min_args = 0
-        self.max_args = 0
-        self.pipe_command = ''
-        self.settings_name = None
-        self.received_flag = False
-        self.received_function = None
-        self.received_args = []
-
-    def run_fxn(self):
-        if self.received_function is not None:
-            self.received_function(self.received_args)
-
-    def update_setting(self):
-        if self.settings_name is not None:
-            self.session.settings.set(self.settings_name, self.received_args)
-
-    def waiting(self):
-        self.received_flag = False
-
-    def is_done(self):
-        return self.received_flag
-
-    def set(self, args):
-        self.received_args = args
-        self.verify_arg_num()
-        self.received_flag = True
-        self.update_setting()
-        self.run_fxn()
-
-    def verify_arg_num(self):
-        if self.received_args is None:
-            len_args = 0
-        else:
-            len_args = len(self.received_args)
-        if self.min_args <= len_args <= self.max_args:
-            return True
-        else:
-            self.session.print_to_log(
-                f'Error - Incorrect number of arguments for {self.pipe_command}.'
-                f' Expected between {self.min_args} and {self.max_args}. Got {len_args}')
-            return False
