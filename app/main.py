@@ -1,17 +1,9 @@
-import csv
-import datetime as dt
-import os
-import sys
-import threading
-import time
-from tkinter import messagebox
-
 import matplotlib
+
 matplotlib.use("TkAgg")
 
 from app.TimerStepsQueue import TimerStepsQueue
 from app.state import State
-
 
 from app.Communication_pipe import Communication
 from app.MainGuiBuilder import MainGuiBuilder
@@ -19,10 +11,13 @@ from app.Positions import Positions
 from app.Timeline import Timeline
 from app.settings import SettingsManager, CommandLineInterpreter
 from app.SpineYoloClient import SpineYoloClient
-
-
-# from spine_yolo.spine_yolo import SpineYolo
-# from spine_yolo.yolo_argparser import YoloArgparse
+import csv
+import datetime as dt
+import os
+import sys
+import threading
+import time
+from tkinter import messagebox
 
 
 class SpineTracker:
@@ -40,16 +35,13 @@ class SpineTracker:
         self.timer_steps_queue = TimerStepsQueue()
         self.settings.initialize_gui_callbacks()
         self.initialize_init_directory()
-        # self.yolo = SpineYolo(YoloArgparse().parse_args())
         self.update_center_position()  # Ryohei: Necessary to calculate center from data stored in position.p.
         self.create_log_file(['SpineTracker Opened'])
 
     def exit(self):
         self.stop_imaging()
         print('quitting')
-        # self.communication.instructions_listener_thread.stop()
         self.communication.pipe_unsubscribe()
-        # print('Instruction listener closed')
         print('Pipe disconnected')
         self.gui.destroy()
         print('goodbye')
