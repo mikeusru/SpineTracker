@@ -29,6 +29,7 @@ class SpineTracker:
     def __init__(self, *args):
         self.gui = MainGuiBuilder(self)
         self.settings = SettingsManager(self.gui)
+        self.state = State(self)
         self.args = args
         self.command_line_interpreter = self.initialize_command_line_interpreter()
         self.communication = Communication(self)
@@ -37,7 +38,6 @@ class SpineTracker:
         self.timeline = Timeline(self)
         self.gui.build_guis()
         self.timer_steps_queue = TimerStepsQueue()
-        self.state = State(self)
         self.settings.initialize_gui_callbacks()
         self.initialize_init_directory()
         # self.yolo = SpineYolo(YoloArgparse().parse_args())

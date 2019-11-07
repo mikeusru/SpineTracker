@@ -19,12 +19,11 @@ def get_command_and_args(line):
 
 
 class CommandReader:
-    def __init__(self, session, instructions_in_queue):
+    def __init__(self, instructions_in_queue):
         self.instructions_in_queue = instructions_in_queue
         self.instructions_received = []
         self.received_flags = {}
         self.read_settings = {}
-        self.create_read_settings()
         self.file_path = None
         self.imaging_param_file = None
         self.stage_control_target = None

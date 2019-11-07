@@ -17,7 +17,7 @@ class Communication:
         self.init_command_reader()
 
     def init_command_reader(self):
-        self.command_reader = CommandReader(self.session, self.instructions_in_queue)
+        self.command_reader = CommandReader(self.instructions_in_queue)
         self.command_reader.set_file_path(self.settings.get('input_file'))
         self.command_reader.set_stage_control_target(self.session.state.current_coordinates.set_motor)
         self.command_reader.set_scan_voltage_target(self.session.state.current_coordinates.set_scan_voltages_x_y)
@@ -27,6 +27,7 @@ class Communication:
         self.command_reader.set_freeze_preventer(self.session.prevent_freezing_during_loops)
         self.command_reader.set_imaging_param_file(self.settings.get('imaging_param_file'))
         self.command_reader.set_fov_setter(self.set_fov)
+        self.command_reader.create_read_settings()
 
     def init_command_writer(self):
         self.command_writer = CommandWriter()
