@@ -2,10 +2,6 @@ import os
 import tkinter as tk
 from tkinter.filedialog import askdirectory, askopenfilename
 from tkinter import ttk
-import matplotlib
-
-matplotlib.use("TkAgg")
-
 
 class ConnectionsPage(ttk.Frame):
     name = 'Connections'

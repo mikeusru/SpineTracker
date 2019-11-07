@@ -7,11 +7,11 @@ import time
 from tkinter import messagebox
 
 import matplotlib
+matplotlib.use("TkAgg")
 
 from app.TimerStepsQueue import TimerStepsQueue
 from app.state import State
 
-matplotlib.use("TkAgg")
 
 from app.Communication_pipe import Communication
 from app.MainGuiBuilder import MainGuiBuilder

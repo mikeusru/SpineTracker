@@ -10,9 +10,6 @@ from matplotlib.figure import Figure
 
 from utilities.helper_functions import fit_fig_to_canvas
 
-matplotlib.use("TkAgg")
-
-
 class StartPage(ttk.Frame):
     name = 'Main'
 

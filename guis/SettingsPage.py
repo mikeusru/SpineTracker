@@ -4,9 +4,6 @@ from tkinter import ttk
 import matplotlib
 from tkinter.filedialog import asksaveasfilename, askopenfilename
 
-matplotlib.use("TkAgg")
-
-
 class SettingsPage(ttk.Frame):
     name = 'Settings'
 

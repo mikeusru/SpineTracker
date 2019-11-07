@@ -11,9 +11,6 @@ import matplotlib.dates
 import matplotlib.colorbar as colorbar
 from matplotlib import pyplot as plt
 
-matplotlib.use("TkAgg")
-
-
 class PositionsPage(ttk.Frame):
     name = 'Positions'
 

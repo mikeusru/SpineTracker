@@ -10,8 +10,6 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from app.Timeline import TimelineStepBlock
 from utilities.helper_functions import fit_fig_to_canvas
 
-matplotlib.use("TkAgg")
-
 
 class TimelinePage(ttk.Frame):
     name = 'Timeline'

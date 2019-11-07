@@ -13,10 +13,21 @@ class Communication:
         self.session = session
         self.settings = session.settings
         self.instructions_in_queue = Queue()
-        self.command_writer = CommandWriter(self.session)
-        self.command_reader = CommandReader(self.session, self.instructions_in_queue)
+        self.command_writer = None
         self.pipe_target = FLIM_Com()
+        self.init_command_writer()
+        self.command_reader = CommandReader(self.session, self.instructions_in_queue)
         # self.pipe_initialize()
+
+    def init_command_writer(self):
+        self.command_writer = CommandWriter()
+        self.command_writer.set_print_function(self.print_function)
+        self.command_writer.set_output_file(self.settings.get('output_file'))
+        self.command_writer.set_command_destination(self.pipe_target.sendCommand)
+
+    def print_function(self, line):
+        self.session.print_sent_command(line)
+        self.session.print_to_log(line)
 
     def pipe_connect(self):
         if self.pipe_target.Connected:
