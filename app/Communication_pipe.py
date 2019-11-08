@@ -31,7 +31,6 @@ class Communication:
 
     def init_command_writer(self):
         self.command_writer = CommandWriter()
-        self.command_writer.set_output_file(self.settings.get('output_file'))
         self.command_writer.set_command_destination(self.pipe_target.sendCommand)
         self.command_writer.set_logger(self.session.print_to_log)
         self.command_writer.set_sent_command_printer(self.session.print_sent_command)
@@ -41,9 +40,10 @@ class Communication:
         self.settings.set('fov_y', y)
 
     def pipe_connect(self):
-        if self.pipe_target.Connected:
+        # if connected and gui var is true, ignore
+        if self.pipe_target.Connected and not self.settings.get_gui_var('pipe_connect_bool'):
             self.pipe_unsubscribe()
-        else:
+        elif not self.pipe_target.Connected and self.settings.get_gui_var('pipe_connect_bool'):
             self.pipe_target.messageReceived += self.pipe_client_message_received
             self.pipe_target.start()
             while not self.instructions_in_queue.empty():
@@ -59,13 +59,13 @@ class Communication:
             self.pipe_target.disconnect()
 
     def pipe_client_message_received(self, message, source):
-        if source == 'R':
-            print('Message from FLIMage: {}'.format(message))
-            # event-driven actions
-            self.command_reader.read_new_command(message)
-        elif source == 'W' and self.pipe_target.debug:
-            print('Mesage from FLIMage: {}'.format(message))
-            # simple reply
+        # if source == 'R':
+        print('Message from FLIMage: {}'.format(message))
+        # event-driven actions
+        self.command_reader.read_new_command(message)
+        # elif source == 'W' and self.pipe_target.debug:
+        #     print('Mesage from FLIMage: {}'.format(message))
+        #     simple reply
         self.settings.set('pipe_connect_bool', self.pipe_target.Connected)
 
     def move_to_coordinates(self, coordinates):

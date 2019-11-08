@@ -29,7 +29,6 @@ prompt-toolkit==1.0.15
 protobuf==3.5.2
 Pygments==2.2.0
 python-dateutil==2.7.0
-pytz==2018.3
 pyzmq==17.0.0
 requests==2.18.4
 simplegeneric==0.8.1
@@ -47,7 +46,6 @@ atomicwrites==1.1.5
 attrs==18.1.0
 colorama==0.3.9
 cycler==0.10.0
-decorator==4.2.1
 more-itertools==4.2.0
 networkx==2.1
 opencv-python==3.4.0.12

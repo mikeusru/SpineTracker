@@ -3,7 +3,6 @@ import os
 
 class CommandWriter:
     def __init__(self):
-        self.file_path = None
         self.print_function = None
         self.command_destination = None
         self.logger = None
@@ -14,13 +13,6 @@ class CommandWriter:
 
     def set_logger(self, fun):
         self.logger = fun
-        if not os.path.isfile(self.file_path):
-            open(self.file_path, 'a').close()
-
-    def set_output_file(self, file_path):
-        self.file_path = file_path
-        if not os.path.isfile(self.file_path):
-            open(self.file_path, 'a').close()
 
     def set_command_destination(self, fun):
         self.command_destination = fun

@@ -144,7 +144,7 @@ class FLIM_Com:
         try:
             self.close()
         except:
-            print('')
+            print('Closing Connection Failed')
 
     def __repeatReceiving(self):
         while self.Connected:
