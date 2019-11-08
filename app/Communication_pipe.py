@@ -23,7 +23,8 @@ class Communication:
         self.command_reader.scan_voltage_target += self.session.state.current_coordinates.set_scan_voltages_x_y
         self.command_reader.setting_target += self.session.settings.set
         self.command_reader.logger += self.session.print_to_log
-        self.command_reader.received_command_printer += self.session.print_received_command
+        self.command_reader.command_target += self.session.print_received_command
+        self.command_reader.command_target += self.session.print_to_log
         self.command_reader.freeze_preventer += self.session.prevent_freezing_during_loops
         self.command_reader.set_imaging_param_file(self.settings.get('imaging_param_file'))
         self.command_reader.fov_target += self.set_fov
@@ -31,9 +32,9 @@ class Communication:
 
     def init_command_writer(self):
         self.command_writer = CommandWriter()
-        self.command_writer.command_destination += self.pipe_target.sendCommand
-        self.command_writer.logger += self.session.print_to_log
-        self.command_writer.sent_command_printer += self.session.print_sent_command
+        self.command_writer.command_target += self.pipe_target.sendCommand
+        self.command_writer.command_target += self.session.print_sent_command
+        self.command_writer.command_target += self.session.print_to_log
 
     def set_fov(self, x, y):
         self.settings.set('fov_x', x)

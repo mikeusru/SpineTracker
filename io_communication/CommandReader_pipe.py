@@ -1,6 +1,7 @@
 import os
 import re
 
+from io_communication.CommandHandler import CommandHandler
 from io_communication.Event import Event
 from io_communication.SingleSettingReader import SingleSettingReader
 
@@ -19,8 +20,9 @@ def get_command_and_args(line):
     return command, args
 
 
-class CommandReader:
+class CommandReader(CommandHandler):
     def __init__(self, instructions_in_queue):
+        super().__init__()
         self.instructions_in_queue = instructions_in_queue
         self.instructions_received = []
         self.received_flags = {}
@@ -30,8 +32,6 @@ class CommandReader:
         self.stage_control_target = Event()
         self.scan_voltage_target = Event()
         self.setting_target = Event()
-        self.logger = Event()
-        self.received_command_printer = Event()
         self.freeze_preventer = Event()
         self.fov_target = Event()
 
@@ -98,7 +98,7 @@ class CommandReader:
         self._run_new_commands()
 
     def print_received_command(self, message):
-        self.received_command_printer(message)
+        self.command_target(message)
 
     def _add_line_to_instructions(self, line):
         self.instructions_received.append(line)

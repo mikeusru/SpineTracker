@@ -1,11 +1,11 @@
+from io_communication.CommandHandler import CommandHandler
 from io_communication.Event import Event
 
 
-class CommandWriter:
+class CommandWriter(CommandHandler):
     def __init__(self):
+        super().__init__()
         self.print_function = None
-        self.command_destination = Event()
-        self.logger = Event()
         self.sent_command_printer = Event()
 
     def move_stage(self, x, y, z):
@@ -55,15 +55,7 @@ class CommandWriter:
 
     def handle_command(self, *args):
         command = ",".join([str(x) for x in args])
-        self.print_line('\nWriting Command {0}\n'.format(command))
         self.write_command(command)
 
     def write_command(self, command):
-        self.command_destination(command)
-
-    def print_line(self, line):
-        try:
-            self.sent_command_printer(line)
-            self.logger(line)
-        except:
-            print('print_function undefined')
+        self.command_target(command)
