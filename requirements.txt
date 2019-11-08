@@ -30,7 +30,7 @@ protobuf==3.5.2
 Pygments==2.2.0
 python-dateutil==2.7.0
 pyzmq==17.0.0
-requests==2.18.4
+requests==2.20.0
 simplegeneric==0.8.1
 tables==3.4.2
 tensorboard==1.6.0
