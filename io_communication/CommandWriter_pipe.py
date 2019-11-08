@@ -1,21 +1,12 @@
-import os
+from io_communication.Event import Event
 
 
 class CommandWriter:
     def __init__(self):
         self.print_function = None
-        self.command_destination = None
-        self.logger = None
-        self.sent_command_printer = None
-
-    def set_sent_command_printer(self, fun):
-        self.sent_command_printer = fun
-
-    def set_logger(self, fun):
-        self.logger = fun
-
-    def set_command_destination(self, fun):
-        self.command_destination = fun
+        self.command_destination = Event()
+        self.logger = Event()
+        self.sent_command_printer = Event()
 
     def move_stage(self, x, y, z):
         self.handle_command('SetMotorPosition', x, y, z)

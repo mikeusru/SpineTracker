@@ -1,3 +1,6 @@
+from io_communication.Event import Event
+
+
 class SingleSettingReader:
 
     def __init__(self):
@@ -8,14 +11,8 @@ class SingleSettingReader:
         self.received_flag = False
         self.received_function = None
         self.received_args = []
-        self.setting_target = None
-        self.logger = None
-
-    def set_setting_target(self, fun):
-        self.setting_target = fun
-
-    def set_logger(self, fun):
-        self.logger = fun
+        self.setting_target = Event()
+        self.logger = Event()
 
     def run_fxn(self):
         if self.received_function is not None:

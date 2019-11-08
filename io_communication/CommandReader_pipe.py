@@ -1,6 +1,7 @@
 import os
 import re
 
+from io_communication.Event import Event
 from io_communication.SingleSettingReader import SingleSettingReader
 
 
@@ -26,42 +27,21 @@ class CommandReader:
         self.read_settings = {}
         self.file_path = None
         self.imaging_param_file = None
-        self.stage_control_target = None
-        self.scan_voltage_target = None
-        self.setting_target = None
-        self.logger = None
-        self.received_command_printer = None
-        self.freeze_preventer = None
-        self.fov_target = None
-
-    def set_fov_setter(self, fun):
-        self.fov_target = fun
+        self.stage_control_target = Event()
+        self.scan_voltage_target = Event()
+        self.setting_target = Event()
+        self.logger = Event()
+        self.received_command_printer = Event()
+        self.freeze_preventer = Event()
+        self.fov_target = Event()
 
     def set_imaging_param_file(self, file_path):
         self.imaging_param_file = file_path
 
     def set_file_path(self, file_path):
         self.file_path = file_path
-
-    def set_freeze_preventer(self, fun):
-        self.freeze_preventer = fun
-
-    def set_received_command_printer(self, fun):
-        self.received_command_printer = fun
-
-    def set_setting_target(self, fun):
-        self.setting_target = fun
-
-    def set_logger(self, fun):
-        self.logger = fun
         if not os.path.isfile(self.file_path):
             open(self.file_path, 'a').close()
-
-    def set_stage_control_target(self, fun):
-        self.stage_control_target = fun
-
-    def set_scan_voltage_target(self, fun):
-        self.scan_voltage_target = fun
 
     def reset(self):
         self.instructions_received = []
@@ -103,8 +83,8 @@ class CommandReader:
 
     def new_setting(self, pipe_command, min_args, max_args, settings_name, received_function):
         new_setting = SingleSettingReader()
-        new_setting.set_setting_target(self.setting_target)
-        new_setting.set_logger(self.logger)
+        new_setting.setting_target += self.setting_target
+        new_setting.logger += self.logger
         new_setting.min_args = min_args
         new_setting.max_args = max_args
         new_setting.pipe_command = pipe_command
