@@ -319,7 +319,6 @@ class SpineTracker:
     def start_imaging(self):
         self.create_log_file(['Imaging Started'])
         self.reset_image_file_record()
-        # self.communication.set_normal_imaging_conditions()
         self.state.display_timer.start()
         self.timer_steps_queue.clear_timers()
         individual_steps = self.timeline.get_steps_for_queue()
@@ -333,7 +332,6 @@ class SpineTracker:
         self.positions.clear_file_record()
 
     def create_log_file(self, first_line):
-        # self.gui.set_log_path()
         self.start_expt_log(first_line)
 
     def stop_imaging(self):
@@ -342,8 +340,6 @@ class SpineTracker:
             self.print_to_log('Experiment timer stopped')
         except AttributeError:
             self.print_to_log('No experiment timer running')
-        # for pos_id in self.state.position_timers:
-        #     self.state.position_timers[pos_id].stop()
         self.state.imaging_active = False
         self.state.display_timer.stop()
         self.gui.rebuild_timeline()
