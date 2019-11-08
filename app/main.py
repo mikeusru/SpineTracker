@@ -9,7 +9,8 @@ from app.Communication_pipe import Communication
 from app.MainGuiBuilder import MainGuiBuilder
 from app.Positions import Positions
 from app.Timeline import Timeline
-from app.settings import SettingsManager, CommandLineInterpreter
+from app.SettingsManager import SettingsManager
+from app.CommandLineInterpreter import CommandLineInterpreter
 from app.SpineYoloClient import SpineYoloClient
 import csv
 import datetime as dt

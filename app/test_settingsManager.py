@@ -9,7 +9,7 @@ class TestSettingsManager(TestCase):
         print('setupClass')
         from app.main import SpineTracker
         cls.container = SpineTracker()
-        from app.settings import SettingsManager
+        from app.SettingsManager import SettingsManager
         cls.settings = SettingsManager(cls.container)
 
     @classmethod
