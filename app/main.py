@@ -349,42 +349,16 @@ class SpineTracker:
         self.gui.rebuild_timeline()
 
     def train_yolo_model(self):
-        self.yolo.toggle_training(True)
-        self.yolo.prepare_image_data(self.settings.get('training_data_path'), is_labeled=True)
-        # self.yolo.set_data_path(self.settings.get('training_data_path'))
-        self.yolo.set_classes()
-        self.yolo.set_anchors()
-        self.yolo.set_partition(train_validation_split=.9, ratio_of_training_data_to_use=1)
-        self.yolo.set_log_dir(self.settings.get('tensorboard_log_dir'))
-        self.yolo.set_model_save_path(self.settings.get('new_model_path'))
-        self.yolo.run()
+        pass
 
     def train_yolo_model_with_different_sized_datasets(self):
-        self.yolo.toggle_training(True)
-        self.yolo.prepare_image_data(self.settings.get('training_data_path'), is_labeled=True)
-        self.yolo.set_classes()
-        self.yolo.set_anchors()
-        self.yolo.set_log_dir(self.settings.get('tensorboard_log_dir'))
-        for ratio in [1, .5, .25, .125, 0.0625, 0.03125]:
-            self.yolo.set_partition(train_validation_split=.9, ratio_of_training_data_to_use=ratio)
-            self.yolo.set_model_save_path(self.settings.get('new_model_path'))
-            self.yolo.run()
+        pass
 
     def test_yolo_model(self):
-        self.yolo.toggle_training(False)
-        self.yolo.prepare_image_data(self.settings.get('test_data_path'))
-        self.yolo.set_classes()
-        self.yolo.set_anchors()
-        self.yolo.set_dummy_partition()
-        self.yolo.set_trained_model_path(self.settings.get('trained_model_path'))
-        self.yolo.run()
+        pass
 
     def run_yolo_on_single_image(self):
-        image_path = self.settings.get('yolo_image_path')
-        self.yolo.set_classes()
-        self.yolo.set_anchors()
-        self.yolo.set_trained_model_path(self.settings.get('trained_model_path'))
-        self.yolo.run_on_single_image(image_path)
+        pass
 
     def print_to_log(self, line):
         print(line)
