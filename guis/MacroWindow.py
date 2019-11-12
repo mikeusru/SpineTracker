@@ -5,6 +5,7 @@ import numpy as np
 from PIL import ImageTk, ImageMath
 from skimage import transform
 
+from io_communication.Event import initialize_events
 from utilities.math_helpers import round_math
 
 
@@ -14,11 +15,17 @@ class MacroWindow(tk.Toplevel):
         self.session = session
         self.title("Macro View")
         self.geometry(newGeometry='700x800+200+200')
-        self.gui = self.define_gui_elements()
         self.settings = self.session.settings
         self.slice_index = 0
         self.data = dict()
         self.image = None
+        self.events = initialize_events([
+            'get_large_font',
+            'run_automated_experiment',
+            'load_macro_image',
+            'add_position_on_image_click'
+        ])
+        self.gui = self.define_gui_elements()
 
     def define_gui_elements(self):
         settings = self.session.settings
@@ -28,22 +35,23 @@ class MacroWindow(tk.Toplevel):
         gui['scale_z'] = tk.Scale(gui['frame_canvas'], orient=tk.VERTICAL)
         gui['frame_buttons'] = ttk.Frame(self)
         gui['button_load_test_macro_image'] = ttk.Button(gui['frame_buttons'], text="Load Test Macro Image",
-                                                         command=lambda: self.load_macro_image())
+                                                         command=lambda: self.events['load_macro_image'])
         gui['label_macro_zoom'] = tk.Label(gui['frame_buttons'], text="Macro Zoom",
-                                           font=self.session.settings.get('large_font'))
+                                           font=self.events['get_large_font']())
         gui['entry_macro_zoom'] = ttk.Entry(gui['frame_buttons'],
                                             textvariable=settings.get_gui_var('macro_zoom'),
                                             width=3)
         gui['scale_zoom'] = tk.Scale(self, orient=tk.HORIZONTAL)
         gui['label_z_slices'] = tk.Label(gui['frame_buttons'], text="Number of Z Slices",
-                                         font=self.session.settings.get('large_font'))
+                                         font=self.events['get_large_font']())
         gui['entry_z_slices'] = ttk.Entry(gui['frame_buttons'],
                                           textvariable=settings.get_gui_var('macro_z_slices'),
                                           width=4)
         gui['button_load_macro_image'] = ttk.Button(gui['frame_buttons'], text="Grab Macro Image",
-                                                    command=lambda: self.load_macro_image())
+                                                    command=lambda: self.events['load_macro_image']())
         gui['button_run_fully_automated_experiment'] = ttk.Button(gui['frame_buttons'], text="Run Full Automation",
-                                                    command=lambda: self.run_automated_experiment())
+                                                                  command=lambda: self.events[
+                                                                      'run_automated_experiment'])
 
         # Arrange GUI elements
         gui['frame_canvas'].grid(row=0, column=0, sticky='nsew')
@@ -67,35 +75,6 @@ class MacroWindow(tk.Toplevel):
         if self.image:
             self.gui['scrollingCanvas'].set_image()
 
-    def run_automated_experiment(self):
-        self.load_macro_image()
-        self.define_positions_from_spines()
-        self.session.align_all_positions_to_refs()
-        self.session.start_imaging()
-
-    def define_positions_from_spines(self):
-        XYRBSZ = self.session.state.macro_image.found_spines
-        max_pos = self.settings.get('max_positions')
-        # spines should already be ordered by score but just in case...
-        XYRBSZ = XYRBSZ[np.argsort(XYRBSZ[:, 4][::-1], axis=0), :]
-        # TODO: user can select how spines are picked. Either pick top 5, or maybe a random sample from top xx amount
-        x_centers_standardized = np.mean(XYRBSZ[:max_pos, [0, 2]], axis=1) / \
-                                 self.session.state.macro_image.image_stack.shape[1]
-        y_centers_standardized = np.mean(XYRBSZ[:max_pos, [1, 3]], axis=1) / \
-                                 self.session.state.macro_image.image_stack.shape[0]
-        for x, y, z in zip(x_centers_standardized, y_centers_standardized, XYRBSZ[:max_pos, 5]):
-            self.add_position_on_image_click(x, y, z)
-
-    def load_macro_image(self):
-        self.session.collect_new_macro_image()
-        # TODO: Loading this image doesn't always work. Figure out why... Sometimes, it loads the old image.
-        # TODO: open this image automatically when macro window is launched
-        self.session.communication.get_motor_position()
-        xyz = self.session.state.current_coordinates.get_combined(self.session)
-        self.session.state.center_coordinates.set_motor(xyz['x'], xyz['y'], xyz['z'])
-        self.image = self.session.state.macro_image.pil_image
-        self.multi_slice_viewer()
-
     def multi_slice_viewer(self):
         self.gui['scale_z'].config(command=self.scale_callback, from_=0, to=self.image.n_frames - 1)
         self.slice_index = self.image.n_frames // 2
@@ -105,42 +84,6 @@ class MacroWindow(tk.Toplevel):
     def scale_callback(self, event):
         self.slice_index = self.gui['scale_z'].get()
         self.gui['scrollingCanvas'].set_image()
-
-    def add_position_on_image_click(self, x, y, z):
-        # translate to normal coordinates
-        fov_x, fov_y = np.array([self.session.settings.get('fov_x'), self.session.settings.get('fov_y')]) / float(
-            self.session.settings.get('macro_zoom'))
-        # xy currently originate from top left of image.
-        # translate them to coordinate plane directionality.
-        # also, make them originate from center
-        xyz_center = self.session.state.center_coordinates.get_motor()
-        xyz_clicked = {'x': x, 'y': y, 'z': z}
-        x = x - .5
-        y = -y + .5
-        # translate coordinates to µm
-        x = x * fov_x + xyz_center['x']
-        y = y * fov_y + xyz_center['y']
-        z = z + xyz_center['z'] - self.image.n_frames / 2
-        # add coordinates to position table
-        print('x, y, z = {0}, {1}, {2}'.format(x, y, z))
-        self.session.state.current_coordinates.set_scan_voltages_x_y(0, 0)
-        self.session.state.current_coordinates.set_motor(x, y, z)
-        self.get_ref_images_from_macro(xyz_clicked)
-        self.session.create_new_position(take_new_refs=False)
-
-    def get_ref_images_from_macro(self, xyz_clicked):
-        image_ref = self.get_ref_image_from_macro(xyz_clicked)
-        image_ref_zoomed_out = self.get_zoomed_out_ref_image_from_macro(xyz_clicked)
-        self.session.state.ref_image.set_stack(image_ref)
-        self.session.state.ref_image_zoomed_out.set_stack(image_ref_zoomed_out)
-
-    def get_ref_image_from_macro(self, xyz_clicked):
-        zoom = float(self.session.settings.get('imaging_zoom'))
-        slice_count = self.session.settings.get('imaging_slices')
-        slice_index = self.get_slice_index(slice_count)
-        pixel_index_x_y = self.identify_image_pixel_indices(xyz_clicked, zoom)
-        image_ref = self.build_reference_image(slice_index, pixel_index_x_y)
-        return image_ref
 
     def get_zoomed_out_ref_image_from_macro(self, xyz_clicked):
         zoom = float(self.session.settings.get('reference_zoom'))

@@ -1,3 +1,10 @@
+def initialize_events(event_key_list):
+    events = {}
+    for key in event_key_list:
+        events[key] = Event()
+    return events
+
+
 class Event:
     def __init__(self):
         self.handlers = set()
