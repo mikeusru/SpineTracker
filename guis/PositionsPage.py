@@ -1,15 +1,18 @@
 import tkinter as tk
 from tkinter import ttk
+
 import matplotlib
+import matplotlib.colorbar as colorbar
+import matplotlib.dates
 import numpy as np
-from utilities.DraggableCircle import DraggableCircle
-from utilities.helper_functions import fit_fig_to_canvas
+from matplotlib import patches
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
-from matplotlib import patches
-import matplotlib.dates
-import matplotlib.colorbar as colorbar
-from matplotlib import pyplot as plt
+
+from io_communication.Event import initialize_events
+from utilities.DraggableCircle import DraggableCircle
+from utilities.helper_functions import fit_fig_to_canvas
+
 
 class PositionsPage(ttk.Frame):
     name = 'Positions'
@@ -18,21 +21,44 @@ class PositionsPage(ttk.Frame):
         ttk.Frame.__init__(self, parent)
         self.gui = dict()
         self.bind("<Visibility>", self.on_visibility)
-        self.session = session
-
         self.selected_pos_id = None
         self.draggable_circle = None
-        settings = self.session.settings
+        self.settings = {
+            'large_font': None,
+            'fig_dpi': 0
+        }
+        self.gui_vars = {
+            'imaging_zoom': None,
+            'reference_zoom': None,
+            'imaging_slices': None,
+            'reference_slices': None,
+            'uncaging_roi_toggle': None,
+        }
+        self.events = initialize_events([
+            'move_to_pos_id',
+            'update_position',
+            'update_reference_images',
+            'remove_position',
+            'create_new_position',
+            'clear_positions',
+            'build_macro_window',
+            'align_all_positions_to_refs',
+            'image_all_positions',
+        ])
+        self.shared_figs = None
+        self.positions = None
+
+    def build_gui_items(self):
         # GUIs
         self.gui['popup'] = tk.Menu(self, tearoff=0)
         self.gui['popup'].add_command(label="Move To Position",
-                                      command=lambda: self.session.move_to_pos_id(pos_id=self.selected_pos_id))
+                                      command=lambda: self.events['move_to_pos_id'](self.selected_pos_id))
         self.gui['popup'].add_command(label="Update XYZ",
-                                      command=lambda: self.session.update_position(self.selected_pos_id))
+                                      command=lambda: self.events['update_position'](self.selected_pos_id))
         self.gui['popup'].add_command(label="Take New Ref Images",
-                                      command=lambda: self.session.update_reference_images(self.selected_pos_id))
+                                      command=lambda: self.events['update_reference_images'](self.selected_pos_id))
         self.gui['popup'].add_command(label="Delete",
-                                      command=lambda: self.session.remove_position(self.selected_pos_id))
+                                      command=lambda: self.events['remove_position'](self.selected_pos_id))
         self.gui['frame_for_buttons'] = ttk.Frame(self)
         self.gui['frame_for_buttons'].grid(column=0, row=0, sticky='nw')
         self.gui['frame_for_zoom'] = ttk.Frame(self)
@@ -40,52 +66,53 @@ class PositionsPage(ttk.Frame):
         self.gui['frame_for_graphics'] = ttk.Frame(self)
         self.gui['frame_for_graphics'].grid(column=1, row=0, sticky='nsew')
         self.gui['button_add_position'] = ttk.Button(self.gui['frame_for_buttons'], text="Add current position",
-                                                     command=lambda: session.create_new_position(self))
+                                                     command=lambda: self.events['create_new_position'](self))
         self.gui['button_add_position'].grid(row=0, column=0, padx=10, pady=10, sticky='wn')
         self.gui['button_clear_positions'] = ttk.Button(self.gui['frame_for_buttons'], text="Clear All Positions",
-                                                        command=lambda: session.clear_positions(self))
+                                                        command=lambda: self.events['clear_positions'](self))
         self.gui['button_clear_positions'].grid(row=1, column=0, padx=10,
                                                 pady=10, sticky='wn')
         self.gui['button_macro_view'] = ttk.Button(self.gui['frame_for_buttons'], text="Macro View",
-                                                   command=lambda: session.gui.build_macro_window())
+                                                   command=lambda: self.events['build_macro_window']())
         self.gui['button_macro_view'].grid(row=2, column=0, padx=10,
                                            pady=10, sticky='wn')
         self.gui['button_align_positions'] = ttk.Button(self.gui['frame_for_buttons'], text="Align All To Reference",
-                                                        command=lambda: session.align_all_positions_to_refs())
+                                                        command=lambda: self.events['align_all_positions_to_refs']())
         self.gui['button_align_positions'].grid(row=3, column=0, padx=10,
                                                 pady=10, sticky='wn')
-        self.gui['button_cycle_through_positions'] = ttk.Button(self.gui['frame_for_buttons'], text="Single Imaging Cycle",
-                                                        command=lambda: session.image_all_positions())
+        self.gui['button_cycle_through_positions'] = ttk.Button(self.gui['frame_for_buttons'],
+                                                                text="Single Imaging Cycle",
+                                                                command=lambda: self.events['image_all_positions']())
         self.gui['button_cycle_through_positions'].grid(row=4, column=0, padx=10,
-                                                pady=10, sticky='wn')
+                                                        pady=10, sticky='wn')
 
         self.gui['label_imaging_zoom'] = tk.Label(self.gui['frame_for_zoom'], text="Imaging Zoom",
-                                                  font=settings.get('large_font'))
+                                                  font=self.settings['large_font'])
         self.gui['label_imaging_zoom'].grid(row=0, column=0, sticky='nw', padx=10, pady=10)
         self.gui['entry_imaging_zoom'] = ttk.Entry(self.gui['frame_for_zoom'],
-                                                   textvariable=settings.get_gui_var('imaging_zoom'))
+                                                   textvariable=self.gui_vars['imaging_zoom'])
         self.gui['entry_imaging_zoom'].grid(row=0, column=1, padx=10, pady=10, sticky='nw')
         self.gui['label_ref_zoom'] = tk.Label(self.gui['frame_for_zoom'], text="Reference Zoom",
-                                              font=settings.get('large_font'))
+                                              font=self.settings['large_font'])
         self.gui['label_ref_zoom'].grid(row=0, column=2, sticky='nw', padx=10, pady=10)
 
         self.gui['entry_ref_zoom'] = ttk.Entry(self.gui['frame_for_zoom'],
-                                               textvariable=settings.get_gui_var('reference_zoom'))
+                                               textvariable=self.gui_vars['reference_zoom'])
         self.gui['entry_ref_zoom'].grid(row=0, column=3, padx=10, pady=10, sticky='nw')
 
         self.gui['label_imaging_slices'] = tk.Label(self.gui['frame_for_zoom'], text="Imaging Slices",
-                                                    font=settings.get('large_font'))
+                                                    font=self.settings['large_font'])
         self.gui['label_imaging_slices'].grid(row=1, column=0, sticky='nw', padx=10, pady=10)
 
         self.gui['entry_imaging_slices'] = ttk.Entry(self.gui['frame_for_zoom'],
-                                                     textvariable=settings.get_gui_var('imaging_slices'))
+                                                     textvariable=self.gui_vars['imaging_slices'])
         self.gui['entry_imaging_slices'].grid(row=1, column=1, padx=10, pady=10, sticky='nw')
         self.gui['label_ref_slices'] = tk.Label(self.gui['frame_for_zoom'], text="Reference Slices",
-                                                font=settings.get('large_font'))
+                                                font=self.settings['large_font'])
         self.gui['label_ref_slices'].grid(row=1, column=2, sticky='nw', padx=10, pady=10)
 
         self.gui['entry_ref_slices'] = ttk.Entry(self.gui['frame_for_zoom'],
-                                                 textvariable=settings.get_gui_var('reference_slices'))
+                                                 textvariable=self.gui_vars['reference_slices'])
         self.gui['entry_ref_slices'].grid(row=1, column=3, padx=10, pady=10, sticky='nw')
 
         # Treeview example given at http://knowpapa.com/ttk-treeview/
@@ -95,7 +122,7 @@ class PositionsPage(ttk.Frame):
         self.create_positions_table(self.gui['positions_table_frame'])
 
         # create canvas for previewing reference images
-        self.gui['ref_images_fig'] = Figure(figsize=(4, 2), dpi=session.settings.get('fig_dpi'))
+        self.gui['ref_images_fig'] = Figure(figsize=(4, 2), dpi=self.settings['fig_dpi'])
         self.gui['ref_images_fig'].subplots_adjust(left=0, right=1, bottom=0, top=1, wspace=0.02, hspace=0)
         self.gui['canvas_preview_ref_images'] = FigureCanvasTkAgg(self.gui['ref_images_fig'],
                                                                   self.gui['frame_for_graphics'])
@@ -108,7 +135,7 @@ class PositionsPage(ttk.Frame):
         for i in range(2):
             self.gui['ref_images_axes'].append(self.gui['ref_images_fig'].add_subplot(1, 2, i + 1))
         # relative positions figure
-        self.gui['f_positions'] = self.session.gui.shared_figs['f_positions']
+        self.gui['f_positions'] = self.shared_figs['f_positions']
         self.gui['canvas_positions'] = FigureCanvasTkAgg(self.gui['f_positions'], self.gui['frame_for_graphics'])
         self.gui['canvas_positions'].draw()
         self.gui['canvas_positions'].get_tk_widget().config(borderwidth=1, background='gray', highlightcolor='gray',
@@ -136,10 +163,8 @@ class PositionsPage(ttk.Frame):
         tree.configure(yscrollcommand=scroll.set)
 
     def preview_position_locations(self):
-        positions = self.session.positions
+        positions = self.positions
         ax = self.gui['position_preview_axis']
-        w = 10
-        h = 10
         ax.clear()
         self.gui['colorbar_axis'].clear()
         xx = np.array([])
@@ -155,18 +180,18 @@ class PositionsPage(ttk.Frame):
             viewsize = fovxy * multiplier / zoom
             w = viewsize[0]
             h = viewsize[1]
-            xyz = positions.get_coordinates(pos_id).get_combined(self.session)
-            xx = np.append(xx, xyz['x']-w/2)
-            yy = np.append(yy, xyz['y']-h/2)
+            xyz = positions.get_coordinates(pos_id).get_combined()
+            xx = np.append(xx, xyz['x'] - w / 2)
+            yy = np.append(yy, xyz['y'] - h / 2)
             zz = np.append(zz, xyz['z'])
-            polygon = np.array(((-w/2, -h/2), (w/2, -h/2), (w/2, h/2), (-w/2, h/2)))
+            polygon = np.array(((-w / 2, -h / 2), (w / 2, -h / 2), (w / 2, h / 2), (-w / 2, h / 2)))
             theta = np.radians(rotation)
-            c,s = np.cos(theta), np.sin(theta)
-            rotation_matrix = np.array(((c,-s), (s,c)))
-            for i in range(0,4):
-                polygon[i,:] = np.dot(rotation_matrix, polygon[i,:])
-            polygon[:,0] += xyz['x']
-            polygon[:,1] += xyz['y']
+            c, s = np.cos(theta), np.sin(theta)
+            rotation_matrix = np.array(((c, -s), (s, c)))
+            for i in range(0, 4):
+                polygon[i, :] = np.dot(rotation_matrix, polygon[i, :])
+            polygon[:, 0] += xyz['x']
+            polygon[:, 1] += xyz['y']
             pp = pp + (polygon,)
 
         if len(positions) > 0:
@@ -180,9 +205,9 @@ class PositionsPage(ttk.Frame):
         c_map = matplotlib.cm.jet
         norm = matplotlib.colors.Normalize(vmin=v_min, vmax=v_max)
 
-        for p, x, y, z, pos in zip (pp, xx, yy, zz, pos_labels):
+        for p, x, y, z, pos in zip(pp, xx, yy, zz, pos_labels):
             ax.add_patch(patches.Polygon(xy=p, fill=True, facecolor=c_map(norm(z))))
-            ax.annotate(str(pos), xy=(p[0,:]), xytext=(p[2,:]))
+            ax.annotate(str(pos), xy=(p[0, :]), xytext=(p[2, :]))
 
         cb1 = colorbar.ColorbarBase(ax=self.gui['colorbar_axis'], cmap=c_map, norm=norm)
         cb1.set_label('Z (µm)')
@@ -204,7 +229,7 @@ class PositionsPage(ttk.Frame):
 
     def on_visibility(self, event):
         fit_fig_to_canvas(self.gui['f_positions'], self.gui['canvas_positions'],
-                          self.session.settings.get('fig_dpi'))
+                          self.settings['fig_dpi'])
         self.redraw_position_table()
         self.gui['canvas_preview_ref_images'].draw_idle()
 
@@ -232,9 +257,9 @@ class PositionsPage(ttk.Frame):
         self.select_position_in_graph(pos_id)
 
     def select_position_in_graph(self, pos_id):
-        positions = self.session.positions
+        positions = self.positions
         ax = self.gui['position_preview_axis']
-        xyz = positions.get_coordinates(pos_id).get_combined(self.session)
+        xyz = positions.get_coordinates(pos_id).get_combined()
         x, y = [xyz[key] for key in ['x', 'y']]
         arrow_props = dict(facecolor='black')
         for annotation in ax.texts:
@@ -246,8 +271,8 @@ class PositionsPage(ttk.Frame):
     def redraw_position_table(self):
         for i in self.gui['tree'].get_children():
             self.gui['tree'].delete(i)
-        for pos_id in self.session.positions:
-            xyz = self.session.positions.get_coordinates(pos_id).get_combined(self.session)
+        for pos_id in self.positions:
+            xyz = self.positions.get_coordinates(pos_id).get_combined()
             x, y, z = [f'{xyz[key]:.1f}' for key in ['x', 'y', 'z']]
             self.gui['tree'].insert("", pos_id, text="Position {0}".format(pos_id),
                                     values=(x, y, z))
@@ -255,18 +280,18 @@ class PositionsPage(ttk.Frame):
         self.gui['canvas_preview_ref_images'].draw_idle()
         self.select_current_position()
 
-    def select_current_position(self, pos_id = 0):
+    def select_current_position(self, pos_id=0):
         children = self.gui['tree'].get_children('')
         if pos_id == 0:
             n = len(children)
         else:
             n = pos_id
         if n > 0:
-            self.gui['tree'].selection_set(children[n-1])
+            self.gui['tree'].selection_set(children[n - 1])
 
     def draw_ref_images(self, pos_id):
-        refs = [self.session.positions.get_image(pos_id, zoomed_out=False),
-                self.session.positions.get_image(pos_id, zoomed_out=True)]
+        refs = [self.positions.get_image(pos_id, zoomed_out=False),
+                self.positions.get_image(pos_id, zoomed_out=True)]
         for ax, ref_image in zip(self.gui['ref_images_axes'], refs):
             ax.clear()
             ax.axis('off')
@@ -276,11 +301,12 @@ class PositionsPage(ttk.Frame):
         self.gui['canvas_preview_ref_images'].draw_idle()
 
     def draw_roi(self, pos_id, ax):
-        if self.session.settings.get('uncaging_roi_toggle'):
+        if self.settings['uncaging_roi_toggle']:
             ax_width = abs(np.diff(ax.get_xlim()).item())
-            x, y = self.session.positions.get_roi_x_y(pos_id)
+            x, y = self.positions.get_roi_x_y(pos_id)
             circle = patches.Circle((x, y), radius=ax_width / 20, fill=False, linewidth=ax_width / 20, edgecolor='r')
             ax.add_patch(circle)
-            dc = DraggableCircle(self.session, self.session.positions[pos_id], circle)
+            dc = DraggableCircle(self.positions[pos_id], circle)
             dc.connect()
             self.draggable_circle = dc
+            self.positions.backup_positions()

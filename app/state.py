@@ -12,8 +12,10 @@ class State:
         self.step_running = False
         self.imaging_active = False
         self.current_pos_id = 1
-        self.current_coordinates = Coordinates()
         self.center_coordinates = Coordinates()
+        self.center_coordinates.settings_reader += self.settings.get
+        self.center_coordinates.center_motor_reader += self.center_coordinates.get_motor
+        self.current_coordinates = self.center_coordinates.copy()
         self.current_image = AcquiredImage()
         self.ref_image = ReferenceImage()
         self.ref_image_zoomed_out = ReferenceImage()

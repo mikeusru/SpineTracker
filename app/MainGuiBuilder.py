@@ -55,6 +55,22 @@ class MainGuiBuilder(tk.Tk):
             frame.events['load_settings'] += self.session.settings.load_settings
             frame.build_gui_items()
 
+        elif frame.name == 'Positions':
+            frame.shared_figs = self.shared_figs
+            self.settings.assign_settings(frame.settings)
+            self.settings.assign_gui_vars(frame.gui_vars)
+            frame.events['move_to_pos_id'] += self.session.move_to_pos_id
+            frame.events['update_position'] += self.session.update_position
+            frame.events['update_reference_images'] += self.session.update_reference_images
+            frame.events['remove_position'] += self.session.remove_position
+            frame.events['create_new_position'] += self.session.create_new_position
+            frame.events['clear_positions'] += self.session.clear_positions
+            frame.events['build_macro_window'] += self.build_macro_window
+            frame.events['align_all_positions_to_refs'] += self.session.align_all_positions_to_refs
+            frame.events['image_all_positions'] += self.session.image_all_positions
+            frame.positions = self.session.positions
+            frame.build_gui_items()
+
     def run_on_exit(self):
         self.session.exit()
 

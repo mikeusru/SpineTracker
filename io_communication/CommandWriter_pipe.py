@@ -1,12 +1,10 @@
 from io_communication.CommandHandler import CommandHandler
-from io_communication.Event import Event
 
 
 class CommandWriter(CommandHandler):
     def __init__(self):
         super().__init__()
         self.print_function = None
-        self.sent_command_printer = Event()
 
     def move_stage(self, x, y, z):
         self.handle_command('SetMotorPosition', x, y, z)

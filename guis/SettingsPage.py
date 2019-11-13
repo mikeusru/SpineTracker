@@ -33,7 +33,6 @@ class SettingsPage(ttk.Frame):
             'load_settings'
         ])
         self.gui = None
-        self.gui = self.build_gui_items()
 
     def build_gui_items(self):
         gui = dict()

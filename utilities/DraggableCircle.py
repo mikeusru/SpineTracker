@@ -16,8 +16,7 @@ import numpy as np
 class DraggableCircle:
     lock = None  # only one can be animated at a time
 
-    def __init__(self, session, position, circ):
-        self.session = session
+    def __init__(self, position, circ):
         self.position = position
         self.circ = circ
         self.press = None
@@ -92,7 +91,6 @@ class DraggableCircle:
         self.circ.set_animated(False)
         self.background = None
         self.position.set_roi_x_y(np.array(self.circ.center))
-        self.session.positions.backup_positions()
         # redraw the full figure
         self.circ.figure.canvas.draw_idle()
 
@@ -101,14 +99,3 @@ class DraggableCircle:
         self.circ.figure.canvas.mpl_disconnect(self.cidpress)
         self.circ.figure.canvas.mpl_disconnect(self.cidrelease)
         self.circ.figure.canvas.mpl_disconnect(self.cidmotion)
-
-# fig = plt.figure()
-# ax = fig.add_subplot(111)
-# rects = ax.bar(range(10), 20*np.random.rand(10))
-# drs = []
-# for rect in rects:
-#    dr = DraggableRectangle(rect)
-#    dr.connect()
-#    drs.append(dr)
-#
-# plt.show()
