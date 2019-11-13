@@ -19,7 +19,7 @@ class StartPage(ttk.Frame):
         self.settings = {
             'large_font': None,
             'huge_font': None,
-            'fig_dpi': None
+            'fig_dpi': 0
         }
         self.gui_vars = {
             'drift_label': None,
