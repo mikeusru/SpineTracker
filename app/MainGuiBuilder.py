@@ -50,6 +50,27 @@ class MainGuiBuilder(tk.Tk):
             frame.events['start_imaging'] += self.session.start_imaging
             frame.events['stop_imaging'] += self.session.stop_imaging
             frame.build_gui_items()
+        elif frame.name == 'Settings':
+            frame.settings['large_font'] = self.settings.get('large_font')
+            frame.settings['normal_font'] = self.settings.get('normal_font')
+            frame.gui_vars['total_channels'] = self.settings.get_gui_var('total_channels')
+            frame.gui_vars['total_channels'] = self.settings.get_gui_var('total_channels')
+            frame.events['save_settings'] += self.session.settings.save_settings
+            frame.events['load_settings'] += self.session.settings.load_settings
+
+        self.gui_vars = {
+            'total_channels': None,
+            'drift_correction_channel': None,
+            'park_xy_motor': None,
+            'uncaging_roi_toggle': None,
+            'macro_resolution_x': None,
+            'macro_resolution_y': None,
+            'normal_resolution_x': None,
+            'normal_resolution_y': None,
+            'manual_fov_toggle': None,
+            'fov_x': None,
+            'fov_y': None,
+        }
 
     def run_on_exit(self):
         self.session.exit()
