@@ -63,6 +63,14 @@ class SettingsManager:
     def get_gui_var(self, name):
         return self.settings_dto[name].gui_var
 
+    def assign_settings(self, settings_dict):
+        for key in settings_dict:
+            settings_dict[key] = self.get(key)
+
+    def assign_gui_vars(self, gui_vars_dict):
+        for key in gui_vars_dict:
+            gui_vars_dict[key] = self.get_gui_var(key)
+
     def load_settings(self, path=None):
         if path is None:
             path = self._get_file_name()

@@ -11,7 +11,6 @@ class SettingsPage(ttk.Frame):
 
     def __init__(self, container, session):
         ttk.Frame.__init__(self, container)
-        self.session = session
         self.settings = {
             'large_font': None,
             'normal_font': None,
@@ -30,13 +29,13 @@ class SettingsPage(ttk.Frame):
             'fov_y': None,
         }
         self.events = initialize_events([
-            'save_settings'
+            'save_settings',
             'load_settings'
         ])
         self.gui = None
-        self.gui = self.define_gui_elements()
+        self.gui = self.build_gui_items()
 
-    def define_gui_elements(self):
+    def build_gui_items(self):
         gui = dict()
         gui['total_image_channels_label'] = tk.Label(self, text="Total Image Channels",
                                                      font=self.settings['large_font'])
@@ -123,10 +122,10 @@ class SettingsPage(ttk.Frame):
                                  title="Select file",
                                  filetypes=(("pickle file", ".p"),),
                                  defaultextension='.p')
-        self.session.settings.save_settings(path)
+        self.events['save_settings'](path)
 
     def load_settings(self):
         path = askopenfilename(initialdir=os.path.expanduser(""),
                                title="Select Settings File",
                                filetypes=(("pickle file", "*.p"),))
-        self.session.settings.load_settings(path)
+        self.events['load_settings'](path)

@@ -39,38 +39,21 @@ class MainGuiBuilder(tk.Tk):
         self.frames = self.initialize_frames()
 
     def build_frame(self, frame):
+
         if frame.name == 'Main':
             frame.shared_figs = self.shared_figs
-            frame.settings['large_font'] = self.settings.get('large_font')
-            frame.settings['huge_font'] = self.settings.get('huge_font')
-            frame.settings['fig_dpi'] = self.settings.get('fig_dpi')
-            frame.gui_vars['drift_label'] = self.settings.get_gui_var('drift_label')
-            frame.gui_vars['communication_log'] = self.settings.get_gui_var('communication_log')
-            frame.gui_vars['display_timer'] = self.settings.get_gui_var('display_timer')
+            self.settings.assign_settings(frame.settings)
+            self.settings.assign_gui_vars(frame.gui_vars)
             frame.events['start_imaging'] += self.session.start_imaging
             frame.events['stop_imaging'] += self.session.stop_imaging
             frame.build_gui_items()
+
         elif frame.name == 'Settings':
-            frame.settings['large_font'] = self.settings.get('large_font')
-            frame.settings['normal_font'] = self.settings.get('normal_font')
-            frame.gui_vars['total_channels'] = self.settings.get_gui_var('total_channels')
-            frame.gui_vars['total_channels'] = self.settings.get_gui_var('total_channels')
+            self.settings.assign_settings(frame.settings)
+            self.settings.assign_gui_vars(frame.gui_vars)
             frame.events['save_settings'] += self.session.settings.save_settings
             frame.events['load_settings'] += self.session.settings.load_settings
-
-        self.gui_vars = {
-            'total_channels': None,
-            'drift_correction_channel': None,
-            'park_xy_motor': None,
-            'uncaging_roi_toggle': None,
-            'macro_resolution_x': None,
-            'macro_resolution_y': None,
-            'normal_resolution_x': None,
-            'normal_resolution_y': None,
-            'manual_fov_toggle': None,
-            'fov_x': None,
-            'fov_y': None,
-        }
+            frame.build_gui_items()
 
     def run_on_exit(self):
         self.session.exit()
