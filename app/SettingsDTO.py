@@ -58,15 +58,8 @@ class SettingsDTO(dict):
         self._create_gui_variable('pipe_connect_bool', tk.BooleanVar, False, False)
         self._create_gui_variable('step_name', tk.StringVar, False, "StepName")
         self._create_gui_variable('custom_command', tk.StringVar, False, "")
-        self._create_gui_variable('training_data_path', tk.StringVar, True, '../test')
-        self._create_gui_variable('new_model_path', tk.StringVar, True, '../test')
-        self._create_gui_variable('tensorboard_log_dir', tk.StringVar, True, os.path.join('..', 'spine_yolo', 'logs'))
-        self._create_gui_variable('test_data_path', tk.StringVar, True, '../test')
-        self._create_gui_variable('yolo_image_path', tk.StringVar, True, '../test.tif')
         self._create_gui_variable('communication_log', tk.StringVar, False, 'Communication Log...')
         self._create_gui_variable('drift_label', tk.StringVar, False, 'Drift: ')
-        self._create_gui_variable('trained_model_path', tk.StringVar, True,
-                                  'spine_yolo/model_data/trained_stage_3_best.h5')
         self._create_gui_variable('display_timer', tk.StringVar, True, '0 s')
 
     def initialize_acquired_variables(self):

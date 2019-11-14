@@ -12,7 +12,7 @@ from guis.StartPage import StartPage
 from guis.TimelinePage.TimelinePage import TimelinePage
 from guis.ConnectionsPage import ConnectionsPage
 
-import os  # Ryohei for making crabIco path cleaner.
+import os
 
 
 class MainGuiBuilder(tk.Tk):

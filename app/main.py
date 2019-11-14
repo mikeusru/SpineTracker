@@ -344,18 +344,6 @@ class SpineTracker:
         self.state.display_timer.stop()
         self.gui.rebuild_timeline()
 
-    def train_yolo_model(self):
-        pass
-
-    def train_yolo_model_with_different_sized_datasets(self):
-        pass
-
-    def test_yolo_model(self):
-        pass
-
-    def run_yolo_on_single_image(self):
-        pass
-
     def print_to_log(self, line):
         print(line)
         self.write_to_log(line)
