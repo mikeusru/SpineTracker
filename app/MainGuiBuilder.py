@@ -1,13 +1,13 @@
 """
 @author: smirnovm
 """
-from matplotlib.figure import Figure
 from guis.MacroWindow import MacroWindow
 from guis.PositionsPage import PositionsPage
 from guis.SettingsPage import SettingsPage
 import tkinter as tk
 from tkinter import ttk
 
+from guis.SharedFigs import SharedFigs
 from guis.SpineRecognitionPage import SpineRecognitionPage
 from guis.StartPage import StartPage
 from guis.TimelinePage.TimelinePage import TimelinePage
@@ -158,24 +158,3 @@ class MainGuiBuilder(tk.Tk):
 
     def print_received_command(self, line):
         self.frames[ConnectionsPage].show_text('r', line)
-
-
-class SharedFigs(dict):
-
-    def __init__(self, fig_dpi, *args, **kwargs):
-        super(SharedFigs, self).__init__()
-
-        # Shared Timeline Figure
-        self['timeline_figure'] = Figure(figsize=(5, 2), dpi=fig_dpi)
-        self['timeline_figure'].set_tight_layout(True)
-        self['timeline_axis'] = self['timeline_figure'].add_subplot(111)
-
-        # Shared Positions Figure
-        self['f_positions'] = Figure(figsize=(3, 3), dpi=fig_dpi)
-        self['f_positions'].subplots_adjust(left=0, right=1, bottom=0, top=1)
-        self['f_positions'].set_tight_layout(True)
-        self['f_positions'].set_size_inches(4, 4)
-
-# if __name__ == "__main__":
-#     app = MainGuiBuilder()
-#     app.mainloop()
