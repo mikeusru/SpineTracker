@@ -1,6 +1,4 @@
-import os
 import tkinter as tk
-from tkinter.filedialog import askdirectory, askopenfilename
 from tkinter import ttk
 
 from io_communication.Event import initialize_events
