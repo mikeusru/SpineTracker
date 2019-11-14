@@ -8,7 +8,6 @@ import tkinter as tk
 from tkinter import ttk
 
 from guis.SharedFigs import SharedFigs
-from guis.SpineRecognitionPage import SpineRecognitionPage
 from guis.StartPage import StartPage
 from guis.TimelinePage.TimelinePage import TimelinePage
 from guis.ConnectionsPage import ConnectionsPage
@@ -85,7 +84,7 @@ class MainGuiBuilder(tk.Tk):
 
     def initialize_frames(self):
         frames = {}
-        for F in (StartPage, SettingsPage, PositionsPage, TimelinePage, SpineRecognitionPage, ConnectionsPage):
+        for F in (StartPage, SettingsPage, PositionsPage, TimelinePage, ConnectionsPage):
             frame = F(self.container, self.session)
             frames[F] = frame
             self.build_frame(frame)
@@ -139,9 +138,6 @@ class MainGuiBuilder(tk.Tk):
 
     def toggle_manual_fov_entering(self, *args):
         self.frames[SettingsPage].toggle_fov_mode()
-
-    def show_end_of_path(self, *args):
-        self.frames[SpineRecognitionPage].put_cursor_at_end_of_path()
 
     def indicate_step_on_timeline(self, step):
         self.frames[TimelinePage].highlight_current_step(step)
