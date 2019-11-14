@@ -1,17 +1,4 @@
 import matplotlib
-
-matplotlib.use("TkAgg")
-
-from app.TimerStepsQueue import TimerStepsQueue
-from app.state import State
-
-from app.Communication_pipe import Communication
-from app.MainGuiBuilder import MainGuiBuilder
-from app.Positions import Positions
-from app.Timeline import Timeline
-from app.SettingsManager import SettingsManager
-from app.CommandLineInterpreter import CommandLineInterpreter
-from app.SpineYoloClient import SpineYoloClient
 import csv
 import datetime as dt
 import os
@@ -19,6 +6,18 @@ import sys
 import threading
 import time
 from tkinter import messagebox
+
+matplotlib.use("TkAgg")
+
+from app.TimerStepsQueue import TimerStepsQueue
+from app.state import State
+from app.Communication_pipe import Communication
+from app.MainGuiBuilder import MainGuiBuilder
+from app.Positions import Positions
+from app.Timeline import Timeline
+from app.SettingsManager import SettingsManager
+from app.CommandLineInterpreter import CommandLineInterpreter
+from app.SpineYoloClient import SpineYoloClient
 
 
 class SpineTracker:
