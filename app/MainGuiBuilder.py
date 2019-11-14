@@ -10,7 +10,7 @@ from tkinter import ttk
 
 from guis.SpineRecognitionPage import SpineRecognitionPage
 from guis.StartPage import StartPage
-from guis.TimelinePage import TimelinePage
+from guis.TimelinePage.TimelinePage import TimelinePage
 from guis.ConnectionsPage import ConnectionsPage
 
 import os  # Ryohei for making crabIco path cleaner.
@@ -69,6 +69,15 @@ class MainGuiBuilder(tk.Tk):
             frame.events['align_all_positions_to_refs'] += self.session.align_all_positions_to_refs
             frame.events['image_all_positions'] += self.session.image_all_positions
             frame.positions = self.session.positions
+            frame.build_gui_items()
+
+        elif frame.name == 'Timeline':
+            frame.shared_figs = self.shared_figs
+            frame.timeline = self.session.timeline
+            self.settings.assign_settings(frame.settings)
+            self.settings.assign_gui_vars(frame.gui_vars)
+            frame.events['get_setting'] += self.session.settings.get
+            frame.events['set_setting'] += self.session.settings.set
             frame.build_gui_items()
 
     def run_on_exit(self):
