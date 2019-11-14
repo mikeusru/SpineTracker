@@ -1,9 +1,9 @@
 import os
 import re
 
-from io_communication.CommandHandler import CommandHandler
-from io_communication.Event import Event
-from io_communication.SingleSettingReader import SingleSettingReader
+from app.io_communication.CommandHandler import CommandHandler
+from app.io_communication.Event import Event
+from app.io_communication.SingleSettingReader import SingleSettingReader
 
 
 def remove_spaces(line):

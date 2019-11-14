@@ -4,7 +4,7 @@ import numpy as np
 import copy
 
 from app.DriftXYZ import DriftXYZ
-from utilities.math_helpers import contrast_stretch
+from app.utilities.math_helpers import contrast_stretch
 
 from app.Positions import Position
 

@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 
-from io_communication.Event import initialize_events
+from app.io_communication.Event import initialize_events
 
 
 class ConnectionsPage(ttk.Frame):

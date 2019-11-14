@@ -1,7 +1,7 @@
 import os
 import re
 
-from io_communication.file_listeners import FileReaderThread
+from app.io_communication.file_listeners import FileReaderThread
 
 
 def remove_spaces(line):

@@ -1,6 +1,6 @@
 import numpy as np
 
-from io_communication.Event import Event
+from app.io_communication.Event import Event
 
 
 class Coordinates:

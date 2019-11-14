@@ -1,5 +1,5 @@
 from app.TkinterTestCase import TkinterTestCase
-from guis.SettingsPage import SettingsPage
+from app.guis.SettingsPage import SettingsPage
 import tkinter as tk
 
 

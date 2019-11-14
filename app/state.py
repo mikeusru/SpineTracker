@@ -2,7 +2,7 @@ from operator import itemgetter
 
 from app.AcquiredImage import AcquiredImage, ReferenceImage, MacroImage
 from app.Coordinates import Coordinates
-from flow.PositionTimer import DisplayTimer, ExperimentTimer
+from app.flow.PositionTimer import DisplayTimer, ExperimentTimer
 
 
 class State:

@@ -1,16 +1,16 @@
 """
 @author: smirnovm
 """
-from guis.MacroWindow import MacroWindow
-from guis.PositionsPage import PositionsPage
-from guis.SettingsPage import SettingsPage
+from app.guis.MacroWindow import MacroWindow
+from app.guis.PositionsPage import PositionsPage
+from app.guis.SettingsPage import SettingsPage
 import tkinter as tk
 from tkinter import ttk
 
-from guis.SharedFigs import SharedFigs
-from guis.StartPage import StartPage
-from guis.TimelinePage.TimelinePage import TimelinePage
-from guis.ConnectionsPage import ConnectionsPage
+from app.guis.SharedFigs import SharedFigs
+from app.guis.StartPage import StartPage
+from app.guis.TimelinePage.TimelinePage import TimelinePage
+from app.guis.ConnectionsPage import ConnectionsPage
 
 import os
 

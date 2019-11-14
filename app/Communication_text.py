@@ -1,9 +1,8 @@
 from queue import Queue, Empty
 import os
-from io_communication.CommandReader_text import CommandReader, ImagingParamFileHandler
-from io_communication.CommandWriter_text import CommandWriter
-from io_communication.file_listeners import FileReaderThread
-import numpy as np
+from app.io_communication.CommandReader_text import CommandReader
+from app.io_communication.CommandWriter_text import CommandWriter
+from app.io_communication.file_listeners import FileReaderThread
 
 
 class Communication:

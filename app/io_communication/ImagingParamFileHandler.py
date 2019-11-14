@@ -1,7 +1,7 @@
 import os
 
-from io_communication.CommandReader_pipe import remove_spaces
-from io_communication.file_listeners import FileReaderThread
+from app.io_communication.CommandReader_pipe import remove_spaces
+from app.io_communication.file_listeners import FileReaderThread
 
 
 class ImagingParamFileHandler:

@@ -26,7 +26,7 @@ import threading
 import time
 from win32com.shell import shell, shellcon
 
-from io_communication.Event import Event
+from app.io_communication.Event import Event
 
 
 class FLIM_Com:

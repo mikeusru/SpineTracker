@@ -6,10 +6,10 @@ from tkinter.filedialog import askopenfilename, asksaveasfilename
 from matplotlib import patches
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
-from guis.TimelinePage.ColorChart import ColorChart
-from guis.TimelinePage.TimelineStepsFrame import TimelineStepsFrame
-from io_communication.Event import initialize_events
-from utilities.helper_functions import fit_fig_to_canvas
+from app.guis.TimelinePage.ColorChart import ColorChart
+from app.guis.TimelinePage.TimelineStepsFrame import TimelineStepsFrame
+from app.io_communication.Event import initialize_events
+from app.utilities.helper_functions import fit_fig_to_canvas
 
 
 class TimelinePage(ttk.Frame):

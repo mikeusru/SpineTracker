@@ -1,4 +1,4 @@
-from io_communication.CommandHandler import CommandHandler
+from app.io_communication.CommandHandler import CommandHandler
 
 
 class CommandWriter(CommandHandler):

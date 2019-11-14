@@ -1,7 +1,7 @@
 from app.TkinterTestCase import TkinterTestCase
 import tkinter as tk
 
-from guis import TimelinePage
+from app.guis import TimelinePage
 
 
 class TestTimelinePage(TkinterTestCase):

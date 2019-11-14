@@ -1,7 +1,7 @@
 from queue import Queue, Empty
-from io_communication.CommandReader_pipe import CommandReader
-from io_communication.CommandWriter_pipe import CommandWriter
-from io_communication.FLIM_pipeClient import FLIM_Com
+from app.io_communication.CommandReader_pipe import CommandReader
+from app.io_communication.CommandWriter_pipe import CommandWriter
+from app.io_communication.FLIM_pipeClient import FLIM_Com
 
 
 class Communication:

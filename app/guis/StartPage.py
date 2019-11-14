@@ -5,8 +5,8 @@ from matplotlib import patches
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 
-from io_communication.Event import initialize_events
-from utilities.helper_functions import fit_fig_to_canvas
+from app.io_communication.Event import initialize_events
+from app.utilities.helper_functions import fit_fig_to_canvas
 
 
 class StartPage(ttk.Frame):

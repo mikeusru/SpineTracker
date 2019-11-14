@@ -5,8 +5,7 @@ import numpy as np
 from PIL import ImageTk, ImageMath
 from skimage import transform
 
-from io_communication.Event import initialize_events
-from utilities.math_helpers import round_math
+from app.utilities.math_helpers import round_math
 
 
 class MacroWindow(tk.Toplevel):
