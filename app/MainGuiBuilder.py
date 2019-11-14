@@ -79,6 +79,11 @@ class MainGuiBuilder(tk.Tk):
             frame.events['set_setting'] += self.session.settings.set
             frame.build_gui_items()
 
+        elif frame.name == 'Connections':
+            self.settings.assign_settings(frame.settings)
+            self.settings.assign_gui_vars(frame.gui_vars)
+            frame.build_gui_items()
+
     def run_on_exit(self):
         self.session.exit()
 
