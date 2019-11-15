@@ -36,7 +36,7 @@ class ConnectionsPage(ttk.Frame):
         gui['commands_received'].config(state='disabled')
         gui['commands_received'].grid(row=2, column=1, sticky='nw', padx=10, pady=3)
 
-        return gui
+        self.gui = gui
 
     def show_text(self, send_or_receive, text):
         if send_or_receive[0].lower() == 's':
