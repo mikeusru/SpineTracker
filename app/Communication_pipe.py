@@ -90,6 +90,13 @@ class Communication:
         self.command_reader.set_response(response_command)
         self.command_writer.grab_one_stack()
         self.command_reader.wait_for_response(response_command)
+        self.get_intensity_file_path()
+
+    def get_intensity_file_path(self):
+        response_command = 'intensityfilepath'
+        self.command_reader.set_response(response_command)
+        self.command_writer.get_intensity_file_path()
+        self.command_reader.wait_for_response(response_command)
 
     def uncage(self, roi_x, roi_y):
         response_command = 'uncagingdone'

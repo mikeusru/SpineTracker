@@ -173,10 +173,10 @@ class PositionsPage(ttk.Frame):
         pp = ()
         for pos_id in positions:
             position = positions[pos_id]
-            zoom = position.zoom
-            multiplier = position.scan_voltage_multiplier
-            rotation = position.rotation
-            fovxy = position.fov_xy
+            zoom = position['zoom']
+            multiplier = position['scan_voltage_multiplier']
+            rotation = position['rotation']
+            fovxy = position['fov_xy']
             viewsize = fovxy * multiplier / zoom
             w = viewsize[0]
             h = viewsize[1]
@@ -295,7 +295,8 @@ class PositionsPage(ttk.Frame):
         for ax, ref_image in zip(self.gui['ref_images_axes'], refs):
             ax.clear()
             ax.axis('off')
-            img = ref_image.get_max_projection()
+            if ref_image:
+                img = ref_image.get_max_projection()
             ax.imshow(img)
         self.draw_roi(pos_id, self.gui['ref_images_axes'][0])
         self.gui['canvas_preview_ref_images'].draw_idle()

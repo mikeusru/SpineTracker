@@ -30,26 +30,24 @@ class AcquiredImage:
 
     def load(self, settings, pos_id, position=None):
         if position is None:
-            self.position.scan_voltage_multiplier = np.array(settings.get('scan_voltage_multiplier'))
-            self.position.scan_voltage_range_reference = np.array(settings.get('scan_voltage_range_reference'))
-            self.position.rotation = float(settings.get('rotation'))
-            self.position.fovxy = np.squeeze(np.array([settings.get('fov_x'), settings.get('fov_y')]))
-            self.position.zstep = float(settings.get('zstep'))
-            self.position.zoom = float(settings.get('current_zoom'))
+            self.position['scan_voltage_multiplier'] = np.array(settings.get('scan_voltage_multiplier'))
+            self.position['scan_voltage_range_reference'] = np.array(settings.get('scan_voltage_range_reference'))
+            self.position['rotation'] = float(settings.get('rotation'))
+            self.position['fov_xy'] = np.squeeze(np.array([settings.get('fov_x'), settings.get('fov_y')]))
+            self.position['zstep'] = float(settings.get('zstep'))
+            self.position['zoom'] = float(settings.get('current_zoom'))
         else:
-            self.position.scan_voltage_multiplier = position.scan_voltage_multiplier
-            self.position.scan_voltage_range_reference = position.scan_voltage_range_reference
-            self.position.rotation = position.rotation
-            self.position.fovxy = position.fovxy
-            self.position.zstep = position.zstep
-            self.position.zoom = position.zoom
+            self.position['scan_voltage_multiplier'] = position['scan_voltage_multiplier']
+            self.position['scan_voltage_range_reference'] = position['scan_voltage_range_reference']
+            self.position['rotation'] = position['rotation']
+            self.position['fov_xy'] = position['fov_xy']
+            self.position['zstep'] = position['zstep']
+            self.position['zoom'] = position['zoom']
 
-        if settings is not None:
-            self.set_zoom(settings)
-            self.image_file_path = settings.get('image_file_path')
-            self.total_chan = int(settings.get('total_channels'))
-            self.drift_chan = int(settings.get('drift_correction_channel'))
-
+        self.set_zoom(settings)
+        self.image_file_path = settings.get('image_file_path')
+        self.total_chan = int(settings.get('total_channels'))
+        self.drift_chan = int(settings.get('drift_correction_channel'))
         self.pos_id = pos_id
         image_stack = io.imread(self.image_file_path)
         image_stack = self._set_correct_dimensions(image_stack)
@@ -78,7 +76,7 @@ class AcquiredImage:
             self.zoom = settings.get('imaging_zoom')
 
     def calc_x_y_z_drift(self, position, zoom, reference_max_projection):
-        self.drift_x_y_z.compute_drift_z(self.image_stack, position.zstep)
+        self.drift_x_y_z.compute_drift_z(self.image_stack, position['zstep'])
         self.calc_x_y_drift(position, zoom, reference_max_projection)
 
     def get_max_projection(self):

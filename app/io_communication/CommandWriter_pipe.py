@@ -18,6 +18,9 @@ class CommandWriter(CommandHandler):
     def set_intensity_saving(self, save_intensity_image_1_or_0):
         self.handle_command('SetIntensitySaving', save_intensity_image_1_or_0)
 
+    def get_intensity_file_path(self):
+        self.handle_command('GetIntensityFilePath')
+
     def do_uncaging(self, roi_x, roi_y):
         self.handle_command('StartUncaging', roi_x, roi_y)
 

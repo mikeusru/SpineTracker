@@ -43,7 +43,7 @@ class Positions(dict):
 
     def update_all_coordinates_relative_to_center(self):
         for pos_id in self:
-            self[pos_id].coordinates.update_to_center()
+            self[pos_id]['coordinates'].update_to_center()
 
     def create_new_pos(self, ref_image, ref_image_zoomed_out):
         coordinates = self.session.state.current_coordinates.copy()
@@ -112,34 +112,34 @@ class Positions(dict):
         self[pos_id].set_coordinates(coordinates)
 
     def get_coordinates(self, pos_id):
-        coordinates = self[pos_id].coordinates
+        coordinates = self[pos_id]['coordinates']
         return coordinates
 
     def update_coordinates_for_drift(self, pos_id, drift_x_y_z):
-        self[pos_id].coordinates.update_to_drift(drift_x_y_z, self.session)
+        self[pos_id]['coordinates'].update_to_drift(drift_x_y_z, self.session)
 
     def import_parameters_from_session(self, pos_id):
         if pos_id in self:
             settings = self.session.settings
             position = self[pos_id]
-            position.zoom = float(settings.get('imaging_zoom'))
-            position.scan_voltage_multiplier = np.array(settings.get('scan_voltage_multiplier'))
-            position.scan_voltage_range_reference = np.array(settings.get('scan_voltage_range_reference'))
-            position.rotation = float(settings.get('rotation'))
-            position.fovxy = np.squeeze(np.array([settings.get('fov_x'), settings.get('fov_y')]))
-            position.zstep = float(settings.get('zstep'))
+            position['zoom'] = float(settings.get('imaging_zoom'))
+            position['scan_voltage_multiplier'] = np.array(settings.get('scan_voltage_multiplier'))
+            position['scan_voltage_range_reference'] = np.array(settings.get('scan_voltage_range_reference'))
+            position['rotation'] = float(settings.get('rotation'))
+            position['fov_xy'] = np.squeeze(np.array([settings.get('fov_x'), settings.get('fov_y')]))
+            position['zstep'] = float(settings.get('zstep'))
 
     def export_parameters_to_session(self, pos_id):
         if pos_id in self:
             settings = self.session.settings
             position = self[pos_id]
-            settings.set('imaging_zoom', position.zoom)
-            settings.set('scan_voltage_multiplier', position.scan_voltage_multiplier)
-            settings.set('scan_voltage_range_reference', position.scan_voltage_range_reference)
-            settings.set('rotation', position.rotation)
-            settings.set('fov_x', position.fov_xy[0])
-            settings.set('fov_y', position.fov_xy[1])
-            settings.set('zstep', position.zstep)
+            settings.set('imaging_zoom', position['zoom'])
+            settings.set('scan_voltage_multiplier', position['scan_voltage_multiplier'])
+            settings.set('scan_voltage_range_reference', position['scan_voltage_range_reference'])
+            settings.set('rotation', position['rotation'])
+            settings.set('fov_x', position['fov_xy'][0])
+            settings.set('fov_y', position['fov_xy'][1])
+            settings.set('zstep', position['zstep'])
 
     def clear_file_record(self):
         for pos_id in self:
