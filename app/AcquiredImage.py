@@ -6,7 +6,7 @@ import copy
 from app.DriftXYZ import DriftXYZ
 from app.utilities.math_helpers import contrast_stretch
 
-from app.Positions import Position
+from app.Position import Position
 
 
 class AcquiredImage:

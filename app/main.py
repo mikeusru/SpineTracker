@@ -66,7 +66,7 @@ class SpineTracker:
 
     def initialize_positions(self):
         positions = Positions(self)
-        positions.load_previous_positions()
+        positions.load_previous_positions(self.state.center_coordinates)
         return positions
 
     def mainloop(self):
