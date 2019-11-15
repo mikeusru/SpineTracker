@@ -27,21 +27,11 @@ class CommandReader(CommandHandler):
         self.instructions_received = []
         self.received_flags = {}
         self.read_settings = {}
-        self.file_path = None
-        self.imaging_param_file = None
         self.stage_control_target = Event()
         self.scan_voltage_target = Event()
         self.setting_target = Event()
         self.freeze_preventer = Event()
         self.fov_target = Event()
-
-    def set_imaging_param_file(self, file_path):
-        self.imaging_param_file = file_path
-
-    def set_file_path(self, file_path):
-        self.file_path = file_path
-        if not os.path.isfile(self.file_path):
-            open(self.file_path, 'a').close()
 
     def reset(self):
         self.instructions_received = []

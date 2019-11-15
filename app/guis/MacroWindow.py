@@ -91,7 +91,7 @@ class MacroWindow(tk.Toplevel):
         # TODO: Loading this image doesn't always work. Figure out why... Sometimes, it loads the old image.
         # TODO: open this image automatically when macro window is launched
         self.session.communication.get_motor_position()
-        xyz = self.session.state.current_coordinates.get_combined(self.session)
+        xyz = self.session.state.current_coordinates.get_combined()
         self.session.state.center_coordinates.set_motor(xyz['x'], xyz['y'], xyz['z'])
         self.image = self.session.state.macro_image.pil_image
         self.multi_slice_viewer()

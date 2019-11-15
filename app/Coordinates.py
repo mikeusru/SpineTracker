@@ -10,8 +10,8 @@ class Coordinates:
         self.motor_z = 0
         self.scan_voltage_x = 0
         self.scan_voltage_y = 0
-        self.settings_reader = Event()
-        self.center_motor_reader = Event()
+        self.settings_reader = None
+        self.center_motor_reader = None
 
     def save(self):
         return dict(
@@ -86,6 +86,7 @@ class Coordinates:
         return dict(x=x_combined, y=y_combined, z=self.motor_z)
 
     def scan_voltage_to_um(self):
+        # TODO: SOmething strange is happening... seems like the settings reader works, but just returns None from here. wtf.
         scan_voltage_range_reference = self.settings_reader('scan_voltage_range_reference')
         fov_x_y = np.squeeze(np.array([self.settings_reader('fov_x'), self.settings_reader('fov_y')]))
         fs_angular = np.array([self.scan_voltage_x, self.scan_voltage_y])
@@ -95,7 +96,7 @@ class Coordinates:
 
     def x_y_to_scan_voltage(self, x, y):
         scan_voltage_range_reference = np.array(self.settings_reader('scan_voltage_range_reference'))
-        fov_x_y = np.squeeze(np.array(self.settings_reader('fov_x'), self.settings_reader('fov_y')))
+        fov_x_y = np.squeeze(np.array([self.settings_reader('fov_x'), self.settings_reader('fov_y')]))
         # convert x and y to relative pixel coordinates
         fs_coordinates = np.array([x - self.motor_x, y - self.motor_y])
         fs_normalized = fs_coordinates / fov_x_y

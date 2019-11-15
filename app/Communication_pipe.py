@@ -1,6 +1,7 @@
 from queue import Queue, Empty
 from app.io_communication.CommandReader_pipe import CommandReader
 from app.io_communication.CommandWriter_pipe import CommandWriter
+from app.io_communication.Event import initialize_events
 from app.io_communication.FLIM_pipeClient import FLIM_Com
 
 
@@ -9,6 +10,9 @@ class Communication:
     def __init__(self, session):
         self.session = session
         self.settings = session.settings
+        self.events = initialize_events([
+            'connection_made'
+        ])
         self.instructions_in_queue = Queue()
         self.command_writer = None
         self.command_reader = None
@@ -18,7 +22,6 @@ class Communication:
 
     def init_command_reader(self):
         self.command_reader = CommandReader(self.instructions_in_queue)
-        self.command_reader.set_file_path(self.settings.get('input_file'))
         self.command_reader.stage_control_target += self.session.state.current_coordinates.set_motor
         self.command_reader.scan_voltage_target += self.session.state.current_coordinates.set_scan_voltages_x_y
         self.command_reader.setting_target += self.session.settings.set
@@ -26,7 +29,6 @@ class Communication:
         self.command_reader.command_target += self.session.print_received_command
         self.command_reader.command_target += self.session.print_to_log
         self.command_reader.freeze_preventer += self.session.prevent_freezing_during_loops
-        self.command_reader.set_imaging_param_file(self.settings.get('imaging_param_file'))
         self.command_reader.fov_target += self.set_fov
         self.command_reader.create_read_settings()
 
@@ -52,6 +54,7 @@ class Communication:
                     self.instructions_in_queue.get(False)
                 except Empty:
                     continue
+            self.events['connection_made']()
         self.settings.set('pipe_connect_bool', self.pipe_target.Connected)
 
     def pipe_unsubscribe(self):
@@ -142,7 +145,6 @@ class Communication:
         self.set_resolution(x_resolution, y_resolution)
         self.set_z_slice_num(z_slice_num)
         self.set_intensity_image_saving_on()  # Added by Ryohei
-        # self.command_reader.read_imaging_param_file()  # Ryohei
 
     def set_reference_imaging_conditions(self):
         zoom = self.settings.get('reference_zoom')
@@ -153,7 +155,6 @@ class Communication:
         self.set_resolution(x_resolution, y_resolution)
         self.set_z_slice_num(z_slice_num)
         self.set_intensity_image_saving_on()  # Added by Ryohei
-        # self.command_reader.read_imaging_param_file()  # Ryohei
 
     def send_custom_command(self, custom_command):
         if custom_command != '':
@@ -174,3 +175,19 @@ class Communication:
             self.command_reader.set_response(response_command)
             self.command_writer.set_intensity_saving(1)
             self.command_reader.wait_for_response(response_command)
+
+    def get_imaging_settings(self):
+        self.get_scan_voltage_range_reference()
+        self.get_scan_voltage_multiplier()
+
+    def get_scan_voltage_range_reference(self):
+        response_command = 'scanvoltagerangereference'
+        self.command_reader.set_response(response_command)
+        self.command_writer.get_scan_voltage_range_reference()
+        self.command_reader.wait_for_response(response_command)
+
+    def get_scan_voltage_multiplier(self):
+        response_command = 'scanvoltagemultiplier'
+        self.command_reader.set_response(response_command)
+        self.command_writer.get_scan_voltage_multiplier()
+        self.command_reader.wait_for_response(response_command)

@@ -301,7 +301,7 @@ class PositionsPage(ttk.Frame):
         self.gui['canvas_preview_ref_images'].draw_idle()
 
     def draw_roi(self, pos_id, ax):
-        if self.settings['uncaging_roi_toggle']:
+        if self.gui_vars['uncaging_roi_toggle']:
             ax_width = abs(np.diff(ax.get_xlim()).item())
             x, y = self.positions.get_roi_x_y(pos_id)
             circle = patches.Circle((x, y), radius=ax_width / 20, fill=False, linewidth=ax_width / 20, edgecolor='r')

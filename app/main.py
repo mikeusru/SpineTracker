@@ -37,6 +37,13 @@ class SpineTracker:
         self.initialize_init_directory()
         self.update_center_position()  # Ryohei: Necessary to calculate center from data stored in position.p.
         self.create_log_file(['SpineTracker Opened'])
+        self.initialize_events()
+
+    def initialize_events(self):
+        self.communication.events['connection_made'] += self.read_imaging_settings
+
+    def read_imaging_settings(self):
+        self.communication.get_imaging_settings()
 
     def exit(self):
         self.stop_imaging()
@@ -107,8 +114,6 @@ class SpineTracker:
             position = self.positions[pos_id]
         else:
             position = None
-        self.read_imaging_param_file(pos_id,
-                                     False)  # Ryohei. Before reading, make sure the current setting. Filename particularly.
         if image_type == 'standard':
             self.state.current_image.zoom = self.settings.get('imaging_zoom')
             self.state.current_image.load(self.settings, pos_id, position)
@@ -203,7 +208,6 @@ class SpineTracker:
     def image_at_pos_id(self, pos_id):
         self.move_to_pos_id(pos_id)
         self.communication.grab_stack()
-        self.read_imaging_param_file()
         self.record_imaging_to_log(pos_id)
 
     def uncage_at_pos_id(self, pos_id):
@@ -252,8 +256,6 @@ class SpineTracker:
             self.collect_new_reference_images()
             self.communication.get_motor_position()
         self.positions.create_new_pos(self.state.ref_image, self.state.ref_image_zoomed_out)
-        self.read_imaging_param_file(self.positions.current_position,
-                                     True)  # Import parameters only for normal imaging.
         self.update_center_position()
         self.handle_position_update()
 
@@ -290,7 +292,6 @@ class SpineTracker:
         self.load_image('reference')
 
     def read_imaging_param_file(self, pos_id=None, import_parameters_to_position=False):
-        self.communication.command_reader.read_imaging_param_file()
         if pos_id is None:
             pos_id = self.positions.current_position
         if import_parameters_to_position:
@@ -312,7 +313,7 @@ class SpineTracker:
 
     def move_to_pos_id(self, pos_id):
         coordinates = self.positions.get_coordinates(pos_id)
-        coordinates.update_to_center(self)
+        coordinates.update_to_center()
         self.communication.move_to_coordinates(coordinates)
 
     def start_imaging(self):

@@ -31,7 +31,7 @@ class Positions(dict):
         z_list = []
         for pos_id in self:
             coordinates = self.get_coordinates(pos_id)
-            xyz = coordinates.get_combined(self.session)
+            xyz = coordinates.get_combined()
             x_list.append(xyz['x'])
             y_list.append(xyz['y'])
             z_list.append(xyz['z'])
@@ -42,7 +42,7 @@ class Positions(dict):
 
     def update_all_coordinates_relative_to_center(self):
         for pos_id in self:
-            self[pos_id].coordinates.update_to_center(self.session)
+            self[pos_id].coordinates.update_to_center()
 
     def create_new_pos(self, ref_image, ref_image_zoomed_out):
         coordinates = self.session.state.current_coordinates.copy()
@@ -146,6 +146,7 @@ class Positions(dict):
     def rename_latest_files(self, pos_id):
         self[pos_id].rename_file(pos_id)
 
+
 class Position:
     def __init__(self):
         self.coordinates = None
@@ -221,7 +222,7 @@ class Position:
 
     def rename_file(self, pos_id):
         path, file = os.path.split(self.collected_files[-1])
-        parent_dir = os.path.dirname(path) #assumes we're looking in parent dir
+        parent_dir = os.path.dirname(path)  # assumes we're looking in parent dir
         file_number, associated_files = self.get_associated_files(parent_dir, file)
         number_extractor = re.compile(file_number)
         new_number = f'{len(self.collected_files):04d}'

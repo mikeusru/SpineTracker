@@ -13,8 +13,8 @@ class State:
         self.imaging_active = False
         self.current_pos_id = 1
         self.center_coordinates = Coordinates()
-        self.center_coordinates.settings_reader += self.settings.get
-        self.center_coordinates.center_motor_reader += self.center_coordinates.get_motor
+        self.center_coordinates.settings_reader = self.settings.get
+        self.center_coordinates.center_motor_reader = self.center_coordinates.get_motor
         self.current_coordinates = self.center_coordinates.copy()
         self.current_image = AcquiredImage()
         self.ref_image = ReferenceImage()
