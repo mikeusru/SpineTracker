@@ -2,6 +2,7 @@ from unittest import TestCase
 import numpy as np
 
 from app.DriftXYZ import DriftXYZ
+from unittest.mock import patch
 
 
 class TestDriftXYZ(TestCase):
@@ -22,11 +23,33 @@ class TestDriftXYZ(TestCase):
         result = drift_xyz.copy()
         self.assertEqual(result.z_um, 12)
 
-    def test_compute_drift_z(self):
-        self.fail()
+    def test_compute_drift_z_even(self):
+        drift_xyz = DriftXYZ()
+        image_stack = [1, 2, 3, 4]
+        zstep = 3
+        with patch.object(DriftXYZ, 'measure_focus') as mocked_measure_focus:
+            mocked_measure_focus.side_effect = (0, 2, 4, 1)
+            drift_xyz.compute_drift_z(image_stack, zstep)
+        self.assertEqual(drift_xyz.z_slices, 0)
+        np.testing.assert_array_equal(drift_xyz.focus_list, np.array([0, 2, 3, 1]))
+        self.assertEqual(drift_xyz.z_um, 0)
+
+    def test_compute_drift_z_odd(self):
+        drift_xyz = DriftXYZ()
+        image_stack = [1, 2, 3, 4, 5]
+        zstep = 3
+        with patch.object(DriftXYZ, 'measure_focus') as mocked_measure_focus:
+            mocked_measure_focus.side_effect = (1, 10, 2, 4, 1)
+            drift_xyz.compute_drift_z(image_stack, zstep)
+        self.assertEqual(drift_xyz.z_slices, -1)
+        np.testing.assert_array_equal(drift_xyz.focus_list, np.array([1, 10, 2, 4, 1]))
+        self.assertEqual(drift_xyz.z_um, -3)
 
     def test_measure_focus(self):
-        self.fail()
+        drift_xyz = DriftXYZ()
+        img = np.ones([128,128])
+        focus = drift_xyz.measure_focus(img)
+        self.assertEqual(focus, 64.05830055475235)
 
     def test_compute_drift_x_y(self):
         self.fail()
