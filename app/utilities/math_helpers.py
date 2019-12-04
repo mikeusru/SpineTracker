@@ -1,5 +1,4 @@
 import math
-from scipy import ndimage
 import numpy as np
 from skimage import exposure
 
@@ -14,13 +13,6 @@ def round_math(n, n_digits=0):
         part = math.floor(part)
     return part / (10 ** n_digits)
 
-
-# def float_or_none(x):
-#     if x == "":
-#         y = None
-#     else:
-#         y = float(x)
-#     return y
 
 def blank_to_none(var):
     if isinstance(var, str) and (var == ""):
@@ -41,14 +33,6 @@ def none_to_blank(var):
         return ""
     else:
         return var
-
-
-# def float_or_zero(x):
-#     if x == "":
-#         y = 0.0
-#     else:
-#         y = float(x)
-#     return y
 
 
 # output is directional shift [x,y] in pixels. based on Sugar et al (2014) paper
@@ -74,10 +58,6 @@ def compute_drift(img_ref, img):
 
     return {'shiftx': shift_x[0], 'shifty': shift_y[0]}
 
-
-# def histogram_equalize(img):
-#     img_cdf, bin_centers = exposure.cumulative_distribution(img)
-#     return np.interp(img, bin_centers, img_cdf)
 
 def contrast_stretch(img):
     p2, p98 = np.percentile(img, (2, 98))

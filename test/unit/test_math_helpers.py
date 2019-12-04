@@ -1,14 +1,15 @@
 # import sys
 # sys.path.append('../')
 
-import unittest
+from unittest import TestCase
 
 import numpy as np
 
-from app.utilities.math_helpers import round_math, blank_to_none, none_to_blank, compute_drift
+from app.utilities.math_helpers import round_math, blank_to_none, none_to_blank, compute_drift, blank_to_zero, \
+    contrast_stretch
 
 
-class TestMath(unittest.TestCase):
+class TestMath(TestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -56,7 +57,13 @@ class TestMath(unittest.TestCase):
         result = none_to_blank(432432.6564)
         self.assertEqual(result, 432432.6564)
 
-    #TODO: make the base drift computation make more sense, change the polarity later
+    def test_blank_to_zero(self):
+        result_zero = blank_to_zero('')
+        result_number = blank_to_zero(32)
+        self.assertEqual(result_zero, 0)
+        self.assertEqual(result_number, 32)
+
+    # TODO: make the base drift computation make more sense, change the polarity later
     def test_compute_drift(self):
         image_ref = np.zeros([25, 25], dtype=np.uint8)
         image_ref[13, 13] = 100
@@ -66,6 +73,8 @@ class TestMath(unittest.TestCase):
         self.assertEqual(result['shiftx'], 2.5)
         self.assertEqual(result['shifty'], -6.5)
 
-
-if __name__ == '__main__':
-    unittest.main()
+    def test_contrast_stretch(self):
+        img = np.ones([128, 128])
+        img[0, 0] = 1000
+        image_stretched = contrast_stretch(img)
+        self.assertEqual(image_stretched[0, 0], 1)
