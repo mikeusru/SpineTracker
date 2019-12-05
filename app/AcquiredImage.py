@@ -85,7 +85,7 @@ class AcquiredImage:
     def calc_x_y_drift(self, position, zoom, reference_max_projection):
         image_max_projection = self.get_max_projection()
         reference_resized = transform.resize(reference_max_projection, image_max_projection.shape)
-        self.drift_x_y_z.compute_drift_x_y(reference_resized, image_max_projection)
+        self.drift_x_y_z.compute_pixel_drift_x_y(reference_resized, image_max_projection)
         self.drift_x_y_z.scale_x_y_drift_to_image(position, zoom,
                                                   image_max_projection.shape)  # This actually requires voltage_mult and rotation.
 

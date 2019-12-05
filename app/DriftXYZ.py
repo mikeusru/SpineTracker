@@ -47,7 +47,7 @@ class DriftXYZ:
         f_m = np.mean(f_m)
         return f_m
 
-    def compute_drift_x_y(self, img_ref, img):
+    def compute_pixel_drift_x_y(self, img_ref, img):
         h, w = img_ref.shape
         fft_ref = np.fft.fft2(img_ref)
         fft_img = np.fft.fft2(img)

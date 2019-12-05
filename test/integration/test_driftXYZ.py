@@ -47,12 +47,19 @@ class TestDriftXYZ(TestCase):
 
     def test_measure_focus(self):
         drift_xyz = DriftXYZ()
-        img = np.ones([128,128])
+        img = np.ones([128, 128])
         focus = drift_xyz.measure_focus(img)
         self.assertEqual(focus, 64.05830055475235)
 
     def test_compute_drift_x_y(self):
-        self.fail()
+        img_ref = np.zeros([10, 10])
+        img_ref[5, 5] = 1
+        img = np.zeros([10, 10])
+        img[8, 3] = 1
+        drift_xyz = DriftXYZ()
+        drift_xyz.compute_pixel_drift_x_y(img_ref, img)
+        self.assertEqual(drift_xyz.x_pixels, 2)
+        self.assertEqual(drift_xyz.y_pixels, -3)
 
     def test_scale_x_y_drift_to_image(self):
         self.fail()
