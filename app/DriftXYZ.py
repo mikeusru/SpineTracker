@@ -14,6 +14,8 @@ class DriftXYZ:
         self.z_slices = 0
         self.z_um = 0.0
         self.focus_list = np.array([])
+        self.x_multiplier = -1
+        self.y_multiplier = -1
 
     def copy(self):
         return copy.deepcopy(self)
@@ -78,4 +80,4 @@ class DriftXYZ:
             cosA = np.cos(rotation * np.pi / 180.0)
             rotMat = np.array([[cosA, -sinA], [sinA, cosA]])
             x_y_um = np.dot(rotMat, x_y_um)
-        self.x_um, self.y_um = (-x_y_um[0], -x_y_um[1])
+        self.x_um, self.y_um = (x_y_um[0] * self.x_multiplier, x_y_um[1] * self.y_multiplier)

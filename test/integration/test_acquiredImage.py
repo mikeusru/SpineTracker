@@ -19,7 +19,6 @@ class TestAcquiredImage(TestCase):
         self.acquired_image_ref.fov_x_y = np.array([250, 250])
         self.acquired_image_ref.zoom = 10
 
-
     def test_load(self):
         self.acquired_image.load()
         self.acquired_image_ref.load()
