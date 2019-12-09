@@ -1,5 +1,5 @@
 from unittest import TestCase
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 from app.Setting import Setting
 import tkinter as tk
@@ -42,18 +42,3 @@ class TestSetting(TestCase):
         setting = Setting('test', None, True, 14, callback=callback_test, dtype=int)
         self.assertEqual(setting.get_value(), 14)
 
-    def test_update_gui(self):
-        gui_var = tk.StringVar
-        setting = Setting('test', gui_var, True, '14', callback=callback_test, dtype=int)
-        # setting.update_gui()
-        # self.assertEqual(gui_var.get(), 14)
-
-
-    def test_set_trace(self):
-        self.fail()
-
-    def test_update_value_from_gui(self):
-        self.fail()
-
-    def test_needs_default_trace(self):
-        self.fail()
