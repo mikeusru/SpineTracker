@@ -34,9 +34,9 @@ class Communication:
 
     def init_command_writer(self):
         self.command_writer = CommandWriter()
-        self.command_writer.command_target += self.pipe_target.sendCommand
         self.command_writer.command_target += self.session.print_sent_command
         self.command_writer.command_target += self.session.print_to_log
+        self.command_writer.command_target += self.pipe_target.sendCommand
 
     def set_fov(self, x, y):
         self.settings.set('fov_x', x)

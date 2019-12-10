@@ -72,7 +72,7 @@ class TimelineStepsFrame(ttk.Frame):
     def add_step_callback(self, ind=None, *args):
         timeline_step = TimelineStepBlock()
         for key in timeline_step:
-            timeline_step[key] = self.container.events['get_setting'](key)
+            timeline_step[key] = self.container.get_setting(key)
         self.uncaging_specific_setting(timeline_step)
         timeline_step['index'] = ind
         if not timeline_step.is_valid():

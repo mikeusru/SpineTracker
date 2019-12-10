@@ -116,7 +116,7 @@ class Positions(dict):
         return coordinates
 
     def update_coordinates_for_drift(self, pos_id, drift_x_y_z):
-        self[pos_id]['coordinates'].update_to_drift(drift_x_y_z, self.session)
+        self[pos_id]['coordinates'].update_to_drift(drift_x_y_z)
 
     def import_parameters_from_session(self, pos_id):
         if pos_id in self:

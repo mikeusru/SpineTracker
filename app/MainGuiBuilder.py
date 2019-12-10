@@ -66,7 +66,7 @@ class MainGuiBuilder(tk.Tk):
         elif frame.name == 'Timeline':
             frame.shared_figs = self.shared_figs
             frame.timeline = self.session.timeline
-            frame.events['get_setting'] += self.session.settings.get
+            frame.get_setting = self.session.settings.get
             frame.events['set_setting'] += self.session.settings.set
 
         elif frame.name == 'Connections':

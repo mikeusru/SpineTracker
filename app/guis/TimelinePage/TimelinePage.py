@@ -36,8 +36,8 @@ class TimelinePage(ttk.Frame):
             'custom_command': None,
             'stagger': None,
         }
+        self.get_setting = None
         self.events = initialize_events([
-            'get_setting',
             'set_setting',
         ])
 

@@ -20,6 +20,8 @@ http://www.valuedlessons.com/2008/04/events-in-python.html
 """
 
 import os
+import sys
+
 import win32file
 import struct
 import threading
@@ -97,6 +99,8 @@ class FLIM_Com:
                 self.__readMessage(self.clientW)
                 self.messageReceived(self.Received, 'W')
             except:
+                e = sys.exc_info()[0]
+                print('Error in pipeClient sendCommand: \n{}'.format(e))
                 self.failureHandle()
 
             return self.Received
