@@ -24,6 +24,7 @@ class PositionsPage(ttk.Frame):
         self.selected_pos_id = None
         self.draggable_circle = None
         self.settings = {
+            'scan_voltage_multiplier': np.array([1, 1]),
             'large_font': None,
             'fig_dpi': 0
         }
@@ -174,7 +175,7 @@ class PositionsPage(ttk.Frame):
         for pos_id in positions:
             position = positions[pos_id]
             zoom = position['zoom']
-            multiplier = position['scan_voltage_multiplier']
+            multiplier = self.settings['scan_voltage_multiplier']
             rotation = position['rotation']
             fovxy = position['fov_xy']
             viewsize = fovxy * multiplier / zoom

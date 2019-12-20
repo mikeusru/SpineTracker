@@ -15,7 +15,6 @@ class AcquiredImage:
         self.image_file_path = None
         self.total_chan = None
         self.drift_chan = None
-        self.fov_x_y = None
         self.image_stack = np.array([])
         self.is_macro = False
         self.is_reference = False
