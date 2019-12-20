@@ -124,7 +124,6 @@ class Positions(dict):
             position = self[pos_id]
             position['zoom'] = float(settings.get('imaging_zoom'))
             position['scan_voltage_multiplier'] = np.array(settings.get('scan_voltage_multiplier'))
-            position['scan_voltage_range_reference'] = np.array(settings.get('scan_voltage_range_reference'))
             position['rotation'] = float(settings.get('rotation'))
             position['fov_xy'] = np.squeeze(np.array([settings.get('fov_x'), settings.get('fov_y')]))
             position['zstep'] = float(settings.get('zstep'))
@@ -135,7 +134,6 @@ class Positions(dict):
             position = self[pos_id]
             settings.set('imaging_zoom', position['zoom'])
             settings.set('scan_voltage_multiplier', position['scan_voltage_multiplier'])
-            settings.set('scan_voltage_range_reference', position['scan_voltage_range_reference'])
             settings.set('rotation', position['rotation'])
             settings.set('fov_x', position['fov_xy'][0])
             settings.set('fov_y', position['fov_xy'][1])

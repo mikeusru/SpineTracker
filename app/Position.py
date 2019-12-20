@@ -17,7 +17,6 @@ class Position(dict):
         self['zoom'] = 10
         self['fov_xy'] = np.array([250, 250])
         self['scan_voltage_multiplier'] = np.array([1, 1])
-        self['scan_voltage_range_reference'] = np.array([5, 5])
         self['zstep'] = 1
         self['collected_files'] = []
         self['drift_history'] = []

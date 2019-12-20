@@ -1,7 +1,5 @@
 import numpy as np
 
-from app.io_communication.Event import Event
-
 
 class Coordinates:
     def __init__(self):

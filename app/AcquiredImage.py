@@ -31,14 +31,12 @@ class AcquiredImage:
     def load(self, settings, pos_id, position=None):
         if position is None:
             self.position['scan_voltage_multiplier'] = np.array(settings.get('scan_voltage_multiplier'))
-            self.position['scan_voltage_range_reference'] = np.array(settings.get('scan_voltage_range_reference'))
             self.position['rotation'] = float(settings.get('rotation'))
             self.position['fov_xy'] = np.squeeze(np.array([settings.get('fov_x'), settings.get('fov_y')]))
             self.position['zstep'] = float(settings.get('zstep'))
             self.position['zoom'] = float(settings.get('current_zoom'))
         else:
             self.position['scan_voltage_multiplier'] = position['scan_voltage_multiplier']
-            self.position['scan_voltage_range_reference'] = position['scan_voltage_range_reference']
             self.position['rotation'] = position['rotation']
             self.position['fov_xy'] = position['fov_xy']
             self.position['zstep'] = position['zstep']
