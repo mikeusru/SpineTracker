@@ -100,7 +100,7 @@ class Communication:
         self.command_reader.wait_for_response(response_command)
 
     def toggle_uncaging(self, uncaging_toggle):
-        response_command = 'uncaging'
+        response_command = 'uncaging processed'
         self.command_reader.set_response(response_command)
         uncaging_toggle = int(uncaging_toggle)
         self.command_writer.toggle_uncaging(uncaging_toggle)
