@@ -180,7 +180,7 @@ class Communication:
 
     def set_imaging_settings_file(self, imaging_settings_file):
         if imaging_settings_file != '':
-            response_command = 'imagingsettingsfilereceived'
+            response_command = 'loadsetting processed'
             self.command_reader.set_response(response_command)
             self.command_writer.set_imaging_settings_file(imaging_settings_file)
             self.command_reader.wait_for_response(response_command)

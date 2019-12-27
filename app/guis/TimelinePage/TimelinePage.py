@@ -77,13 +77,14 @@ class TimelinePage(ttk.Frame):
 
     def create_timeline_table(self):
         tree = self.gui['timeline_tree']
-        tree["columns"] = ("sn", "iu", 'ex', "p", "i", "cc")
+        tree["columns"] = ("sn", "iu", 'ex', "p", "i", "sf", "cc")
         tree.column("#0", width=30)
         tree.column("sn", width=120)
         tree.column("iu", width=60)
         tree.column("ex", width=60)
         tree.column("p", width=60)
         tree.column("i", width=75)
+        tree.column("sf", width=75)
         tree.column("cc", width=60)
         tree.heading("#0", text='#')
         tree.heading("sn", text="Step")
@@ -91,6 +92,7 @@ class TimelinePage(ttk.Frame):
         tree.heading("ex", text="Exclusive")
         tree.heading("p", text="Period (s)")
         tree.heading("i", text="Iterations")
+        tree.heading("sf", text="Settings")
         tree.heading("cc", text="Comm")
         tree.bind("<Button-3>", self.on_timeline_table_right_click)
         tree.bind("<Button-1>", self.on_timeline_table_left_click)
@@ -224,8 +226,9 @@ class TimelinePage(ttk.Frame):
             image_or_uncage = stepDist['image_or_uncage']
             exclusive = stepDist['exclusive']
             custom_command = stepDist['custom_command']
+            imaging_settings_file = os.path.basename(stepDist['imaging_settings_file'])
             tree.insert("", ii, text=str(ii),
-                        values=(step_name, image_or_uncage, exclusive, period, iterations, custom_command))
+                        values=(step_name, image_or_uncage, exclusive, period, iterations, imaging_settings_file, custom_command))
             ii += 1
 
         self.create_timeline_chart()
