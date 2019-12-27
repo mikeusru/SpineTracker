@@ -48,9 +48,6 @@ class CommandWriter(CommandHandler):
     def set_x_y_resolution(self, x_resolution, y_resolution):
         self.handle_command('SetResolutionXY', x_resolution, y_resolution)
 
-    def load_setting_file(self, file_number):
-        self.handle_command('LoadSetting', file_number)
-
     def set_uncaging_location(self, x_pixel, y_pixel):
         self.handle_command('SetUncagingLocation', x_pixel, y_pixel)
 
