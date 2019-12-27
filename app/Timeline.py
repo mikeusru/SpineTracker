@@ -298,13 +298,16 @@ class TimelineStepBlock(dict):
 
 
 class TimelineStepsMini(TimelineStepBlock):
-    """Individual steps on the timeline chart"""
+    """Individual steps on the timeline chart. This is
+        the information used during actual imaging."""
 
     def __init__(self, timeline_step, start_time, end_time, pos_id):
         super().__init__(timeline_step['step_name'],
                          timeline_step['image_or_uncage'],
                          timeline_step['exclusive'],
                          timeline_step['uncaging_while_imaging'],
+                         timeline_step['custom_command'],
+                         timeline_step['imaging_settings_file'],
                          start_time=start_time,
                          end_time=end_time,
                          pos_id=pos_id)
