@@ -178,6 +178,13 @@ class Communication:
             self.command_writer.write_custom_command(custom_command)
             self.command_reader.wait_for_response(response_command)
 
+    def set_imaging_settings_file(self, imaging_settings_file):
+        if imaging_settings_file != '':
+            response_command = 'imagingsettingsfilereceived'
+            self.command_reader.set_response(response_command)
+            self.command_writer.set_imaging_settings_file(imaging_settings_file)
+            self.command_reader.wait_for_response(response_command)
+
     def get_motor_position(self):
         response_command = 'currentposition'
         self.command_reader.set_response(response_command)

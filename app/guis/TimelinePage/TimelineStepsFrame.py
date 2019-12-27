@@ -1,5 +1,6 @@
 from tkinter import ttk
-
+from tkinter.filedialog import askopenfilename
+import os
 from app.Timeline import TimelineStepBlock
 
 
@@ -58,11 +59,12 @@ class TimelineStepsFrame(ttk.Frame):
 
         gui['setting_file_label1'] = ttk.Label(gui['settings_file_frame'], text='Setting File: ',
                                                  font=self.container.settings['large_font'])
-        gui['setting_file_label1'].grid(row=6, column=0, sticky='nw', padx=10, pady=3)
-        
+        gui['setting_file_label1'].grid(row=0, column=0, sticky='nw', padx=10, pady=3)
+        gui['settings_file_button'] = ttk.Button(gui['settings_file_frame'], text="...", command=self.get_imaging_settings_file)
+        gui['settings_file_button'].grid(row=0, column=1, padx=5, pady=0, sticky='wn')
         gui['setting_file_entry'] = ttk.Entry(gui['settings_file_frame'], width=30,
                                                 textvariable=self.container.gui_vars['imaging_settings_file'])
-        gui['setting_file_entry'].grid(row=6, column=2, sticky='nw', padx=10, pady=3)
+        gui['setting_file_entry'].grid(row=0, column=2, sticky='nw', padx=10, pady=3)
         gui['add_step_button'] = ttk.Button(self, text="Add Step", command=self.add_step_callback)
         gui['add_step_button'].grid(row=7, column=0, padx=10, pady=10, sticky='wn')
 
@@ -81,6 +83,11 @@ class TimelineStepsFrame(ttk.Frame):
                                           font=self.container.settings['large_font'])
         gui['stagger_label2'].grid(row=0, column=2, sticky='nw', padx=0, pady=10)
         return gui
+
+    def get_imaging_settings_file(self):
+        path = askopenfilename(initialdir=os.path.expanduser(""),
+                               title="Select Imaging Settings File")
+        self.container.gui_vars['imaging_settings_file'].set(path)
 
     def add_step_callback(self, ind=None, *args):
         timeline_step = TimelineStepBlock()
@@ -104,7 +111,7 @@ class TimelineStepsFrame(ttk.Frame):
             item_number = tree.index(item)
         ts = self.container.timeline.timeline_steps[item_number]
         for key in ts:
-            ts[key] = self.container.event['get_setting'](key)
+            ts[key] = self.container.get_setting(key)
         self.uncaging_specific_setting(ts)
         self.container.draw_timeline_steps_general()
         self.container.timeline.backup_timeline()

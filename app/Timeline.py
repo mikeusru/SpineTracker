@@ -259,7 +259,7 @@ class TimelineStepBlock(dict):
                  exclusive=True, uncaging_while_imaging=False,
                  period=60, iterations=1,
                  start_time=None, end_time=None,
-                 index=None, pos_id=None, custom_command=''):
+                 index=None, pos_id=None, custom_command='', imaging_settings_file=''):
         super(TimelineStepBlock, self).__init__()
         if (iterations is None) or (iterations == 0):
             iterations = 1
@@ -276,6 +276,7 @@ class TimelineStepBlock(dict):
         self['start_time'] = start_time
         self['end_time'] = end_time
         self['custom_command'] = custom_command
+        self['imaging_settings_file'] = imaging_settings_file
 
     def is_valid(self):
         if (self['period'] * self['iterations'] == 0) and (self['image_or_uncage'] == 'Image'):

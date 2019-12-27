@@ -186,6 +186,7 @@ class SpineTracker:
         self.positions.current_position = pos_id
         self.gui.indicate_step_on_timeline(single_step)
         self.communication.send_custom_command(single_step['custom_command'])
+        self.communication.set_imaging_settings_file(single_step['imaging_settings_file'])
         self.set_uncaging_roi(pos_id)
         if single_step['image_or_uncage'] == 'Image':
             if single_step['uncaging_while_imaging']:

@@ -57,6 +57,9 @@ class CommandWriter(CommandHandler):
     def write_custom_command(self, custom_command):
         self.handle_command('CustomCommand', custom_command)
 
+    def set_imaging_settings_file(self, imaging_settings_file):
+        self.handle_command('LoadSetting', imaging_settings_file)
+
     def handle_command(self, *args):
         command = ",".join([str(x) for x in args])
         self.write_command(command)

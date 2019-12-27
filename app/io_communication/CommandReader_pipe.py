@@ -53,6 +53,7 @@ class CommandReader(CommandHandler):
         self.new_setting('zslicenum', 1, 1, 'z_slice_num', None)
         self.new_setting('resolutionxy', 2, 2, 'resolution_x_y', None)
         self.new_setting('customcommandreceived', 0, 0, None, None)
+        self.new_setting('imagingsettingsfilereceived', 0, 0, None, None)
         self.new_setting('parameterfilesaved', 1, 1, None,
                          None)  # Added for future use by Ryohei. You have to take filepath here.
         self.new_setting('rotation', 1, 1, 'rotation',
