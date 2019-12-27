@@ -42,7 +42,7 @@ class CommandReader(CommandHandler):
         self.new_setting('intensityfilepath', 1, 1, 'image_file_path', None)
         self.new_setting('currentposition', 3, 3, None, self.set_current_position)
         self.new_setting('uncagingdone', 0, 0, None, None)
-        self.new_setting('uncaging processed', 0, 0, None, None)
+        self.new_setting('uncaging processed.', 0, 0, None, None)
         self.new_setting('uncaginglocation', 2, 2, None, None)
         self.new_setting('intensitysaving', 1, 1, 'intensity_saving', None)
         self.new_setting('fovxyum', 2, 2, None, self.set_fov_x_y_um)
@@ -53,7 +53,7 @@ class CommandReader(CommandHandler):
         self.new_setting('zslicenum', 1, 1, 'z_slice_num', None)
         self.new_setting('resolutionxy', 2, 2, 'resolution_x_y', None)
         self.new_setting('customcommandreceived', 0, 0, None, None)
-        self.new_setting('loadsettings processed', 0, 0, None, None)
+        self.new_setting('loadsettings processed.', 0, 0, None, None)
         self.new_setting('parameterfilesaved', 1, 1, None,
                          None)  # Added for future use by Ryohei. You have to take filepath here.
         self.new_setting('rotation', 1, 1, 'rotation',
