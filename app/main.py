@@ -188,7 +188,10 @@ class SpineTracker:
         self.communication.send_custom_command(single_step['custom_command'])
         self.set_uncaging_roi(pos_id)
         if single_step['image_or_uncage'] == 'Image':
+            if single_step['uncaging_while_imaging']:
+                self.toggle_uncaging(True)
             self.image_at_pos_id(pos_id)
+            self.toggle_uncaging(False)
             self.state.step_running = False
             self.load_image()
             self.positions[pos_id].add_file_path(self.settings.get('image_file_path'))
@@ -204,6 +207,9 @@ class SpineTracker:
 
     def prevent_freezing_during_loops(self):
         self.gui.update()
+
+    def toggle_uncaging(self, uncage_toggle):
+        self.communication.toggle_uncaging(uncage_toggle)
 
     def image_at_pos_id(self, pos_id):
         self.move_to_pos_id(pos_id)

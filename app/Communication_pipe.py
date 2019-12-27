@@ -99,6 +99,13 @@ class Communication:
         self.command_writer.get_intensity_file_path()
         self.command_reader.wait_for_response(response_command)
 
+    def toggle_uncaging(self, uncaging_toggle):
+        response_command = 'uncaging'
+        self.command_reader.set_response(response_command)
+        uncaging_toggle = int(uncaging_toggle)
+        self.command_writer.toggle_uncaging(uncaging_toggle)
+        self.command_reader.wait_for_response(response_command)
+
     def uncage(self, roi_x, roi_y):
         response_command = 'uncagingdone'
         self.command_reader.set_response(response_command)

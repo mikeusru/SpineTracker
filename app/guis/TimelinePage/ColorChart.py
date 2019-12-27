@@ -5,3 +5,4 @@ class ColorChart:
         self.imaging = 'blue'
         self.exclusive_imaging = 'green'
         self.selected_edge = 'pink'
+        self.uncaging_while_imaging = 'purple'

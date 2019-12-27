@@ -27,6 +27,8 @@ class SettingsManager:
             self.container.rebuild_timeline()
         elif name == 'image_or_uncage':
             self.container.switch_between_image_and_uncage_guis()
+        elif name == 'uncaging_while_imaging':
+            self.container.toggle_uncaging_while_imaging()
         elif name == 'manual_fov_toggle':
             self.container.toggle_manual_fov_entering()
         elif name == 'training_data_path':

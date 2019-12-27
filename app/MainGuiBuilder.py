@@ -131,6 +131,9 @@ class MainGuiBuilder(tk.Tk):
     def switch_between_image_and_uncage_guis(self, *args):
         self.frames[TimelinePage].gui['tFrame'].image_uncage_radiobutton_switch()
 
+    def toggle_uncaging_while_imaging(self, *args):
+        self.frames[TimelinePage].gui['tFrame'].uncaging_while_imaging_checkbutton_on()
+
     def toggle_manual_fov_entering(self, *args):
         self.frames[SettingsPage].toggle_fov_mode()
 

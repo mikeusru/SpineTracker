@@ -255,8 +255,11 @@ class TimelineSteps(list):
 
 
 class TimelineStepBlock(dict):
-    def __init__(self, step_name='Step1', image_or_uncage='Image', exclusive=True, period=60, iterations=1,
-                 start_time=None, end_time=None, index=None, pos_id=None, custom_command=''):
+    def __init__(self, step_name='Step1', image_or_uncage='Image',
+                 exclusive=True, uncaging_while_imaging=False,
+                 period=60, iterations=1,
+                 start_time=None, end_time=None,
+                 index=None, pos_id=None, custom_command=''):
         super(TimelineStepBlock, self).__init__()
         if (iterations is None) or (iterations == 0):
             iterations = 1
@@ -265,6 +268,7 @@ class TimelineStepBlock(dict):
         self['step_name'] = step_name
         self['image_or_uncage'] = image_or_uncage
         self['exclusive'] = exclusive
+        self['uncaging_while_imaging'] = uncaging_while_imaging
         self['period'] = period
         self['iterations'] = iterations
         self['index'] = index
@@ -299,6 +303,7 @@ class TimelineStepsMini(TimelineStepBlock):
         super().__init__(timeline_step['step_name'],
                          timeline_step['image_or_uncage'],
                          timeline_step['exclusive'],
+                         timeline_step['uncaging_while_imaging'],
                          start_time=start_time,
                          end_time=end_time,
                          pos_id=pos_id)

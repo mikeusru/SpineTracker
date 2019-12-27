@@ -33,7 +33,9 @@ class TimelinePage(ttk.Frame):
             'period': None,
             'iterations': None,
             'exclusive': None,
+            'uncaging_while_imaging': None,
             'custom_command': None,
+            'imaging_settings_file': None,
             'stagger': None,
         }
         self.get_setting = None
@@ -125,8 +127,10 @@ class TimelinePage(ttk.Frame):
                 x_range_list.append((step['start_time'] / 60, step['end_time'] / 60 - step['start_time'] / 60))
                 if not step['exclusive']:
                     color_list.append(color_chart.imaging)
-                elif step['exclusive'] and step['image_or_uncage'] == 'Image':
+                elif step['exclusive'] and step['image_or_uncage'] == 'Image' and not step['uncaging_while_imaging']:
                     color_list.append(color_chart.exclusive_imaging)
+                elif step['uncaging_while_imaging']:
+                    color_list.append(color_chart.uncaging_while_imaging)
                 else:
                     color_list.append(color_chart.uncaging)
             self.gui['timeline_axis'].broken_barh(x_range_list, y_range, color=color_list, edgecolor='black')
@@ -141,8 +145,9 @@ class TimelinePage(ttk.Frame):
         legend_patch_uncaging = patches.Patch(color=color_chart.uncaging, label='Uncaging')
         legend_patch_imaging = patches.Patch(color=color_chart.imaging, label='Imaging')
         legend_patch_exclusive_imaging = patches.Patch(color=color_chart.exclusive_imaging, label='Exclusive Imaging')
+        legend_patch_uncaging_while_imaging = patches.Patch(color=color_chart.uncaging_while_imaging, label='Imaging + Uncaging')
         self.gui['timeline_axis'].legend(
-            handles=[legend_patch_uncaging, legend_patch_imaging, legend_patch_exclusive_imaging])
+            handles=[legend_patch_uncaging, legend_patch_imaging, legend_patch_exclusive_imaging, legend_patch_uncaging_while_imaging])
         self.redraw_canvas()
 
     def on_timeline_table_left_click(self, event):

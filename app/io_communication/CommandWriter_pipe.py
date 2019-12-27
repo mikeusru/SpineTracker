@@ -21,6 +21,9 @@ class CommandWriter(CommandHandler):
     def get_intensity_file_path(self):
         self.handle_command('GetIntensityFilePath')
 
+    def toggle_uncaging(self, uncaging_toggle):
+        self.handle_command('Uncaging', uncaging_toggle)
+
     def do_uncaging(self, roi_x, roi_y):
         self.handle_command('StartUncaging', roi_x, roi_y)
 
