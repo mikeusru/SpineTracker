@@ -189,8 +189,7 @@ class SpineTracker:
         self.communication.set_imaging_settings_file(single_step['imaging_settings_file'])
         self.set_uncaging_roi(pos_id)
         if single_step['image_or_uncage'] == 'Image':
-            if single_step['uncaging_while_imaging']:
-                self.toggle_uncaging(True)
+            self.toggle_uncaging(single_step['uncaging_while_imaging'])
             self.image_at_pos_id(pos_id)
             self.toggle_uncaging(False)
             self.state.step_running = False

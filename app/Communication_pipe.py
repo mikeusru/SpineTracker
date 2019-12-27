@@ -79,10 +79,10 @@ class Communication:
         self.set_scan_shift(scan_voltage_x_y['x'], scan_voltage_x_y['y'])
 
     def move_motor(self, x, y, z):
-        # response_command = 'setmotorpositiondone'
-        # self.command_reader.set_response(response_command)
-        # self.command_writer.move_stage(x, y, z)
-        # self.command_reader.wait_for_response(response_command)
+        response_command = 'setmotorpositiondone'
+        self.command_reader.set_response(response_command)
+        self.command_writer.move_stage(x, y, z)
+        self.command_reader.wait_for_response(response_command)
         pass
 
     def grab_stack(self):
