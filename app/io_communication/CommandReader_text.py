@@ -36,7 +36,7 @@ class CommandReader:
         self.instructions_received = []
 
     def create_read_settings(self):
-        self.new_setting('stagemovedone', 3, 3, None, None)
+        self.new_setting('setmotorpositiondone', 3, 3, None, None)
         self.new_setting('acquisitiondone', 0, 0, None, None)
         self.new_setting('intensityfilepath', 1, 1, 'image_file_path', None)
         self.new_setting('currentposition', 3, 3, None, self.set_current_position)

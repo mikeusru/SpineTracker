@@ -157,11 +157,15 @@ class FLIM_Com:
 
     def __sendMessage(self, client, str1):
         s_code = bytes(str1, 'utf-8')
-        len1 = len(s_code);
+        len1 = len(s_code)
         if len1 > 65535:
             s_code = s_code[0:65534]
             len1 = 65535
-
+        # if str1[:8] == 'SetScanV':
+        #     win32file.WriteFile(client, bytes([int(len1 / 256)]))
+        #     win32file.WriteFile(client, bytes([len1 & 255]))
+        #     win32file.WriteFile(client, s_code)
+        # else:
         win32file.WriteFile(client, bytes([int(len1 / 256)]))
         win32file.WriteFile(client, bytes([len1 & 255]))
         win32file.WriteFile(client, s_code)

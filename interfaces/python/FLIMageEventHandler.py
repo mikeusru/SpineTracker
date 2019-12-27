@@ -87,7 +87,7 @@ class CommandInterpreter:
     def move_x_y_z(self, args):
         x, y, z = [float(arg) for arg in args]
         # TODO: Move to new position
-        self.command_to_spine_tracker.send_command('StageMoveDone', x, y, z)
+        self.command_to_spine_tracker.send_command('SetMotorPositionDone', x, y, z)
 
     def grab_one_stack(self, args):
         x, y, z = [float(arg) for arg in args]
