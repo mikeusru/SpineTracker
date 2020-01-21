@@ -14,12 +14,12 @@ class SettingsDTO(dict):
         self.container = container
 
         # Settings set here
-        self._create_entered_variable('experiment_log_directory', '../temp/logs')
+        self._create_entered_variable('experiment_log_directory', './temp/logs')
         self._create_entered_variable('huge_font', ("Verdana", 18))
         self._create_entered_variable('large_font', ("Verdana", 12))
         self._create_entered_variable('normal_font', ("Verdana", 10))
         self._create_entered_variable('fig_dpi', 100)
-        self._create_entered_variable('init_directory', "../iniFiles/")
+        self._create_entered_variable('init_directory', "./iniFiles/")
         self._create_entered_variable('input_file', "../instructions_fromFLIMage.txt")
         self._create_entered_variable('output_file', "../instructions_fromSpineTracker.txt")
 
