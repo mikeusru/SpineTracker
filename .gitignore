@@ -1,5 +1,9 @@
 # Misha's stuff:
 *.asv
+
+dist/
+build/
+
 Thumbs.db
 instructions_output.txt
 instructions_input.txt
