@@ -20,8 +20,8 @@ class SettingsDTO(dict):
         self._create_entered_variable('normal_font', ("Verdana", 10))
         self._create_entered_variable('fig_dpi', 100)
         self._create_entered_variable('init_directory', "./iniFiles/")
-        self._create_entered_variable('input_file', "../instructions_fromFLIMage.txt")
-        self._create_entered_variable('output_file', "../instructions_fromSpineTracker.txt")
+        self._create_entered_variable('input_file', "./instructions_fromFLIMage.txt")
+        self._create_entered_variable('output_file', "./instructions_fromSpineTracker.txt")
 
         # Settings set in command line
         self._create_command_line_variable('simulation', False)
