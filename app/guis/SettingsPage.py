@@ -81,14 +81,14 @@ class SettingsPage(ttk.Frame):
                                           value=False)
         gui['motor_rb'].grid(row=1, column=0, sticky='nw', pady=10, padx=10)
 
-        gui['invert_motor_label'] = tk.Label(gui['scan_motor_frame'], text="Invert Motor: ",
-                                                  font=self.settings['normal_font'])
+        gui['invert_motor_label'] = tk.Label(gui['scan_motor_frame'], text="Invert Motor: ", state='disabled',
+                                             font=self.settings['normal_font'])
         gui['invert_motor_label'].grid(row=1, column=1, sticky='nw', padx=10, pady=10)
         gui['invert_motor_x_cb'] = ttk.Checkbutton(gui['scan_motor_frame'], text="X",
-                                                        variable=self.gui_vars['invert_motor_x'],state='disabled')
+                                                   variable=self.gui_vars['invert_motor_x'], state='disabled')
         gui['invert_motor_x_cb'].grid(row=1, column=2, sticky='nw', pady=10, padx=10)
         gui['invert_motor_y_cb'] = ttk.Checkbutton(gui['scan_motor_frame'], text="Y",
-                                                        variable=self.gui_vars['invert_motor_y'],state='disabled')
+                                                   variable=self.gui_vars['invert_motor_y'], state='disabled')
         gui['invert_motor_y_cb'].grid(row=1, column=3, sticky='nw', pady=10, padx=10)
 
         gui['show_uncaging_roi_cb'] = ttk.Checkbutton(self, text="Show Uncaging ROI",

@@ -12,6 +12,7 @@ class Coordinates:
         self.center_motor_reader = None
         self.scan_voltage_range_reference = None
         self.fov_x_y = None
+        self.park_xy_motor = None
         self.xy_inverter = {
             'motor_x': 1,
             'motor_y': 1,
@@ -66,9 +67,13 @@ class Coordinates:
         self.set_combined_coordinates(x_new, y_new, z_new)
 
     def set_combined_coordinates(self, x, y, z):
-        scan_voltage_x, scan_voltage_y = self.x_y_to_scan_voltage(x, y)
-        self.set_scan_voltages_x_y(scan_voltage_x, scan_voltage_y)
-        self.set_motor(z=z)
+        self.update_values_from_settings()
+        if self.park_xy_motor:
+            scan_voltage_x, scan_voltage_y = self.x_y_to_scan_voltage(x, y)
+            self.set_scan_voltages_x_y(scan_voltage_x, scan_voltage_y)
+            self.set_motor(z=z)
+        else:
+            self.set_motor(x, y, z)
 
     def set_relative_to_center_coordinates(self, x, y, z):  # Ryohei.
         self.set_scan_voltages_x_y(0, 0)
@@ -112,16 +117,19 @@ class Coordinates:
         return scan_voltage_x, scan_voltage_y
 
     def update_to_center(self):
-        center_xyz = self.center_motor_reader()
-        x_motor, y_motor = center_xyz['x'], center_xyz['y']
-        old_xyz = self.get_combined()
-        old_x = old_xyz['x']
-        old_y = old_xyz['y']
-        self.set_motor(x=x_motor, y=y_motor)
-        scan_voltage_x, scan_voltage_y = self.x_y_to_scan_voltage(old_x, old_y)
-        self.set_scan_voltages_x_y(scan_voltage_x, scan_voltage_y)
+        self.update_values_from_settings()
+        if self.park_xy_motor:
+            center_xyz = self.center_motor_reader()
+            x_motor, y_motor = center_xyz['x'], center_xyz['y']
+            old_xyz = self.get_combined()
+            old_x = old_xyz['x']
+            old_y = old_xyz['y']
+            self.set_motor(x=x_motor, y=y_motor)
+            scan_voltage_x, scan_voltage_y = self.x_y_to_scan_voltage(old_x, old_y)
+            self.set_scan_voltages_x_y(scan_voltage_x, scan_voltage_y)
 
     def update_values_from_settings(self):
+        self.park_xy_motor = self.settings_reader('park_xy_motor')
         self.scan_voltage_range_reference = np.array(self.settings_reader('scan_voltage_range_reference'))
         self.fov_x_y = np.squeeze(np.array([self.settings_reader('fov_x'), self.settings_reader('fov_y')]))
         self.xy_inverter = {
