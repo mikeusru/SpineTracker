@@ -10,6 +10,14 @@ class Coordinates:
         self.scan_voltage_y = 0
         self.settings_reader = None
         self.center_motor_reader = None
+        self.scan_voltage_range_reference = None
+        self.fov_x_y = None
+        self.xy_inverter = {
+            'motor_x': 1,
+            'motor_y': 1,
+            'scan_shift_x': 1,
+            'scan_shift_y': 1,
+        }
 
     def save(self):
         return dict(
@@ -84,21 +92,23 @@ class Coordinates:
         return dict(x=x_combined, y=y_combined, z=self.motor_z)
 
     def scan_voltage_to_um(self):
-        scan_voltage_range_reference = self.settings_reader('scan_voltage_range_reference')
-        fov_x_y = np.squeeze(np.array([self.settings_reader('fov_x'), self.settings_reader('fov_y')]))
-        fs_angular = np.array([self.scan_voltage_x, self.scan_voltage_y])
-        fs_normalized = fs_angular / scan_voltage_range_reference
-        fs_coordinates = fs_normalized * fov_x_y
+        self.update_values_from_settings()
+        scan_voltage_x = self.scan_voltage_x * self.xy_inverter['scan_shift_x']
+        scan_voltage_y = self.scan_voltage_y * self.xy_inverter['scan_shift_y']
+        fs_angular = np.array([scan_voltage_x, scan_voltage_y])
+        fs_normalized = fs_angular / self.scan_voltage_range_reference
+        fs_coordinates = fs_normalized * self.fov_x_y
         return fs_coordinates
 
     def x_y_to_scan_voltage(self, x, y):
-        scan_voltage_range_reference = np.array(self.settings_reader('scan_voltage_range_reference'))
-        fov_x_y = np.squeeze(np.array([self.settings_reader('fov_x'), self.settings_reader('fov_y')]))
+        self.update_values_from_settings()
         # convert x and y to relative pixel coordinates
         fs_coordinates = np.array([x - self.motor_x, y - self.motor_y])
-        fs_normalized = fs_coordinates / fov_x_y
-        fs_angular = fs_normalized * scan_voltage_range_reference
+        fs_normalized = fs_coordinates / self.fov_x_y
+        fs_angular = fs_normalized * self.scan_voltage_range_reference
         scan_voltage_x, scan_voltage_y = fs_angular
+        scan_voltage_x *= self.xy_inverter['scan_shift_x']
+        scan_voltage_y *= self.xy_inverter['scan_shift_y']
         return scan_voltage_x, scan_voltage_y
 
     def update_to_center(self):
@@ -110,3 +120,13 @@ class Coordinates:
         self.set_motor(x=x_motor, y=y_motor)
         scan_voltage_x, scan_voltage_y = self.x_y_to_scan_voltage(old_x, old_y)
         self.set_scan_voltages_x_y(scan_voltage_x, scan_voltage_y)
+
+    def update_values_from_settings(self):
+        self.scan_voltage_range_reference = np.array(self.settings_reader('scan_voltage_range_reference'))
+        self.fov_x_y = np.squeeze(np.array([self.settings_reader('fov_x'), self.settings_reader('fov_y')]))
+        self.xy_inverter = {
+            'motor_x': 1 - 2 * self.settings_reader('invert_motor_x'),
+            'motor_y': 1 - 2 * self.settings_reader('invert_motor_y'),
+            'scan_shift_x': 1 - 2 * self.settings_reader('invert_motor_x'),
+            'scan_shift_y': 1 - 2 * self.settings_reader('invert_motor_y'),
+        }

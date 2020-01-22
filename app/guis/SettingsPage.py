@@ -27,6 +27,10 @@ class SettingsPage(ttk.Frame):
             'manual_fov_toggle': None,
             'fov_x': None,
             'fov_y': None,
+            'invert_scan_shift_x': None,
+            'invert_scan_shift_y': None,
+            'invert_motor_x': None,
+            'invert_motor_y': None,
         }
         self.events = initialize_events([
             'save_settings',
@@ -55,14 +59,38 @@ class SettingsPage(ttk.Frame):
         gui['drift_correction_channel_label'].grid(row=1, column=0, sticky='nw', padx=10, pady=10)
         gui['entry_drift_channel'] = ttk.Entry(self, textvariable=self.gui_vars['drift_correction_channel'])
         gui['entry_drift_channel'].grid(row=1, column=1, padx=10, pady=10, sticky='nw')
-        gui['scan_shift_rb'] = ttk.Radiobutton(self, text='Scan Shift for X,Y',
+
+        gui['scan_motor_frame'] = ttk.Frame(self)
+        gui['scan_motor_frame'].grid(column=0, row=2, sticky='nw')
+
+        gui['scan_shift_rb'] = ttk.Radiobutton(gui['scan_motor_frame'], text='Scan Shift for X,Y',
                                                variable=self.gui_vars['park_xy_motor'],
                                                value=True)
-        gui['scan_shift_rb'].grid(row=2, column=0, sticky='nw', pady=10, padx=10)
-        gui['motor_rb'] = ttk.Radiobutton(self, text='Motor for X,Y',
+        gui['scan_shift_rb'].grid(row=0, column=0, sticky='nw', pady=10, padx=10)
+        gui['invert_scan_shift_label'] = tk.Label(gui['scan_motor_frame'], text="Invert Scan Shift: ",
+                                                  font=self.settings['normal_font'])
+        gui['invert_scan_shift_label'].grid(row=0, column=1, sticky='nw', padx=10, pady=10)
+        gui['invert_scan_shift_x_cb'] = ttk.Checkbutton(gui['scan_motor_frame'], text="X",
+                                                        variable=self.gui_vars['invert_scan_shift_x'])
+        gui['invert_scan_shift_x_cb'].grid(row=0, column=2, sticky='nw', pady=10, padx=10)
+        gui['invert_scan_shift_y_cb'] = ttk.Checkbutton(gui['scan_motor_frame'], text="Y",
+                                                        variable=self.gui_vars['invert_scan_shift_y'])
+        gui['invert_scan_shift_y_cb'].grid(row=0, column=3, sticky='nw', pady=10, padx=10)
+        gui['motor_rb'] = ttk.Radiobutton(gui['scan_motor_frame'], text='Motor for X,Y',
                                           variable=self.gui_vars['park_xy_motor'],
                                           value=False)
-        gui['motor_rb'].grid(row=3, column=0, sticky='nw', pady=10, padx=10)
+        gui['motor_rb'].grid(row=1, column=0, sticky='nw', pady=10, padx=10)
+
+        gui['invert_motor_label'] = tk.Label(gui['scan_motor_frame'], text="Invert Motor: ",
+                                                  font=self.settings['normal_font'])
+        gui['invert_motor_label'].grid(row=1, column=1, sticky='nw', padx=10, pady=10)
+        gui['invert_motor_x_cb'] = ttk.Checkbutton(gui['scan_motor_frame'], text="X",
+                                                        variable=self.gui_vars['invert_motor_x'],state='disabled')
+        gui['invert_motor_x_cb'].grid(row=1, column=2, sticky='nw', pady=10, padx=10)
+        gui['invert_motor_y_cb'] = ttk.Checkbutton(gui['scan_motor_frame'], text="Y",
+                                                        variable=self.gui_vars['invert_motor_y'],state='disabled')
+        gui['invert_motor_y_cb'].grid(row=1, column=3, sticky='nw', pady=10, padx=10)
+
         gui['show_uncaging_roi_cb'] = ttk.Checkbutton(self, text="Show Uncaging ROI",
                                                       variable=self.gui_vars['uncaging_roi_toggle'])
         gui['show_uncaging_roi_cb'].grid(row=4, column=0, sticky='nw', pady=10, padx=10)

@@ -141,6 +141,12 @@ class SpineTracker:
         if pos_id is None:
             pos_id = self.positions.current_position
         reference_max_projection = self.get_ref_image(zoom, pos_id)
+        # drift_params = {
+        #     'invert_scan_shift_x': self.settings.get('invert_scan_shift_x'),
+        #     'invert_scan_shift_y': self.settings.get('invert_scan_shift_y'),
+        #     'invert_motor_x': self.settings.get('invert_motor_x'),
+        #     'invert_motor_y': self.settings.get('invert_motor_y'),
+        # }
         self.state.current_image.calc_x_y_z_drift(self.positions[pos_id], zoom, reference_max_projection)
         self.positions.update_coordinates_for_drift(pos_id, self.state.current_image.drift_x_y_z)
         self.gui.show_drift_info(self.state.current_image, pos_id)

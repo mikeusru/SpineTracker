@@ -15,7 +15,7 @@ class DriftXYZ:
         self.z_um = 0.0
         self.focus_list = np.array([])
         self.x_multiplier = -1
-        self.y_multiplier = -1
+        self.y_multiplier = 1
 
     def copy(self):
         return copy.deepcopy(self)
