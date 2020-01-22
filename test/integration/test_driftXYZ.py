@@ -70,4 +70,4 @@ class TestDriftXYZ(TestCase):
         drift_xyz.y_pixels = -11
         drift_xyz.scale_x_y_drift_to_image(position, zoom, image_shape)
         self.assertEqual(round(drift_xyz.x_um, 3), -.977)
-        self.assertEqual(round(drift_xyz.y_um, 3), 2.148)
+        self.assertEqual(round(drift_xyz.y_um, 3), -2.148)

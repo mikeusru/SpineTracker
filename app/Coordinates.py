@@ -127,6 +127,10 @@ class Coordinates:
         self.xy_inverter = {
             'motor_x': 1 - 2 * self.settings_reader('invert_motor_x'),
             'motor_y': 1 - 2 * self.settings_reader('invert_motor_y'),
-            'scan_shift_x': 1 - 2 * self.settings_reader('invert_motor_x'),
-            'scan_shift_y': 1 - 2 * self.settings_reader('invert_motor_y'),
+            'scan_shift_x': 1 - 2 * self.settings_reader('invert_scan_shift_x'),
+            'scan_shift_y': 1 - 2 * self.settings_reader('invert_scan_shift_y'),
         }
+        if self.settings_reader('invert_scan_shift_x'):
+            self.xy_inverter['scan_shift_x'] = -1
+        else:
+            self.xy_inverter['scan_shift_x'] = 1
