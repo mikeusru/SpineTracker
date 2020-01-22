@@ -6,7 +6,7 @@ block_cipher = None
 a = Analysis(['SpineTracker.py'],
              pathex=['D:\\Users\\smirnovm\\SpineTracker'],
              binaries=[],
-             datas=[],
+             datas=[('images','images'),('iniFiles','iniFiles')],
              hiddenimports=[],
              hookspath=[],
              runtime_hooks=[],
@@ -15,23 +15,23 @@ a = Analysis(['SpineTracker.py'],
              win_private_assemblies=False,
              cipher=block_cipher,
              noarchive=False)
-
-a.datas += [(images/, 'images'),
-            (iniFiles/*.p, 'iniFiles')]
-
 pyz = PYZ(a.pure, a.zipped_data,
              cipher=block_cipher)
 exe = EXE(pyz,
           a.scripts,
-          a.binaries,
-          a.zipfiles,
-          a.datas,
           [],
+          exclude_binaries=True,
           name='SpineTracker',
           debug=False,
           bootloader_ignore_signals=False,
           strip=False,
           upx=True,
-          upx_exclude=[],
-          runtime_tmpdir=None,
-          console=True )
+          console=True , icon='images\\crabIco.ico')
+coll = COLLECT(exe,
+               a.binaries,
+               a.zipfiles,
+               a.datas,
+               strip=False,
+               upx=True,
+               upx_exclude=[],
+               name='SpineTracker')
