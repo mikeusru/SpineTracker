@@ -57,3 +57,22 @@ def test_scan_voltage_to_um(coordinates):
     fs_coordinates = coordinates.scan_voltage_to_um()
     assert fs_coordinates[0] == 100
     assert fs_coordinates[1] == 150
+
+
+def test_scan_voltage_to_um_inverted_x(coordinates):
+    coordinates.scan_voltage_x = -6
+    coordinates.scan_voltage_y = 9
+    coordinates.settings_reader_dict['invert_scan_shift_x'] = True
+    fs_coordinates = coordinates.scan_voltage_to_um()
+    assert fs_coordinates[0] == 100
+    assert fs_coordinates[1] == 150
+
+
+def test_scan_voltage_to_um_inverted_y(coordinates):
+    coordinates.scan_voltage_x = 6
+    coordinates.scan_voltage_y = -9
+    coordinates.settings_reader_dict['invert_scan_shift_y'] = True
+    fs_coordinates = coordinates.scan_voltage_to_um()
+    assert fs_coordinates[0] == 100
+    assert fs_coordinates[1] == 150
+
