@@ -72,19 +72,19 @@ class AcquiredImage:
         else:
             self.zoom = settings.get('imaging_zoom')
 
-    def calc_x_y_z_drift(self, position, zoom, reference_max_projection):
+    def calc_x_y_z_drift(self, position, zoom, reference_max_projection, drift_params):
         self.drift_x_y_z.compute_drift_z(self.image_stack, position['zstep'])
-        self.calc_x_y_drift(position, zoom, reference_max_projection)
+        self.calc_x_y_drift(position, zoom, reference_max_projection, drift_params)
 
     def get_max_projection(self):
         return np.max(self.image_stack.copy(), axis=0)
 
-    def calc_x_y_drift(self, position, zoom, reference_max_projection):
+    def calc_x_y_drift(self, position, zoom, reference_max_projection, drift_params):
         image_max_projection = self.get_max_projection()
         reference_resized = transform.resize(reference_max_projection, image_max_projection.shape)
         self.drift_x_y_z.compute_pixel_drift_x_y(reference_resized, image_max_projection)
         self.drift_x_y_z.scale_x_y_drift_to_image(position, zoom,
-                                                  image_max_projection.shape)  # This actually requires voltage_mult and rotation.
+                                                  image_max_projection.shape, drift_params)  # This actually requires voltage_mult and rotation.
 
     def get_shape(self):
         return self.image_stack.shape

@@ -31,6 +31,8 @@ class SettingsPage(ttk.Frame):
             'invert_scan_shift_y': None,
             'invert_motor_x': None,
             'invert_motor_y': None,
+            'invert_drift_x': None,
+            'invert_drift_y': None,
         }
         self.events = initialize_events([
             'save_settings',
@@ -90,6 +92,16 @@ class SettingsPage(ttk.Frame):
         gui['invert_motor_y_cb'] = ttk.Checkbutton(gui['scan_motor_frame'], text="Y",
                                                    variable=self.gui_vars['invert_motor_y'], state='disabled')
         gui['invert_motor_y_cb'].grid(row=1, column=3, sticky='nw', pady=10, padx=10)
+
+        gui['invert_drift_label'] = tk.Label(gui['scan_motor_frame'], text="Invert Drift Correction Direction: ",
+                                             font=self.settings['normal_font'])
+        gui['invert_drift_label'].grid(row=2, column=0, sticky='nw', padx=10, pady=10, columnspan=2)
+        gui['invert_drift_x_cb'] = ttk.Checkbutton(gui['scan_motor_frame'], text="X",
+                                                   variable=self.gui_vars['invert_drift_x'])
+        gui['invert_drift_x_cb'].grid(row=2, column=2, sticky='nw', pady=10, padx=10)
+        gui['invert_drift_y_cb'] = ttk.Checkbutton(gui['scan_motor_frame'], text="Y",
+                                                   variable=self.gui_vars['invert_drift_y'])
+        gui['invert_drift_y_cb'].grid(row=2, column=3, sticky='nw', pady=10, padx=10)
 
         gui['show_uncaging_roi_cb'] = ttk.Checkbutton(self, text="Show Uncaging ROI",
                                                       variable=self.gui_vars['uncaging_roi_toggle'])
