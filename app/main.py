@@ -228,7 +228,7 @@ class SpineTracker:
 
     def align_all_positions_to_refs(self):
         for pos_id in self.positions.keys():
-            self.align_pos_to_ref(pos_id)
+            self.align_position_to_ref(pos_id)
 
     def align_position_to_ref(self, pos_id):
         self.gui.select_current_position_position_page_tree(pos_id)  # Ryohei To see where you are looking at.
