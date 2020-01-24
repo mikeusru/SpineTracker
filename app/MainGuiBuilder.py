@@ -53,6 +53,7 @@ class MainGuiBuilder(tk.Tk):
         elif frame.name == 'Positions':
             frame.shared_figs = self.shared_figs
             frame.events['move_to_pos_id'] += self.session.move_to_pos_id
+            frame.events['align_position_to_ref'] += self.session.align_position_to_ref
             frame.events['update_position'] += self.session.update_position
             frame.events['update_reference_images'] += self.session.update_reference_images
             frame.events['remove_position'] += self.session.remove_position

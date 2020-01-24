@@ -142,8 +142,8 @@ class SpineTracker:
             pos_id = self.positions.current_position
         reference_max_projection = self.get_ref_image(zoom, pos_id)
         drift_params = {
-            'invert_drift_x': self.settings.get('invert_scan_shift_x'),
-            'invert_drift_y': self.settings.get('invert_scan_shift_y'),
+            'invert_drift_x': self.settings.get('invert_drift_x'),
+            'invert_drift_y': self.settings.get('invert_drift_y'),
         }
         self.state.current_image.calc_x_y_z_drift(self.positions[pos_id], zoom, reference_max_projection, drift_params)
         self.positions.update_coordinates_for_drift(pos_id, self.state.current_image.drift_x_y_z)
@@ -228,16 +228,19 @@ class SpineTracker:
 
     def align_all_positions_to_refs(self):
         for pos_id in self.positions.keys():
-            self.gui.select_current_position_position_page_tree(pos_id)  # Ryohei To see where you are looking at.
-            self.communication.set_reference_imaging_conditions()
-            self.image_at_pos_id(pos_id)
-            self.load_image(image_type='zoomed_out')
-            self.correct_xyz_drift(pos_id, zoom=self.settings.get('reference_zoom'))
-            self.communication.set_normal_imaging_conditions()
-            self.image_at_pos_id(pos_id)
-            self.load_image(image_type='standard')
-            self.correct_xyz_drift(pos_id, zoom=self.settings.get('imaging_zoom'))
-            self.gui.select_current_position_position_page_tree(pos_id)  # Upload acquired images?
+            self.align_pos_to_ref(pos_id)
+
+    def align_position_to_ref(self, pos_id):
+        self.gui.select_current_position_position_page_tree(pos_id)  # Ryohei To see where you are looking at.
+        self.communication.set_reference_imaging_conditions()
+        self.image_at_pos_id(pos_id)
+        self.load_image(image_type='zoomed_out')
+        self.correct_xyz_drift(pos_id, zoom=self.settings.get('reference_zoom'))
+        self.communication.set_normal_imaging_conditions()
+        self.image_at_pos_id(pos_id)
+        self.load_image(image_type='standard')
+        self.correct_xyz_drift(pos_id, zoom=self.settings.get('imaging_zoom'))
+        self.gui.select_current_position_position_page_tree(pos_id)  # Upload acquired images?
 
     def image_all_positions(self, time_cycle=True):
         start_time = time.time()

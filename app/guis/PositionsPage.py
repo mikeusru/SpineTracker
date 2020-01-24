@@ -37,6 +37,7 @@ class PositionsPage(ttk.Frame):
         }
         self.events = initialize_events([
             'move_to_pos_id',
+            'align_position_to_ref',
             'update_position',
             'update_reference_images',
             'remove_position',
@@ -54,6 +55,8 @@ class PositionsPage(ttk.Frame):
         self.gui['popup'] = tk.Menu(self, tearoff=0)
         self.gui['popup'].add_command(label="Move To Position",
                                       command=lambda: self.events['move_to_pos_id'](self.selected_pos_id))
+        self.gui['popup'].add_command(label="Align to Reference",
+                                      command=lambda: self.events['align_position_to_ref'](self.selected_pos_id))
         self.gui['popup'].add_command(label="Update XYZ",
                                       command=lambda: self.events['update_position'](self.selected_pos_id))
         self.gui['popup'].add_command(label="Take New Ref Images",
