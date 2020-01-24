@@ -199,7 +199,8 @@ class SpineTracker:
             self.state.step_running = False
             self.load_image()
             self.positions[pos_id].add_file_path(self.settings.get('image_file_path'))
-            self.correct_xyz_drift(pos_id)
+            if not single_step['uncaging_while_imaging']:
+                self.correct_xyz_drift(pos_id)
             self.positions.rename_latest_files(pos_id)
         elif single_step['image_or_uncage'] == 'Uncage':
             self.uncage_at_pos_id(pos_id)
