@@ -13,14 +13,23 @@ from app.guis.TimelinePage.TimelinePage import TimelinePage
 from app.guis.ConnectionsPage import ConnectionsPage
 
 import os
+import pkg_resources
+
+
+def get_icon():
+    icon_path = pkg_resources.resource_filename(__name__,
+                                                os.path.join(os.pardir,
+                                                             'images',
+                                                             'crabIco.ico'))
+    # icon_path = os.path.join("images", "crabIco.ico")
+    return icon_path
 
 
 class MainGuiBuilder(tk.Tk):
 
     def __init__(self, session):
         tk.Tk.__init__(self)
-        icon_path = os.path.join("images", "crabIco.ico")  # path to ico
-        tk.Tk.iconbitmap(self, default=icon_path)
+        tk.Tk.iconbitmap(self, default=get_icon())
         tk.Tk.wm_title(self, "SpineTracker")
         tk.Tk.geometry(self, newGeometry='1000x600+200+200')
         self.session = session
