@@ -3,6 +3,7 @@ from unittest.mock import MagicMock
 import pytest
 import numpy as np
 
+from app.AcquiredImage import ReferenceImage, ReferenceImageZoomedOut
 from app.Coordinates import Coordinates
 from app.Position import Position
 from app.Positions import Positions
@@ -52,8 +53,9 @@ def positions(coordinates):
     session = FakeSession()
     session.state.current_coordinates = coordinates
     positions = Positions(session)
-    ref_img = np.zeros([128, 128])
-    positions.create_new_pos(ref_img, ref_img)
+    ref_img = ReferenceImage()
+    ref_img_zoomed_out = ReferenceImageZoomedOut()
+    positions.create_new_pos(ref_img, ref_img_zoomed_out)
     return positions
 
 

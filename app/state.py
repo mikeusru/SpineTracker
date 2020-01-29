@@ -1,6 +1,6 @@
 from operator import itemgetter
 
-from app.AcquiredImage import AcquiredImage, ReferenceImage, MacroImage
+from app.AcquiredImage import AcquiredImage, ReferenceImage, MacroImage, ReferenceImageZoomedOut
 from app.Coordinates import Coordinates
 from app.flow.PositionTimer import DisplayTimer, ExperimentTimer
 
@@ -18,7 +18,7 @@ class State:
         self.current_coordinates = self.center_coordinates.copy()
         self.current_image = AcquiredImage()
         self.ref_image = ReferenceImage()
-        self.ref_image_zoomed_out = ReferenceImage()
+        self.ref_image_zoomed_out = ReferenceImageZoomedOut()
         self.macro_image = MacroImage()
         self.position_timers = {}
         self.experiment_timer = None

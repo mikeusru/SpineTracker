@@ -102,7 +102,7 @@ class ReferenceImage(AcquiredImage):
 
 class ReferenceImageZoomedOut(AcquiredImage):
 
-    def __init__(self, settings):
+    def __init__(self):
         super(ReferenceImageZoomedOut, self).__init__()
         self.is_reference_zoomed_out = True
 
