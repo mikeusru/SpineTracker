@@ -5,7 +5,7 @@ from app.guis.MacroWindow import MacroWindow
 from app.guis.PositionsPage import PositionsPage
 from app.guis.SettingsPage import SettingsPage
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
 
 from app.guis.SharedFigs import SharedFigs
 from app.guis.StartPage import StartPage
@@ -162,3 +162,6 @@ class MainGuiBuilder(tk.Tk):
 
     def print_received_command(self, line):
         self.frames[ConnectionsPage].show_text('r', line)
+
+    def popup_warning(self, title, message):
+        messagebox.showwarning(title, message)

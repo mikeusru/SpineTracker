@@ -244,6 +244,8 @@ class SpineTracker:
         self.gui.select_current_position_position_page_tree(pos_id)  # Upload acquired images?
 
     def image_all_positions(self, time_cycle=True):
+        if not self.check_for_connection():
+            return
         start_time = time.time()
         for pos_id in self.positions.keys():
             self.gui.select_current_position_position_page_tree(pos_id)  # Ryohei To see where you are looking at.
@@ -266,12 +268,20 @@ class SpineTracker:
                                                                          dt.datetime.now().second))
 
     def create_new_position(self, take_new_refs=True):
+        if not self.check_for_connection():
+            return
         if take_new_refs:
             self.collect_new_reference_images()
             self.communication.get_motor_position()
         self.positions.create_new_pos(self.state.ref_image, self.state.ref_image_zoomed_out)
         self.update_center_position()
         self.handle_position_update()
+
+    def check_for_connection(self):
+        if not self.communication.get_connection_status():
+            self.gui.popup_warning("Imaging Software Not Connected",
+                                   "Please Connect to Imaging Software First")
+        return self.communication.get_connection_status()
 
     def clear_positions(self, *args):
         self.positions.clear()
@@ -331,6 +341,8 @@ class SpineTracker:
         self.communication.move_to_coordinates(coordinates)
 
     def start_imaging(self):
+        if not self.check_for_connection():
+            return
         self.create_log_file(['Imaging Started'])
         self.reset_image_file_record()
         self.state.display_timer.start()

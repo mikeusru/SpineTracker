@@ -42,6 +42,9 @@ class Communication:
         self.settings.set('fov_x', x)
         self.settings.set('fov_y', y)
 
+    def get_connection_status(self):
+        return self.pipe_target.Connected
+
     def pipe_connect(self):
         # if connected and gui var is true, ignore
         if self.pipe_target.Connected and not self.settings.get_gui_var('pipe_connect_bool'):
