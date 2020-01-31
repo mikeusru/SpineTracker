@@ -34,6 +34,8 @@ class PositionsPage(ttk.Frame):
             'imaging_slices': None,
             'reference_slices': None,
             'uncaging_roi_toggle': None,
+            'invert_x_position_canvas_axis': None,
+            'invert_y_position_canvas_axis': None,
         }
         self.events = initialize_events([
             'move_to_pos_id',
@@ -139,14 +141,32 @@ class PositionsPage(ttk.Frame):
         for i in range(2):
             self.gui['ref_images_axes'].append(self.gui['ref_images_fig'].add_subplot(1, 2, i + 1))
         # relative positions figure
+        self.gui['popup_positions_canvas'] = tk.Menu(self, tearoff=0)
+        self.gui['popup_positions_canvas'].add_command(label="Invert X Axis",
+                                      command=self.invert_x_axis)
+        self.gui['popup_positions_canvas'].add_command(label="Invert Y Axis",
+                                      command=self.invert_y_axis)
         self.gui['f_positions'] = self.shared_figs['f_positions']
         self.gui['canvas_positions'] = FigureCanvasTkAgg(self.gui['f_positions'], self.gui['frame_for_graphics'])
         self.gui['canvas_positions'].draw()
         self.gui['canvas_positions'].get_tk_widget().config(borderwidth=1, background='gray', highlightcolor='gray',
                                                             highlightbackground='gray')
         self.gui['canvas_positions'].get_tk_widget().grid(row=0, column=2, rowspan=2, padx=10, pady=10, sticky='nsew')
+        self.gui['canvas_positions'].get_tk_widget().bind("<Button-3>", self.on_canvas_position_click)
+        # self.gui['canvas_positions'].mpl_connect("button_press_event", self.on_canvas_position_click)
         self.gui['position_preview_axis'] = self.gui['f_positions'].add_subplot(1, 1, 1)
         self.gui['colorbar_axis'], kw = colorbar.make_axes_gridspec(self.gui['position_preview_axis'])
+        self.preview_position_locations()
+
+    def on_canvas_position_click(self, event):
+        self.gui['popup_positions_canvas'].post(event.x_root, event.y_root)
+
+    def invert_x_axis(self):
+        self.gui_vars['invert_x_position_canvas_axis'].set(not self.gui_vars['invert_x_position_canvas_axis'].get())
+        self.preview_position_locations()
+
+    def invert_y_axis(self):
+        self.gui_vars['invert_y_position_canvas_axis'].set(not self.gui_vars['invert_y_position_canvas_axis'].get())
         self.preview_position_locations()
 
     def create_positions_table(self, container):
@@ -218,6 +238,10 @@ class PositionsPage(ttk.Frame):
         ax.set_ylabel('Y (µm)')
         ax.set_xlabel('X (µm)')
         ax.axis('equal')
+        if self.gui_vars['invert_y_position_canvas_axis'].get():
+            ax.invert_yaxis()
+        if self.gui_vars['invert_x_position_canvas_axis'].get():
+            ax.invert_xaxis()
         cb1.ax.yaxis.label.set_size(8)
         ax.xaxis.label.set_size(8)
         ax.yaxis.label.set_size(8)
