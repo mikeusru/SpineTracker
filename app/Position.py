@@ -13,7 +13,6 @@ class Position(dict):
         self['ref_image'] = None
         self['ref_image_zoomed_out'] = None
         self['roi_x_y'] = None
-        self['af_box_xywh'] = None
         self['rotation'] = 0
         self['zoom'] = 10
         self['fov_xy'] = np.array([250, 250])

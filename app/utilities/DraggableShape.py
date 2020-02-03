@@ -127,3 +127,10 @@ class DraggableRectangle(DraggableShape):
         x_center = xy[0] - self.shape.get_width()/2
         y_center = xy[1] - self.shape.get_height()/2
         return x_center, y_center
+
+    def get_xywh(self):
+        xywh = np.array([self.shape.get_x(),
+                         self.shape.get_y(),
+                         self.shape.get_width(),
+                         self.shape.get_height()])
+        return xywh

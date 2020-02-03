@@ -343,7 +343,7 @@ class PositionsPage(ttk.Frame):
             ax.axis('off')
             if ref_image:
                 img = ref_image.get_max_projection()
-            ax.imshow(img)
+                ax.imshow(img)
         self.draw_roi(pos_id, self.gui['ref_images_axes'][0])
         self.draw_af_boxes(pos_id, self.gui['ref_images_axes'])
         self.gui['canvas_preview_ref_images'].draw_idle()
@@ -363,16 +363,22 @@ class PositionsPage(ttk.Frame):
         x, y = self.positions.get_roi_x_y(pos_id)
         self.draw_af_box_ref(x, y, pos_id, ax_list[0])
         self.draw_af_box_ref_zoomed_out(x, y, pos_id, ax_list[1])
+        self.positions[pos_id]['ref_image'].set_af_xywh(af_xywh)
 
     def draw_af_box_ref(self, center_x, center_y, pos_id, ax):
         side_um = self.gui_vars['af_box_size_um'].get()
         self.draggable_af_rectangle = self.draw_af_box(side_um, center_x, center_y, pos_id, ax)
+        af_xywh = self.draggable_af_rectangle.get_xywh()
+        self.positions[pos_id]['ref_image'].set_af_xywh(af_xywh)
+
 
     def draw_af_box_ref_zoomed_out(self, center_x, center_y, pos_id, ax):
         fov_x_y = self.settings['fov_x_y'].get()
         zoom = self.positions[pos_id].zoom
         side_um = fov_x_y[0] / zoom
         self.draggable_af_rectangle_zoomed_out = self.draw_af_box(side_um, center_x, center_y, pos_id, ax)
+        af_xywh = self.draggable_af_rectangle_zoomed_out.get_xywh()
+        self.positions[pos_id]['ref_image_zoomed_out'].set_af_xywh(af_xywh)
 
     def draw_af_box(self, side_um, center_x, center_y, pos_id, ax):
         fov_x_y = self.settings['fov_x_y'].get()

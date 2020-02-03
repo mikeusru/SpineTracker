@@ -20,6 +20,7 @@ class AcquiredImage:
         self.is_reference = False
         self.is_reference_zoomed_out = False
         self.zoom = 10.0
+        self.af_xywh = None
         self.pos_id = 1
         self.drift_x_y_z = DriftXYZ()
         self.position = Position()
@@ -95,6 +96,9 @@ class AcquiredImage:
 
     def set_stack(self, image_stack):
         self.image_stack = image_stack
+
+    def set_af_xywh(self, xywh):
+        self.af_xywh = xywh
 
 
 class ReferenceImage(AcquiredImage):
