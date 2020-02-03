@@ -36,7 +36,7 @@ class DraggableShape:
         if DraggableShape.lock is not None: return
         contains, attrd = self.shape.contains(event)
         if not contains: return
-        x0, y0 = self.shape.center
+        x0, y0 = self.get_position()
         self.press = x0, y0, event.xdata, event.ydata
         DraggableShape.lock = self
 
@@ -63,7 +63,7 @@ class DraggableShape:
         dy = event.ydata - ypress
 
         new_x, new_y = x0 + dx, y0 + dy
-        self.shape.center = (new_x, new_y)
+        self.update_position(new_x, new_y)
 
         canvas = self.shape.figure.canvas
         axes = self.shape.axes
@@ -87,7 +87,7 @@ class DraggableShape:
         # turn off the circ animation property and reset the background
         self.shape.set_animated(False)
         self.background = None
-        self.position.set_roi_x_y(np.array(self.shape.center))
+        self.position.set_roi_x_y(np.array(self.get_center()))
         # redraw the full figure
         self.shape.figure.canvas.draw_idle()
 
@@ -96,3 +96,34 @@ class DraggableShape:
         self.shape.figure.canvas.mpl_disconnect(self.cidpress)
         self.shape.figure.canvas.mpl_disconnect(self.cidrelease)
         self.shape.figure.canvas.mpl_disconnect(self.cidmotion)
+
+
+class DraggableCircle(DraggableShape):
+    def __init__(self, position, shape):
+        super().__init__(position, shape)
+
+    def update_position(self, x, y):
+        self.shape.center = (x, y)
+
+    def get_position(self):
+        return self.shape.center
+
+    def get_center(self):
+        return self.shape.center
+
+
+class DraggableRectangle(DraggableShape):
+    def __init__(self, position, shape):
+        super().__init__(position, shape)
+
+    def update_position(self, x, y):
+        self.shape.set_xy(x, y)
+
+    def get_position(self):
+        return self.shape.get_xy()
+
+    def get_center(self):
+        xy = self.shape.get_xy()
+        x_center = xy[0] - self.shape.get_width()/2
+        y_center = xy[1] - self.shape.get_height()/2
+        return x_center, y_center

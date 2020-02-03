@@ -10,7 +10,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 
 from app.io_communication.Event import initialize_events
-from app.utilities.DraggableShape import DraggableShape
+from app.utilities.DraggableShape import DraggableCircle, DraggableRectangle
 from app.utilities.helper_functions import fit_fig_to_canvas
 
 
@@ -354,7 +354,7 @@ class PositionsPage(ttk.Frame):
             x, y = self.positions.get_roi_x_y(pos_id)
             circle = patches.Circle((x, y), radius=ax_width / 20, fill=False, linewidth=ax_width / 20, edgecolor='r')
             ax.add_patch(circle)
-            dc = DraggableShape(self.positions[pos_id], circle)
+            dc = DraggableCircle(self.positions[pos_id], circle)
             dc.connect()
             self.draggable_circle = dc
             self.positions.backup_positions()
@@ -387,6 +387,6 @@ class PositionsPage(ttk.Frame):
         rect = patches.Rectangle((x, y), width_pixels, height_pixels, fill=False, linewidth=ax_width / 100,
                                  edgecolor='r')
         ax.add_patch(rect)
-        dr = DraggableShape(self.positions[pos_id], rect)
+        dr = DraggableRectangle(self.positions[pos_id], rect)
         dr.connect()
         return dr

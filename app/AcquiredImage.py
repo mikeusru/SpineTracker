@@ -74,6 +74,7 @@ class AcquiredImage:
 
     def calc_x_y_z_drift(self, position, zoom, reference_max_projection, drift_params):
         # TODO: Cut section of image stack based on ROI position
+
         # TODO: Make this section µm-based for reference image
         # TODO: and based on the size of the ref image in the center of the zoomed out ref image
         self.drift_x_y_z.compute_drift_z(self.image_stack, position['zstep'])
