@@ -78,8 +78,18 @@ class AcquiredImage:
 
         # TODO: Make this section µm-based for reference image
         # TODO: and based on the size of the ref image in the center of the zoomed out ref image
-        self.drift_x_y_z.compute_drift_z(self.image_stack, position['zstep'])
+        z_stack = self.get_cropped_z_stack()
+        self.drift_x_y_z.compute_drift_z(z_stack, position['zstep'])
         self.calc_x_y_drift(position, zoom, reference_max_projection, drift_params)
+
+    def get_cropped_z_stack(self):
+        z_stack = self.image_stack
+        if self.af_xywh:
+            z_stack = self.image_stack[
+                      self.af_xywh[0]: self.af_xywh[1] + self.af_xywh[3],
+                      self.af_xywh[0]: self.af_xywh[0]+self.af_xywh[2]
+                      ]
+            return z_stack
 
     def get_max_projection(self):
         return np.max(self.image_stack.copy(), axis=0)

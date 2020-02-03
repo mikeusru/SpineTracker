@@ -136,7 +136,7 @@ class PositionsPage(ttk.Frame):
         self.gui['ref_images_fig'].subplots_adjust(left=0, right=1, bottom=0, top=1, wspace=0.02, hspace=0)
         self.gui['popup_canvas_preview_ref_images'] = tk.Menu(self, tearoff=0)
         self.gui['popup_canvas_preview_ref_images'].add_command(label="Change Z Drift Calculation Window",
-                                                       command=self.change_z_drift_calc_window)
+                                                                command=self.change_z_drift_calc_window)
         self.gui['canvas_preview_ref_images'] = FigureCanvasTkAgg(self.gui['ref_images_fig'],
                                                                   self.gui['frame_for_graphics'])
         self.gui['canvas_preview_ref_images'].get_tk_widget().config(borderwidth=1, background='gray',
@@ -144,7 +144,8 @@ class PositionsPage(ttk.Frame):
                                                                      highlightbackground='gray')
         self.gui['canvas_preview_ref_images'].draw()
         self.gui['canvas_preview_ref_images'].get_tk_widget().grid(row=1, column=0, padx=10, sticky='nsew')
-        self.gui['canvas_preview_ref_images'].get_tk_widget().bind("<Button-3>", self.on_canvas_preview_ref_images_click)
+        self.gui['canvas_preview_ref_images'].get_tk_widget().bind("<Button-3>",
+                                                                   self.on_canvas_preview_ref_images_click)
 
         self.gui['ref_images_axes'] = []
         for i in range(2):
@@ -370,7 +371,6 @@ class PositionsPage(ttk.Frame):
         self.draggable_af_rectangle = self.draw_af_box(side_um, center_x, center_y, pos_id, ax)
         af_xywh = self.draggable_af_rectangle.get_xywh()
         self.positions[pos_id]['ref_image'].set_af_xywh(af_xywh)
-
 
     def draw_af_box_ref_zoomed_out(self, center_x, center_y, pos_id, ax):
         fov_x_y = self.settings['fov_x_y'].get()
