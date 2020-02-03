@@ -5,7 +5,7 @@ from app.guis.MacroWindow import MacroWindow
 from app.guis.PositionsPage import PositionsPage
 from app.guis.SettingsPage import SettingsPage
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk, messagebox, simpledialog
 
 from app.guis.SharedFigs import SharedFigs
 from app.guis.StartPage import StartPage

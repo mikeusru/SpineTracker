@@ -60,6 +60,7 @@ class SettingsDTO(dict):
         self._create_gui_variable('invert_drift_y', tk.BooleanVar, True, False)
         self._create_gui_variable('invert_x_position_canvas_axis', tk.BooleanVar, True, False)
         self._create_gui_variable('invert_y_position_canvas_axis', tk.BooleanVar, True, False)
+        self._create_gui_variable('af_box_size_um', tk.StringVar, True, 4.0, dtype=np.float32)
         self._create_gui_variable('uncaging_while_imaging', tk.BooleanVar, False, False)
         self._create_gui_variable('iterations', tk.StringVar, False, 5, dtype=np.int)
         self._create_gui_variable('period', tk.StringVar, False, 60, dtype=np.int)

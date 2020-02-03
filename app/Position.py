@@ -21,6 +21,12 @@ class Position(dict):
         self['collected_files'] = []
         self['drift_history'] = []
 
+    def get_ref_image_side(self):
+        return self['ref_image'].shape[0]
+
+    def get_ref_image_zoomed_out_side(self):
+        return self['ref_image'].shape[0]
+
     def save(self):
         position_to_save = Position()
         for key in self:

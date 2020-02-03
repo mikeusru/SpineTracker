@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, simpledialog
 
 import matplotlib
 import matplotlib.colorbar as colorbar
@@ -10,7 +10,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 
 from app.io_communication.Event import initialize_events
-from app.utilities.DraggableCircle import DraggableCircle
+from app.utilities.DraggableShape import DraggableShape
 from app.utilities.helper_functions import fit_fig_to_canvas
 
 
@@ -23,10 +23,13 @@ class PositionsPage(ttk.Frame):
         self.bind("<Visibility>", self.on_visibility)
         self.selected_pos_id = None
         self.draggable_circle = None
+        self.draggable_af_rectangle = None
+        self.draggable_af_rectangle_zoomed_out = None
         self.settings = {
             'scan_voltage_multiplier': np.array([1, 1]),
             'large_font': None,
-            'fig_dpi': 0
+            'fig_dpi': 0,
+            'fov_x_y': 0
         }
         self.gui_vars = {
             'imaging_zoom': None,
@@ -36,6 +39,7 @@ class PositionsPage(ttk.Frame):
             'uncaging_roi_toggle': None,
             'invert_x_position_canvas_axis': None,
             'invert_y_position_canvas_axis': None,
+            'af_box_size_um': None,
         }
         self.events = initialize_events([
             'move_to_pos_id',
@@ -130,6 +134,9 @@ class PositionsPage(ttk.Frame):
         # create canvas for previewing reference images
         self.gui['ref_images_fig'] = Figure(figsize=(4, 2), dpi=self.settings['fig_dpi'])
         self.gui['ref_images_fig'].subplots_adjust(left=0, right=1, bottom=0, top=1, wspace=0.02, hspace=0)
+        self.gui['popup_canvas_preview_ref_images'] = tk.Menu(self, tearoff=0)
+        self.gui['popup_canvas_preview_ref_images'].add_command(label="Change Z Drift Calculation Window",
+                                                       command=self.change_z_drift_calc_window)
         self.gui['canvas_preview_ref_images'] = FigureCanvasTkAgg(self.gui['ref_images_fig'],
                                                                   self.gui['frame_for_graphics'])
         self.gui['canvas_preview_ref_images'].get_tk_widget().config(borderwidth=1, background='gray',
@@ -137,15 +144,17 @@ class PositionsPage(ttk.Frame):
                                                                      highlightbackground='gray')
         self.gui['canvas_preview_ref_images'].draw()
         self.gui['canvas_preview_ref_images'].get_tk_widget().grid(row=1, column=0, padx=10, sticky='nsew')
+        self.gui['canvas_preview_ref_images'].get_tk_widget().bind("<Button-3>", self.on_canvas_preview_ref_images_click)
+
         self.gui['ref_images_axes'] = []
         for i in range(2):
             self.gui['ref_images_axes'].append(self.gui['ref_images_fig'].add_subplot(1, 2, i + 1))
         # relative positions figure
         self.gui['popup_positions_canvas'] = tk.Menu(self, tearoff=0)
         self.gui['popup_positions_canvas'].add_command(label="Invert X Axis",
-                                      command=self.invert_x_axis)
+                                                       command=self.invert_x_axis)
         self.gui['popup_positions_canvas'].add_command(label="Invert Y Axis",
-                                      command=self.invert_y_axis)
+                                                       command=self.invert_y_axis)
         self.gui['f_positions'] = self.shared_figs['f_positions']
         self.gui['canvas_positions'] = FigureCanvasTkAgg(self.gui['f_positions'], self.gui['frame_for_graphics'])
         self.gui['canvas_positions'].draw()
@@ -157,6 +166,15 @@ class PositionsPage(ttk.Frame):
         self.gui['position_preview_axis'] = self.gui['f_positions'].add_subplot(1, 1, 1)
         self.gui['colorbar_axis'], kw = colorbar.make_axes_gridspec(self.gui['position_preview_axis'])
         self.preview_position_locations()
+
+    def change_z_drift_calc_window(self):
+        answer = simpledialog.askfloat("Input", "Enter Box Size for Drift Calculation (µm)", parent=self)
+        if answer is float:
+            self.gui_vars['af_box_size_um'].set(answer)
+            self.select_current_position()
+
+    def on_canvas_preview_ref_images_click(self, event):
+        self.gui['popup_canvas_preview_ref_images'].post(event.x_root, event.y_root)
 
     def on_canvas_position_click(self, event):
         self.gui['popup_positions_canvas'].post(event.x_root, event.y_root)
@@ -327,6 +345,7 @@ class PositionsPage(ttk.Frame):
                 img = ref_image.get_max_projection()
             ax.imshow(img)
         self.draw_roi(pos_id, self.gui['ref_images_axes'][0])
+        self.draw_af_boxes(pos_id, self.gui['ref_images_axes'])
         self.gui['canvas_preview_ref_images'].draw_idle()
 
     def draw_roi(self, pos_id, ax):
@@ -335,7 +354,39 @@ class PositionsPage(ttk.Frame):
             x, y = self.positions.get_roi_x_y(pos_id)
             circle = patches.Circle((x, y), radius=ax_width / 20, fill=False, linewidth=ax_width / 20, edgecolor='r')
             ax.add_patch(circle)
-            dc = DraggableCircle(self.positions[pos_id], circle)
+            dc = DraggableShape(self.positions[pos_id], circle)
             dc.connect()
             self.draggable_circle = dc
             self.positions.backup_positions()
+
+    def draw_af_boxes(self, pos_id, ax_list):
+        x, y = self.positions.get_roi_x_y(pos_id)
+        self.draw_af_box_ref(x, y, pos_id, ax_list[0])
+        self.draw_af_box_ref_zoomed_out(x, y, pos_id, ax_list[1])
+
+    def draw_af_box_ref(self, center_x, center_y, pos_id, ax):
+        side_um = self.gui_vars['af_box_size_um'].get()
+        self.draggable_af_rectangle = self.draw_af_box(side_um, center_x, center_y, pos_id, ax)
+
+    def draw_af_box_ref_zoomed_out(self, center_x, center_y, pos_id, ax):
+        fov_x_y = self.settings['fov_x_y'].get()
+        zoom = self.positions[pos_id].zoom
+        side_um = fov_x_y[0] / zoom
+        self.draggable_af_rectangle_zoomed_out = self.draw_af_box(side_um, center_x, center_y, pos_id, ax)
+
+    def draw_af_box(self, side_um, center_x, center_y, pos_id, ax):
+        fov_x_y = self.settings['fov_x_y'].get()
+        zoom = self.positions[pos_id].zoom
+        ax_width = abs(np.diff(ax.get_xlim()).item())
+        image_pixels = self.positions[pos_id].get_ref_image_side()
+        pixels_per_um = np.array([image_pixels / (fov_x_y[0] / zoom), image_pixels / (fov_x_y[1] / zoom)])
+        width_pixels = side_um * pixels_per_um[0] / 2
+        height_pixels = side_um * pixels_per_um[1] / 2
+        x = center_x - width_pixels / 2
+        y = center_y - height_pixels / 2
+        rect = patches.Rectangle((x, y), width_pixels, height_pixels, fill=False, linewidth=ax_width / 100,
+                                 edgecolor='r')
+        ax.add_patch(rect)
+        dr = DraggableShape(self.positions[pos_id], rect)
+        dr.connect()
+        return dr
