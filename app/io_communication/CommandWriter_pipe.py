@@ -57,6 +57,9 @@ class CommandWriter(CommandHandler):
     def set_imaging_settings_file(self, imaging_settings_file):
         self.handle_command('LoadSetting', imaging_settings_file)
 
+    def get_pixel_to_voltage(self, x_pixel, y_pixel):
+        self.handle_command('PixelToVoltage', x_pixel, y_pixel)
+
     def handle_command(self, *args):
         command = ",".join([str(x) for x in args])
         self.write_command(command)

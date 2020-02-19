@@ -36,4 +36,4 @@ StartGrab,,,AcquisitionDone,Grab a stack once
 StartUncaging,"ROI_x_pixels, ROI_y_pixels","StartUncaging,37,42",UncagingDone,do uncaging at specific position signified by pixel value in image
 CustomCommand,string,"CustomCommand,page_acq",CustomCommandReceived,send a custom command to imaging program immediately before executing a step
 SetUncagingLocation,"ROI_x_pixels, ROI_y_pixels","SetUncagingLocation,37,42",UncagingLocation,sends an uncaging location without actually uncaging
-PixelToVoltage,"Xvoltage, Yvoltage","PixelToVoltage, 1, 1","share exactly the same calculation for pixel to voltage conversion (includes rotation, XY change, Y flip, X flip, etc).",
+PixelToVoltage,"Xpixel, Ypixel","PixelToVoltage, 1, 1","share exactly the same calculation for pixel to voltage conversion (includes rotation, XY change, Y flip, X flip, etc).",
