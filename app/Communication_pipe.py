@@ -216,3 +216,9 @@ class Communication:
         self.command_reader.set_response(response_command)
         self.command_writer.get_scan_voltage_multiplier()
         self.command_reader.wait_for_response(response_command)
+
+    def get_pixels_to_voltage(self, x_pixel, y_pixel):
+        response_command = 'pixeltovoltage'
+        self.command_reader.set_response(response_command)
+        self.command_writer.get_pixel_to_voltage(x_pixel, y_pixel)
+        self.command_reader.wait_for_response(response_command)
