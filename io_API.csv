@@ -1,0 +1,39 @@
+Commands To SpineTracker,,,,
+,,,,
+Command,Arguments,Example,Purpose,
+AcquisitionDone,,,sent after acquisition of single image stack complete,
+CurrentPosition,"x, y, z","CurrentPosition,2,0,-3.2",sent after request for current position,
+FovXYum,"x,y","FovXYum,250,250",sent to establish Field of View size in µm (when completely zoomed out),
+IntensityFilePath,filepath,"IntensityFilePath,c:/imaging/image1.tiff",Sent when intensity file path is requested,
+IntensitySaving,1 or 0,"IntensitySaving,1",Sent when intensity saving is turned on/off,
+ResolutionXY,"x,y","ResolutionXY,512,512","sent when X,Y Imaging Resolution is requested",
+ScanVoltageMultiplier,"x,y","ScanVoltageMultiplier,5,15",sent when scan voltage multiplier is requested,
+ScanVoltageRangeReference,"x,y","ScanVoltageRangeReference,5,15",sent when scan voltage range reference is requested,
+ScanVoltageXY,"x,y","ScanVoltageXY,0.02,1.2",Sent when new galvo scanning voltage is set,
+SetMotorPositionDone,"x, y, z","SetMotorPositionDone,1,34.2,-2",sent after movement to new coordinates is complete,
+UncagingDone,"X,Y",,sent after uncaging is finished,
+Zoom,int,"Zoom,25",sent when new zoom is set,
+ZSliceNum,int,"ZSliceNum,10",sent when number of Z slices is requested to change,
+CustomCommandReceived,,,,
+UncagingLocation,"ROI_x_pixels, ROI_y_pixels",,sent as an answer to SetUncagingLocation,
+PixelToVoltage,"Xvoltage, Yvoltage","PixelToVoltage, 1, 1","share exactly the same calculation for pixel to voltage conversion (includes rotation, XY change, Y flip, X flip, etc).",
+,,,,
+Commands To Imaging Program,,,Expected Answer,Purpose
+GetCurrentPosition,,,CurrentPosition,Request for current position to be sent
+GetFOVXY,,,FovXYum,Request for FOV size
+GetIntensityFilePath,,,IntensityFilePath,GetIntensityFilePath
+GetResolutionXY,,,ResolutionXY,"Get X,Y Imaging Resolution"
+GetScanVoltageMultiplier,,,ScanVoltageMultiplier,Request Galvo Scan Voltage Multiplier
+GetScanVoltageRangeReference,,,ScanVoltageRangeReference,Request Galvo Scan Voltage Range Reference
+GetScanVoltageXY,,,ScanVoltageXY,Request Galvo Scanning Position
+SetIntensitySaving,1 or 0,"SetIntensitySaving,1",IntensitySaving,Turn intensity file saving on/off
+SetMotorPosition,"x,y,z","SetMotorPosition,12,89.2,0",StageMoveDone,Move to new stage position
+SetResolutionXY,"x,y","SetResolutionXY,128,128",ResolutionXY,"Set X,Y Imaging Resolution"
+SetScanVoltageXY,"x,y","setScanVoltageXY,0.2,-4",ScanVoltageXY,Set Galvo Scanning Position
+SetZoom,int,"SetZoom,20",Zoom,Set Zoom to value
+SetZSliceNum,int,"SetZSliceNum,10",ZSliceNum,Set Number of Z Slices
+StartGrab,,,AcquisitionDone,Grab a stack once
+StartUncaging,"ROI_x_pixels, ROI_y_pixels","StartUncaging,37,42",UncagingDone,do uncaging at specific position signified by pixel value in image
+CustomCommand,string,"CustomCommand,page_acq",CustomCommandReceived,send a custom command to imaging program immediately before executing a step
+SetUncagingLocation,"ROI_x_pixels, ROI_y_pixels","SetUncagingLocation,37,42",UncagingLocation,sends an uncaging location without actually uncaging
+PixelToVoltage,"Xvoltage, Yvoltage","PixelToVoltage, 1, 1","share exactly the same calculation for pixel to voltage conversion (includes rotation, XY change, Y flip, X flip, etc).",
