@@ -65,14 +65,9 @@ class Communication:
         if self.pipe_target.Connected:
             self.pipe_target.disconnect()
 
-    def pipe_client_message_received(self, message, source):
-        # if source == 'R':
+    def pipe_client_message_received(self, message, _):
         print('Message from FLIMage: {}'.format(message))
-        # event-driven actions
         self.command_reader.read_new_command(message)
-        # elif source == 'W' and self.pipe_target.debug:
-        #     print('Mesage from FLIMage: {}'.format(message))
-        #     simple reply
         self.settings.set('pipe_connect_bool', self.pipe_target.Connected)
 
     def move_to_coordinates(self, coordinates):
@@ -156,16 +151,13 @@ class Communication:
 
     def set_normal_imaging_conditions(self):
         zoom = self.settings.get('imaging_zoom')
-        x_resolution = self.settings.get('normal_resolution_x')
-        y_resolution = self.settings.get('normal_resolution_y')
-        z_slice_num = self.settings.get('imaging_slices')
-        self.set_zoom(zoom)
-        self.set_resolution(x_resolution, y_resolution)
-        self.set_z_slice_num(z_slice_num)
-        self.set_intensity_image_saving_on()  # Added by Ryohei
+        self.set_standard_resolution_imaging_conditions(zoom)
 
     def set_reference_imaging_conditions(self):
         zoom = self.settings.get('reference_zoom')
+        self.set_standard_resolution_imaging_conditions(zoom)
+
+    def set_standard_resolution_imaging_conditions(self, zoom):
         x_resolution = self.settings.get('normal_resolution_x')
         y_resolution = self.settings.get('normal_resolution_y')
         z_slice_num = self.settings.get('reference_slices')
