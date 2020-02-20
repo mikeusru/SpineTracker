@@ -89,7 +89,7 @@ class AcquiredImage:
                       self.af_xywh[0]: self.af_xywh[1] + self.af_xywh[3],
                       self.af_xywh[0]: self.af_xywh[0]+self.af_xywh[2]
                       ]
-            return z_stack
+        return z_stack
 
     def get_max_projection(self):
         return np.max(self.image_stack.copy(), axis=0)
