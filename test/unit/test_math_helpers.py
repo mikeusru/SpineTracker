@@ -69,9 +69,9 @@ class TestMath(TestCase):
         image_ref[13, 13] = 100
         image_drifted = np.zeros([25, 25], dtype=np.uint8)
         image_drifted[19, 10] = 100
-        result = compute_drift(image_ref, image_drifted)
-        self.assertEqual(result['shiftx'], 2.5)
-        self.assertEqual(result['shifty'], -6.5)
+        shift_x, shift_y = compute_drift(image_ref, image_drifted)
+        self.assertEqual(shift_x.item(), 2.5)
+        self.assertEqual(shift_y.item(), -6.5)
 
     def test_contrast_stretch(self):
         img = np.ones([128, 128])

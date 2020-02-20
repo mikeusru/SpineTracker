@@ -4,6 +4,9 @@ from scipy import ndimage
 
 
 # TODO: Add way to convert z_slices to z_um
+from app.utilities.math_helpers import compute_drift
+
+
 class DriftXYZ:
 
     def __init__(self):
@@ -18,7 +21,7 @@ class DriftXYZ:
     def copy(self):
         return copy.deepcopy(self)
 
-    def compute_drift_z(self, image_stack, zstep):
+    def compute_drift_z(self, image_stack, z_step):
         focus_list = []
         for image_slice in image_stack:
             focus_list.append(self.measure_focus(image_slice))
@@ -26,7 +29,7 @@ class DriftXYZ:
         drift_z = focus_list.argmax().item() - np.floor(len(image_stack) / 2)
         self.z_slices = drift_z
         self.focus_list = focus_list
-        self.z_um = drift_z * zstep
+        self.z_um = drift_z * z_step
 
     @staticmethod
     def measure_focus(image):
@@ -48,23 +51,7 @@ class DriftXYZ:
         return f_m
 
     def compute_pixel_drift_x_y(self, img_ref, img):
-        h, w = img_ref.shape
-        fft_ref = np.fft.fft2(img_ref)
-        fft_img = np.fft.fft2(img)
-        center_y = h / 2
-        center_x = w / 2
-        prod = fft_ref * np.conj(fft_img)
-        cc = np.fft.ifft2(prod)
-        max_y, max_x = np.nonzero(np.fft.fftshift(cc) == np.max(cc))
-        shift_y = max_y[0] - center_y
-        shift_x = max_x[0] - center_x
-        # Checks to see if there is an ambiguity problem with FFT because of the
-        # periodic boundary in FFT (not sure why or if this is necessary but I'm
-        # keeping it around for now)
-        if np.abs(shift_y).all() > h / 2:
-            shift_y = shift_y - np.sign(shift_y) * h
-        if np.abs(shift_x) > h / 2:
-            shift_x = shift_x - np.sign(shift_x) * w
+        shift_x, shift_y = compute_drift(img_ref, img)
         self.x_pixels = shift_x.item()
         self.y_pixels = shift_y.item()
 
@@ -76,8 +63,8 @@ class DriftXYZ:
         rotation = position['rotation']
         x_y_um = np.squeeze(np.array([self.x_pixels, self.y_pixels])) / image_shape * multiplicator * fov_x_y / zoom
         if rotation != 0:
-            sinA = np.sin(rotation * np.pi / 180.0)
-            cosA = np.cos(rotation * np.pi / 180.0)
-            rotMat = np.array([[cosA, -sinA], [sinA, cosA]])
-            x_y_um = np.dot(rotMat, x_y_um)
+            sin_a = np.sin(rotation * np.pi / 180.0)
+            cos_a = np.cos(rotation * np.pi / 180.0)
+            rot_mat = np.array([[cos_a, -sin_a], [sin_a, cos_a]])
+            x_y_um = np.dot(rot_mat, x_y_um)
         self.x_um, self.y_um = (x_y_um[0] * x_multiplier, x_y_um[1] * y_multiplier)
