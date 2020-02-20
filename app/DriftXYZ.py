@@ -33,7 +33,7 @@ class DriftXYZ:
 
     @staticmethod
     def measure_focus(image):
-        # Gaussian derivative (Geusebroek2000)
+        # Gaussian derivative (Geusebroek 2000)
         w_size = 15
         nn = np.floor(w_size / 2)
         sig = nn / 2.5
@@ -58,10 +58,10 @@ class DriftXYZ:
     def scale_x_y_drift_to_image(self, position, zoom, image_shape, drift_params):
         x_multiplier = 1 - 2 * drift_params['invert_drift_x']
         y_multiplier = 1 - 2 * drift_params['invert_drift_y']
-        multiplicator = position['scan_voltage_multiplier']
+        multiplier = position['scan_voltage_multiplier']
         fov_x_y = position['fov_xy']
         rotation = position['rotation']
-        x_y_um = np.squeeze(np.array([self.x_pixels, self.y_pixels])) / image_shape * multiplicator * fov_x_y / zoom
+        x_y_um = np.squeeze(np.array([self.x_pixels, self.y_pixels])) / image_shape * multiplier * fov_x_y / zoom
         if rotation != 0:
             sin_a = np.sin(rotation * np.pi / 180.0)
             cos_a = np.cos(rotation * np.pi / 180.0)
